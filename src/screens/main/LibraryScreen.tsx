@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -16,13 +16,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchPlaylists, fetchSongs } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
-import type { LibraryStackParamList } from '../../navigation/types';
+import type { LibraryStackParamList, LibraryView } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import DownloadsScreen from './DownloadsScreen';
 import { useLanguage } from '../../context/LanguageContext';
-
-type LibraryView = 'artists' | 'albums' | 'playlists' | 'downloads';
 
 interface Artist {
   id: string;
@@ -43,12 +41,13 @@ interface Album {
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'LibraryMain'>;
 
-const LibraryScreen: React.FC<Props> = ({ navigation }) => {
+const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { state: offlineState } = useOffline();
   const connectivity = useConnectivity();
   const { t } = useLanguage();
-  const [activeView, setActiveView] = useState<LibraryView>('artists');
+  const initialView = route.params?.view ?? 'artists';
+  const [activeView, setActiveView] = useState<LibraryView>(initialView);
 
   const {
     data: onlineSongs = [],
@@ -177,6 +176,12 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     ],
     [t],
   );
+
+  useEffect(() => {
+    if (route.params?.view && route.params.view !== activeView) {
+      setActiveView(route.params.view);
+    }
+  }, [route.params?.view, activeView]);
 
   const renderArtist = useCallback(
     ({ item }: { item: Artist }) => (

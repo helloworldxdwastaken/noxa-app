@@ -128,14 +128,15 @@ const tabStyles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 8,
+    paddingBottom: 20,
   },
   tabBackground: {
     flex: 1,
     flexDirection: 'row',
-    backgroundColor: '#0d0d14',
+    backgroundColor: 'rgba(13,13,20,0.35)',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     paddingHorizontal: 4,
     gap: 6,
     minHeight: 64,
@@ -167,24 +168,20 @@ const tabStyles = StyleSheet.create({
   searchBubble: {
     width: 64,
     height: 64,
-    borderRadius: 32,
-    backgroundColor: '#0d0d14',
+    borderRadius: 999,
+    backgroundColor: 'rgba(13,13,20,0.35)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
   },
   miniPlayerSpacer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
+    height: 100,
   },
 });
 
@@ -228,7 +225,7 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const isSearchFocused = searchRouteIndex === state.index;
 
   return (
-    <View style={[tabStyles.customContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}> 
+    <View style={[tabStyles.customContainer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
       <View style={tabStyles.tabBackground}>
         {mainRoutes.map(route => {
           const routeIndex = state.routes.findIndex(r => r.key === route.key);

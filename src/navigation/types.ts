@@ -6,15 +6,21 @@ export type AuthStackParamList = {
 };
 
 export type PlaylistDetailParams = {
-    playlistId: number;
-    playlistName?: string | null;
-    description?: string | null;
-    coverUrl?: string | null;
-    trackCount?: number | null;
-  };
+  playlistId: number;
+  playlistName?: string | null;
+  description?: string | null;
+  coverUrl?: string | null;
+  trackCount?: number | null;
+};
+
+export type LibraryView = 'artists' | 'albums' | 'playlists' | 'downloads';
 
 export type LibraryStackParamList = {
-  LibraryMain: undefined;
+  LibraryMain:
+    | {
+        view?: LibraryView;
+      }
+    | undefined;
   PlaylistDetail: PlaylistDetailParams;
 };
 

@@ -34,6 +34,7 @@ import ArtworkImage from '../../components/ArtworkImage';
 import { togglePlayback } from '../../services/player/PlayerService';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
 import type { Playlist } from '../../types/models';
+import { useLanguage } from '../../context/LanguageContext';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NowPlaying'>;
 
@@ -48,6 +49,7 @@ const formatTime = (seconds: number) => {
 
 const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const { track, state } = useCurrentTrack();
+  const { t } = useLanguage();
   const progress = useProgress(250);
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
@@ -305,7 +307,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
           <Icon name="chevron-down" size={24} color="#ffffff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Now Playing</Text>
+        <Text style={styles.headerTitle}>{t('nowPlaying.title')}</Text>
         <TouchableOpacity style={styles.menuBtn} onPress={() => setActionsVisible(true)}>
           <Icon name="more-vertical" size={22} color="#ffffff" />
         </TouchableOpacity>
@@ -329,8 +331,8 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.trackInfo}>
-          <Text style={styles.trackTitle}>{track?.title ?? 'Nothing playing'}</Text>
-          <Text style={styles.trackArtist}>{track?.artist ?? '—'}</Text>
+        <Text style={styles.trackTitle}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
+        <Text style={styles.trackArtist}>{track?.artist ?? t('nowPlaying.placeholderArtist')}</Text>
           {track?.album ? <Text style={styles.trackAlbum}>{track.album}</Text> : null}
         </View>
 
@@ -391,9 +393,9 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.queueSection}>
-          <Text style={styles.queueTitle}>Up Next</Text>
+          <Text style={styles.queueTitle}>{t('nowPlaying.upNext')}</Text>
           {queue.length === 0 ? (
-            <Text style={styles.emptyQueue}>Queue is empty</Text>
+            <Text style={styles.emptyQueue}>{t('nowPlaying.queueEmpty')}</Text>
           ) : (
             queue.map((item, index) => {
               const isActive = index === activeIndex;

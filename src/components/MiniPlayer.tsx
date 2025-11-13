@@ -35,7 +35,7 @@ const MiniPlayer: React.FC = () => {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.wrapper, { bottom: (insets.bottom || 12) + 84 }]}
+      style={[styles.wrapper, { bottom: (insets.bottom || 12) + 60 }]}
     >
       <TouchableOpacity
         style={styles.container}
@@ -81,16 +81,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: '#101018',
+    paddingVertical: 12,
+    backgroundColor: 'rgba(10,10,15,0.6)',
     borderRadius: 48,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.04)',
+    borderColor: 'rgba(255,255,255,0.08)',
     shadowColor: '#000',
     shadowOpacity: 0.35,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 14 },
-    elevation: 8,
+    elevation: 12,
   },
   info: {
     flex: 1,

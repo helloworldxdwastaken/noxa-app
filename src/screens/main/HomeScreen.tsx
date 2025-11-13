@@ -172,7 +172,14 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>{t('home.playlists')}</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                navigation.navigate('Library', {
+                  screen: 'LibraryMain',
+                  params: { view: 'playlists' },
+                })
+              }
+            >
               <Text style={styles.showAll}>{t('home.showAll')}</Text>
             </TouchableOpacity>
           </View>

@@ -136,6 +136,9 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
     },
     nowPlaying: {
       title: 'Now Playing',
+      placeholderTitle: 'Nothing playing',
+      placeholderArtist: '—',
+      upNext: 'Up Next',
       queueEmpty: 'Queue is empty',
       trackActions: 'Track Actions',
       selectPlaylist: 'Select playlist',
@@ -288,6 +291,9 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
     },
     nowPlaying: {
       title: 'Reproduciendo',
+      placeholderTitle: 'Nada en reproducción',
+      placeholderArtist: '—',
+      upNext: 'A continuación',
       queueEmpty: 'La cola está vacía',
       trackActions: 'Acciones',
       selectPlaylist: 'Selecciona una lista',
