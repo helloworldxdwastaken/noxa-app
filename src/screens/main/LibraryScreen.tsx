@@ -18,6 +18,8 @@ import { useOffline } from '../../context/OfflineContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
+import { playSong } from '../../services/player/PlayerService';
+import ArtworkImage from '../../components/ArtworkImage';
 
 type LibraryView = 'artists' | 'albums' | 'tracks' | 'playlists';
 
@@ -26,6 +28,7 @@ interface Artist {
   name: string;
   trackCount: number;
   songs: Song[];
+  artwork?: string | null;
 }
 
 interface Album {
@@ -34,6 +37,7 @@ interface Album {
   artist: string;
   trackCount: number;
   songs: Song[];
+  artwork?: string | null;
 }
 
 type Props = CompositeScreenProps<
@@ -91,10 +95,19 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
       (acc, song) => {
         const artistName = song.artist || 'Unknown Artist';
         if (!acc[artistName]) {
-          acc[artistName] = { id: artistName, name: artistName, trackCount: 0, songs: [] };
+          acc[artistName] = {
+            id: artistName,
+            name: artistName,
+            trackCount: 0,
+            songs: [],
+            artwork: song.albumCover ?? null,
+          };
         }
         acc[artistName].songs.push(song);
         acc[artistName].trackCount += 1;
+        if (!acc[artistName].artwork && song.albumCover) {
+          acc[artistName].artwork = song.albumCover;
+        }
         return acc;
       },
       {} as Record<string, Artist>,
@@ -115,10 +128,14 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
             artist: song.artist,
             trackCount: 0,
             songs: [],
+            artwork: song.albumCover ?? null,
           };
         }
         acc[key].songs.push(song);
         acc[key].trackCount += 1;
+        if (!acc[key].artwork && song.albumCover) {
+          acc[key].artwork = song.albumCover;
+        }
         return acc;
       },
       {} as Record<string, Album>,
@@ -134,12 +151,22 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     refetchPlaylists();
   };
 
+  const handlePlaySong = useCallback(
+    (song: Song) => {
+      const queue = songs.filter(entry => entry.id !== song.id);
+      playSong(song, queue).catch(error => console.error('Failed to play song', error));
+    },
+    [songs],
+  );
+
   const renderSong = useCallback(
     ({ item }: { item: Song }) => (
-      <TouchableOpacity style={styles.songRow}>
-        <View style={styles.artworkSmall}>
-          <Text style={styles.artworkLetter}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
-        </View>
+      <TouchableOpacity style={styles.songRow} onPress={() => handlePlaySong(item)}>
+        <ArtworkImage
+          uri={item.albumCover}
+          size={52}
+          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+        />
         <View style={styles.songDetails}>
           <Text style={styles.songTitle} numberOfLines={1}>
             {item.title}
@@ -150,15 +177,18 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </TouchableOpacity>
     ),
-    [],
+    [handlePlaySong],
   );
 
   const renderArtist = useCallback(
     ({ item }: { item: Artist }) => (
       <TouchableOpacity style={styles.gridCard}>
-        <View style={styles.artworkLarge}>
-          <Text style={styles.artworkIcon}>{item.name?.[0]?.toUpperCase() ?? '🎤'}</Text>
-        </View>
+        <ArtworkImage
+          uri={item.artwork}
+          size={140}
+          fallbackLabel={item.name?.[0]?.toUpperCase() ?? 'A'}
+          shape="circle"
+        />
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.name}
         </Text>
@@ -171,9 +201,11 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
   const renderAlbum = useCallback(
     ({ item }: { item: Album }) => (
       <TouchableOpacity style={styles.gridCard}>
-        <View style={styles.artworkLarge}>
-          <Text style={styles.artworkIcon}>{item.title?.[0]?.toUpperCase() ?? '💿'}</Text>
-        </View>
+        <ArtworkImage
+          uri={item.artwork}
+          size={140}
+          fallbackLabel={item.title?.[0]?.toUpperCase() ?? 'A'}
+        />
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.title}
         </Text>
@@ -191,9 +223,11 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         style={styles.gridCard}
         onPress={() => navigation.navigate('PlaylistDetail', { playlistId: item.id })}
       >
-        <View style={styles.artworkLarge}>
-          <Text style={styles.artworkIcon}>♪</Text>
-        </View>
+        <ArtworkImage
+          uri={item.coverUrl}
+          size={140}
+          fallbackLabel={item.name?.[0]?.toUpperCase() ?? '♪'}
+        />
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.name}
         </Text>
@@ -391,27 +425,18 @@ const styles = StyleSheet.create({
     maxWidth: '48%',
     gap: 8,
     marginBottom: 24,
-  },
-  artworkLarge: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 12,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
     alignItems: 'center',
-  },
-  artworkIcon: {
-    fontSize: 48,
-    color: '#8aa4ff',
   },
   gridTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
+    textAlign: 'center',
   },
   gridSubtitle: {
     fontSize: 12,
     color: '#9090a5',
+    textAlign: 'center',
   },
   songRow: {
     flexDirection: 'row',
@@ -420,19 +445,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#1e1e2c',
-  },
-  artworkSmall: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  artworkLetter: {
-    color: '#8aa4ff',
-    fontSize: 20,
-    fontWeight: '600',
   },
   songDetails: {
     flex: 1,

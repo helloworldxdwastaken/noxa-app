@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import {
+  Alert,
   ActivityIndicator,
   FlatList,
   StyleSheet,
@@ -8,14 +9,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { searchLibrary, searchOnlineTracks } from '../../api/service';
+import { requestDownloadAdd, searchLibrary, searchOnlineTracks } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { RemoteTrack, Song } from '../../types/models';
+import { playSong } from '../../services/player/PlayerService';
+import ArtworkImage from '../../components/ArtworkImage';
+import Icon from 'react-native-vector-icons/Feather';
 
 type SearchMode = 'local' | 'online';
 type OnlineSearchType = 'track' | 'artist' | 'album';
@@ -42,38 +46,82 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
     enabled: mode === 'online' && query.trim().length > 1,
   });
 
-  const results = mode === 'local' ? localResults : onlineResults;
+  const localSongs = useMemo(() => (Array.isArray(localResults) ? localResults : []), [localResults]);
+  const results = mode === 'local' ? localSongs : onlineResults;
   const isFetching = mode === 'local' ? localFetching : onlineFetching;
 
-  const renderLocalItem = ({ item }: { item: Song }) => (
-    <TouchableOpacity style={styles.resultRow}>
-      <View style={styles.artwork}>
-        <Text style={styles.artworkLetter}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
-      </View>
-      <View style={styles.resultInfo}>
-        <Text style={styles.resultTitle}>{item.title}</Text>
-        <Text style={styles.resultSubtitle}>{item.artist}</Text>
-      </View>
-    </TouchableOpacity>
+  const downloadMutation = useMutation<void, Error, RemoteTrack>({
+    mutationFn: (track: RemoteTrack) =>
+      requestDownloadAdd(track.title, track.artistName, track.albumTitle ?? undefined),
+    onSuccess: () => {
+      Alert.alert('Download queued', 'Track added to the download queue.');
+    },
+    onError: error => {
+      const message = error instanceof Error ? error.message : 'Failed to queue download.';
+      Alert.alert('Download failed', message);
+    },
+  });
+
+  const handlePlayLocalSong = useCallback(
+    (song: Song) => {
+      const queue = localSongs.filter(entry => entry.id !== song.id);
+      playSong(song, queue).catch(error => console.error('Failed to play song', error));
+    },
+    [localSongs],
   );
 
-  const renderOnlineItem = ({ item }: { item: RemoteTrack }) => (
-    <TouchableOpacity style={styles.resultRow}>
-      <View style={styles.artwork}>
-        <Text style={styles.artworkLetter}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
-      </View>
-      <View style={styles.resultInfo}>
-        <Text style={styles.resultTitle}>{item.title}</Text>
-        <Text style={styles.resultSubtitle}>{item.artistName}</Text>
-        {item.albumTitle && <Text style={styles.resultAlbum}>{item.albumTitle}</Text>}
-      </View>
-      <TouchableOpacity
-        style={styles.downloadBtn}
-        onPress={() => navigation.navigate('DownloadRequest')}
-      >
-        <Text style={styles.downloadIcon}>⬇</Text>
+  const renderLocalItem = useCallback(
+    ({ item }: { item: Song }) => (
+      <TouchableOpacity style={styles.resultRow} onPress={() => handlePlayLocalSong(item)}>
+        <ArtworkImage
+          uri={item.albumCover}
+          size={56}
+          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+        />
+        <View style={styles.resultInfo}>
+          <Text style={styles.resultTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.resultSubtitle} numberOfLines={1}>
+            {item.artist}
+          </Text>
+        </View>
       </TouchableOpacity>
-    </TouchableOpacity>
+    ),
+    [handlePlayLocalSong],
+  );
+
+  const renderOnlineItem = useCallback(
+    ({ item }: { item: RemoteTrack }) => (
+      <View style={styles.resultRow}>
+        <ArtworkImage
+          uri={item.image}
+          size={56}
+          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+        />
+        <View style={styles.resultInfo}>
+          <Text style={styles.resultTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.resultSubtitle} numberOfLines={1}>
+            {item.artistName}
+          </Text>
+          {item.albumTitle && <Text style={styles.resultAlbum}>{item.albumTitle}</Text>}
+        </View>
+        <TouchableOpacity
+          style={styles.downloadBtn}
+          onPress={() => downloadMutation.mutate(item)}
+          disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
+        >
+          {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
+            <ActivityIndicator color="#050505" size="small" />
+          ) : (
+            <Icon name="download" size={16} color="#050505" />
+          )}
+        </TouchableOpacity>
+      </View>
+    ),
+    [downloadMutation],
   );
 
   return (
@@ -96,7 +144,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setMode('local')}
         >
           <Text style={[styles.modeBtnText, mode === 'local' && styles.modeBtnTextActive]}>
-            💾 Local
+            Local
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -104,7 +152,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setMode('online')}
         >
           <Text style={[styles.modeBtnText, mode === 'online' && styles.modeBtnTextActive]}>
-            🌐 Online
+            Online
           </Text>
         </TouchableOpacity>
       </View>
@@ -158,7 +206,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
           ListEmptyComponent={
             query.trim().length <= 1 ? (
               <View style={styles.centered}>
-                <Text style={styles.emptyIcon}>🔍</Text>
+                <View style={styles.emptyIcon}>
+                  <Icon name="search" size={24} color="#8aa4ff" />
+                </View>
                 <Text style={styles.emptyTitle}>Search for music</Text>
                 <Text style={styles.emptyText}>
                   {mode === 'local'
@@ -168,7 +218,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
               </View>
             ) : (
               <View style={styles.centered}>
-                <Text style={styles.emptyIcon}>😔</Text>
+                <View style={styles.emptyIcon}>
+                  <Icon name="slash" size={24} color="#f87171" />
+                </View>
                 <Text style={styles.emptyTitle}>No results found</Text>
                 <Text style={styles.emptyText}>Try different keywords or check your spelling</Text>
               </View>
@@ -187,15 +239,17 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
           ListEmptyComponent={
             query.trim().length <= 1 ? (
               <View style={styles.centered}>
-                <Text style={styles.emptyIcon}>🔍</Text>
+                <View style={styles.emptyIcon}>
+                  <Icon name="search" size={24} color="#8aa4ff" />
+                </View>
                 <Text style={styles.emptyTitle}>Search for music</Text>
-                <Text style={styles.emptyText}>
-                  Discover millions of tracks online
-                </Text>
+                <Text style={styles.emptyText}>Discover millions of tracks online</Text>
               </View>
             ) : (
               <View style={styles.centered}>
-                <Text style={styles.emptyIcon}>😔</Text>
+                <View style={styles.emptyIcon}>
+                  <Icon name="slash" size={24} color="#f87171" />
+                </View>
                 <Text style={styles.emptyTitle}>No results found</Text>
                 <Text style={styles.emptyText}>Try different keywords or check your spelling</Text>
               </View>
@@ -279,7 +333,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   emptyIcon: {
-    fontSize: 48,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1f1f2e',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   emptyTitle: {
     fontSize: 18,
@@ -302,19 +361,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#282828',
-  },
-  artwork: {
-    width: 56,
-    height: 56,
-    borderRadius: 8,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  artworkLetter: {
-    fontSize: 24,
-    color: '#8aa4ff',
-    fontWeight: '600',
   },
   resultInfo: {
     flex: 1,
@@ -341,10 +387,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  downloadIcon: {
-    fontSize: 18,
-  },
 });
 
 export default SearchScreen;
-

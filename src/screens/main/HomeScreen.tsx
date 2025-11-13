@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useMemo } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -12,6 +12,9 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { fetchLibraryStats, fetchPlaylists, fetchSongs } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
+import ArtworkImage from '../../components/ArtworkImage';
+import { playSong } from '../../services/player/PlayerService';
+import Icon from 'react-native-vector-icons/Feather';
 
 const HomeScreen: React.FC = () => {
   const {
@@ -49,17 +52,36 @@ const HomeScreen: React.FC = () => {
     refetchTracks();
   };
 
+  const statCards = useMemo(
+    () => [
+      { label: 'Songs', value: stats?.totalSongs ?? '--', icon: 'music' as const },
+      { label: 'Artists', value: stats?.totalArtists ?? '--', icon: 'mic' as const },
+      { label: 'Albums', value: stats?.totalAlbums ?? '--', icon: 'disc' as const },
+      { label: 'Storage', value: stats?.totalStorage ?? '--', icon: 'hard-drive' as const },
+    ],
+    [stats?.totalAlbums, stats?.totalArtists, stats?.totalSongs, stats?.totalStorage],
+  );
+
+  const handlePlayTrack = useCallback(
+    (song: Song) => {
+      const queue = recentTracks.filter(track => track.id !== song.id);
+      playSong(song, queue).catch(error => console.error('Failed to start playback', error));
+    },
+    [recentTracks],
+  );
+
   const renderPlaylistItem = ({ item }: { item: Playlist }) => (
     <TouchableOpacity
       style={styles.playlistCard}
       onPress={() => {
-        // TODO: Navigate to playlist detail when screen is implemented
         console.log('Navigate to playlist', item.id);
       }}
     >
-      <View style={styles.playlistArtwork}>
-        <Text style={styles.playlistIcon}>♪</Text>
-      </View>
+      <ArtworkImage
+        uri={item.coverUrl}
+        size={88}
+        fallbackLabel={item.name?.[0]?.toUpperCase() ?? '♪'}
+      />
       <Text style={styles.playlistName} numberOfLines={2}>
         {item.name}
       </Text>
@@ -68,10 +90,12 @@ const HomeScreen: React.FC = () => {
   );
 
   const renderRecentTrack = ({ item }: { item: Song }) => (
-    <View style={styles.trackCard}>
-      <View style={styles.trackArtwork}>
-        <Text style={styles.trackIcon}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
-      </View>
+    <TouchableOpacity style={styles.trackCard} onPress={() => handlePlayTrack(item)}>
+      <ArtworkImage
+        uri={item.albumCover}
+        size={64}
+        fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+      />
       <View style={styles.trackInfo}>
         <Text style={styles.trackTitle} numberOfLines={1}>
           {item.title}
@@ -80,7 +104,7 @@ const HomeScreen: React.FC = () => {
           {item.artist}
         </Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
@@ -97,26 +121,15 @@ const HomeScreen: React.FC = () => {
 
       {/* Library Stats */}
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>🎵</Text>
-          <Text style={styles.statValue}>{stats?.totalSongs ?? '--'}</Text>
-          <Text style={styles.statLabel}>Songs</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>🎤</Text>
-          <Text style={styles.statValue}>{stats?.totalArtists ?? '--'}</Text>
-          <Text style={styles.statLabel}>Artists</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>💿</Text>
-          <Text style={styles.statValue}>{stats?.totalAlbums ?? '--'}</Text>
-          <Text style={styles.statLabel}>Albums</Text>
-        </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statIcon}>💾</Text>
-          <Text style={styles.statValue}>{stats?.totalStorage ?? '--'}</Text>
-          <Text style={styles.statLabel}>Storage</Text>
-        </View>
+        {statCards.map(card => (
+          <View style={styles.statCard} key={card.label}>
+            <View style={styles.statIcon}>
+              <Icon name={card.icon} size={18} color="#1db954" />
+            </View>
+            <Text style={styles.statValue}>{card.value}</Text>
+            <Text style={styles.statLabel}>{card.label}</Text>
+          </View>
+        ))}
       </View>
 
       {/* Your Playlists Section */}
@@ -189,16 +202,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   statCard: {
-    flex: 1,
-    minWidth: '45%',
+    flexBasis: '48%',
+    flexGrow: 1,
     backgroundColor: '#121212',
     borderRadius: 16,
     padding: 20,
-    alignItems: 'center',
     gap: 8,
   },
   statIcon: {
-    fontSize: 32,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(29,185,84,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   statValue: {
     fontSize: 24,
@@ -232,23 +249,14 @@ const styles = StyleSheet.create({
   },
   horizontalList: {
     paddingHorizontal: 24,
-    gap: 16,
   },
   playlistCard: {
     width: 160,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#121212',
+    marginRight: 16,
     gap: 8,
-  },
-  playlistArtwork: {
-    width: 160,
-    height: 160,
-    borderRadius: 12,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  playlistIcon: {
-    fontSize: 48,
-    color: '#8aa4ff',
   },
   playlistName: {
     fontSize: 14,
@@ -260,23 +268,18 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   trackCard: {
-    width: 160,
-    gap: 8,
-  },
-  trackArtwork: {
-    width: 160,
-    height: 160,
-    borderRadius: 12,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
+    width: 220,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: '#121212',
+    marginRight: 16,
+    gap: 12,
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  trackIcon: {
-    fontSize: 48,
-    color: '#8aa4ff',
   },
   trackInfo: {
     gap: 4,
+    flex: 1,
   },
   trackTitle: {
     fontSize: 14,
@@ -294,4 +297,3 @@ const styles = StyleSheet.create({
 });
 
 export default HomeScreen;
-

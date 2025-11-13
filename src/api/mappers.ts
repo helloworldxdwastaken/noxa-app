@@ -79,6 +79,7 @@ export const mapPlaylist = (raw: any): Playlist => ({
     normalizeString(raw?.cover_url) ??
     normalizeString(raw?.coverUrl) ??
     normalizeString(raw?.coverURL) ??
+    normalizeString(raw?.artwork) ??
     null,
   trackCount:
     typeof raw?.track_count === 'number'
@@ -225,4 +226,3 @@ export const mapRemoteSearchResponse = (raw: RemoteSearchResponse): RemoteTrack[
   const list = data ?? items ?? results ?? tracks ?? [];
   return list.map(mapRemoteTrack);
 };
-
