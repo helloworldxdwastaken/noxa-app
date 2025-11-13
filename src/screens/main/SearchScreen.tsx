@@ -3,6 +3,8 @@ import {
   Alert,
   ActivityIndicator,
   FlatList,
+  Keyboard,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -113,7 +115,10 @@ const SearchScreen: React.FC<Props> = () => {
         </View>
         <TouchableOpacity
           style={styles.downloadBtn}
-          onPress={() => setDownloadOptionsTrack(item)}
+          onPress={() => {
+            Keyboard.dismiss();
+            setDownloadOptionsTrack(item);
+          }}
           disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
         >
           {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
@@ -261,9 +266,9 @@ const SearchScreen: React.FC<Props> = () => {
         />
       )}
       {downloadOptionsTrack ? (
-        <View style={styles.sheetOverlay}>
+        <View style={styles.dialogOverlay}>
           <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setDownloadOptionsTrack(null)} />
-          <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={styles.dialogContainer}>
             <Text style={styles.sheetTitle}>Choose an action</Text>
             <TouchableOpacity
               style={styles.sheetAction}
@@ -298,35 +303,47 @@ const SearchScreen: React.FC<Props> = () => {
                 <Text style={styles.sheetActionSubtext}>Choose where to store this track</Text>
               </View>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.dialogCancelBtn} onPress={() => setDownloadOptionsTrack(null)}>
+              <Text style={styles.dialogCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ) : null}
       {playlistPickerTrack ? (
-        <View style={styles.sheetOverlay}>
+        <View style={styles.dialogOverlay}>
           <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setPlaylistPickerTrack(null)} />
-          <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <View style={[styles.dialogContainer, styles.playlistDialog]}>
             <Text style={styles.sheetTitle}>Select playlist</Text>
             {playlists.length === 0 ? (
               <Text style={styles.sheetEmpty}>Create a playlist first.</Text>
             ) : (
-              playlists.map(playlist => (
-                <TouchableOpacity
-                  key={playlist.id}
-                  style={styles.sheetAction}
-                  onPress={() => {
-                    downloadMutation.mutate(playlistPickerTrack);
-                    addTrackToPlaylist(playlist.id, Number(playlistPickerTrack.id)).catch(error => {
-                      console.error('Failed to add track', error);
-                      Alert.alert('Unable to add track', 'Please try again later.');
-                    });
-                    setPlaylistPickerTrack(null);
-                  }}
-                >
-                  <Icon name="folder-plus" size={18} color="#ffffff" />
-                  <Text style={styles.sheetActionText}>{playlist.name}</Text>
-                </TouchableOpacity>
-              ))
+              <ScrollView
+                style={styles.playlistScroll}
+                contentContainerStyle={styles.playlistList}
+                showsVerticalScrollIndicator
+              >
+                {playlists.map(playlist => (
+                  <TouchableOpacity
+                    key={playlist.id}
+                    style={styles.sheetAction}
+                    onPress={() => {
+                      downloadMutation.mutate(playlistPickerTrack);
+                      addTrackToPlaylist(playlist.id, Number(playlistPickerTrack.id)).catch(error => {
+                        console.error('Failed to add track', error);
+                        Alert.alert('Unable to add track', 'Please try again later.');
+                      });
+                      setPlaylistPickerTrack(null);
+                    }}
+                  >
+                    <Icon name="folder-plus" size={18} color="#ffffff" />
+                    <Text style={styles.sheetActionText}>{playlist.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             )}
+            <TouchableOpacity style={styles.dialogCancelBtn} onPress={() => setPlaylistPickerTrack(null)}>
+              <Text style={styles.dialogCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ) : null}
@@ -460,21 +477,31 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  sheetOverlay: {
+  dialogOverlay: {
     ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  sheetContainer: {
+  dialogContainer: {
+    width: '88%',
     backgroundColor: '#0d0d14',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    borderRadius: 24,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
     gap: 16,
+  },
+  playlistDialog: {
+    maxHeight: '70%',
+  },
+  playlistScroll: {
+    maxHeight: 260,
+  },
+  playlistList: {
+    gap: 8,
   },
   sheetTitle: {
     color: '#ffffff',
@@ -510,6 +537,18 @@ const styles = StyleSheet.create({
   sheetDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#1c1c23',
+  },
+  dialogCancelBtn: {
+    marginTop: 4,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#272738',
+  },
+  dialogCancelText: {
+    color: '#d6d6e4',
+    fontWeight: '600',
   },
 });
 

@@ -354,7 +354,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     </TouchableOpacity>
   );
 
-  if (isLoading) {
+  const waitingForRemote = !connectivity.isOffline && isLoading && baseTracks.length === 0;
+
+  if (waitingForRemote) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color="#ffffff" />

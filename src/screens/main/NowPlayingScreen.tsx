@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Animated,
   GestureResponderEvent,
   Modal,
@@ -50,12 +51,15 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
   const [actionsVisible, setActionsVisible] = useState(false);
+  const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
+  const shuffleBackupRef = useRef<Track[] | null>(null);
 
   const loadQueue = useCallback(async () => {
     try {
@@ -105,10 +109,10 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   useEffect(() => {
-    if (actionsVisible && playlists.length === 0 && !loadingPlaylists) {
+    if ((actionsVisible || playlistPickerVisible) && playlists.length === 0 && !loadingPlaylists) {
       loadPlaylists();
     }
-  }, [actionsVisible, playlists.length, loadingPlaylists, loadPlaylists]);
+  }, [actionsVisible, playlistPickerVisible, playlists.length, loadingPlaylists, loadPlaylists]);
 
   const activeIndex = useMemo(
     () => queue.findIndex(item => item.id === track?.id),
@@ -148,6 +152,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const duration = track?.duration ?? progress.duration;
   const position = progress.position;
   const progressPct = duration ? Math.min(100, (position / duration) * 100) : 0;
+  const canShuffle = queue.length > 1;
 
   const handleSkipNext = async () => {
     try {
@@ -176,6 +181,65 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     await TrackPlayer.setRepeatMode(nextMode);
   };
 
+  const shuffleArray = useCallback((items: Track[]) => {
+    const clone = [...items];
+    for (let i = clone.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const temp = clone[i];
+      clone[i] = clone[j];
+      clone[j] = temp;
+    }
+    return clone;
+  }, []);
+
+  const handleShuffleToggle = useCallback(async () => {
+    if (!track || !canShuffle) {
+      return;
+    }
+    const currentPosition = position;
+    const wasPlaying = isPlaying;
+    try {
+      if (!shuffleEnabled) {
+        shuffleBackupRef.current = queue;
+        const currentTrack = queue.find(item => item.id === track.id);
+        const rest = queue.filter(item => item.id !== track.id);
+        const shuffledRest = shuffleArray(rest);
+        const newQueue = currentTrack ? [currentTrack, ...shuffledRest] : shuffledRest;
+        await TrackPlayer.reset();
+        await TrackPlayer.add(newQueue);
+        if (currentTrack) {
+          await TrackPlayer.skip(currentTrack.id);
+          if (Number.isFinite(currentPosition) && currentPosition > 0) {
+            await TrackPlayer.seekTo(currentPosition);
+          }
+        }
+        if (wasPlaying) {
+          await TrackPlayer.play();
+        }
+        setQueue(newQueue);
+        setShuffleEnabled(true);
+      } else {
+        const originalQueue = shuffleBackupRef.current ?? queue;
+        await TrackPlayer.reset();
+        await TrackPlayer.add(originalQueue);
+        if (track) {
+          await TrackPlayer.skip(track.id);
+          if (Number.isFinite(currentPosition) && currentPosition > 0) {
+            await TrackPlayer.seekTo(currentPosition);
+          }
+        }
+        if (wasPlaying) {
+          await TrackPlayer.play();
+        }
+        shuffleBackupRef.current = null;
+        setQueue(originalQueue);
+        setShuffleEnabled(false);
+      }
+    } catch (error) {
+      console.error('Failed to toggle shuffle', error);
+    }
+  }, [track, canShuffle, position, isPlaying, shuffleEnabled, queue, shuffleArray]);
+
   const panResponder = useMemo(
     () =>
       PanResponder.create({
@@ -197,6 +261,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       await addTrackToPlaylist(playlistId, Number(track.id));
       Alert.alert('Added', 'Track added to playlist.');
       setActionsVisible(false);
+      setPlaylistPickerVisible(false);
     } catch (error) {
       Alert.alert('Failed', error instanceof Error ? error.message : 'Unable to add to playlist');
     }
@@ -305,9 +370,17 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           <TouchableOpacity style={styles.controlBtn} onPress={handleSkipNext}>
             <Icon name="skip-forward" size={28} color="#ffffff" />
           </TouchableOpacity>
-          <View style={[styles.controlBtn, styles.disabledControl]}>
-            <Icon name="shuffle" size={20} color="#6b7280" />
-          </View>
+          <TouchableOpacity
+            style={[
+              styles.controlBtn,
+              !canShuffle && styles.disabledControl,
+              shuffleEnabled && styles.shuffleActive,
+            ]}
+            onPress={handleShuffleToggle}
+            disabled={!canShuffle}
+          >
+            <Icon name="shuffle" size={20} color={shuffleEnabled ? '#1db954' : '#ffffff'} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.queueSection}>
@@ -350,23 +423,19 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
           <Text style={styles.sheetTitle}>Track Actions</Text>
           <View style={styles.sheetSection}>
-            <Text style={styles.sheetSubtitle}>Add to Playlist</Text>
-            {loadingPlaylists ? (
-              <ActivityIndicator color="#ffffff" />
-            ) : playlists.length === 0 ? (
-              <Text style={styles.sheetEmpty}>No playlists available</Text>
-            ) : (
-              playlists.map(playlist => (
-                <TouchableOpacity
-                  key={playlist.id}
-                  style={styles.sheetAction}
-                  onPress={() => handleAddToPlaylist(playlist.id)}
-                >
-                  <Icon name="plus-circle" size={18} color="#ffffff" />
-                  <Text style={styles.sheetActionText}>{playlist.name}</Text>
-                </TouchableOpacity>
-              ))
-            )}
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => {
+                if (playlists.length === 0 && !loadingPlaylists) {
+                  loadPlaylists();
+                }
+                setActionsVisible(false);
+                setPlaylistPickerVisible(true);
+              }}
+            >
+              <Icon name="plus-circle" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>Add to playlist</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.sheetSection}>
             <Text style={styles.sheetSubtitle}>Library</Text>
@@ -379,6 +448,42 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[styles.sheetActionText, styles.sheetDangerText]}>Delete permanently</Text>
             </TouchableOpacity>
           </View>
+        </View>
+      </Modal>
+      <Modal
+        transparent
+        visible={playlistPickerVisible}
+        animationType="fade"
+        onRequestClose={() => setPlaylistPickerVisible(false)}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={() => setPlaylistPickerVisible(false)} />
+        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <Text style={styles.sheetTitle}>Select playlist</Text>
+          {loadingPlaylists ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : playlists.length === 0 ? (
+            <Text style={styles.sheetEmpty}>Create a playlist first.</Text>
+          ) : (
+            <FlatList
+              data={playlists}
+              keyExtractor={item => `${item.id}`}
+              style={styles.playlistList}
+              contentContainerStyle={styles.playlistListContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.sheetAction}
+                  onPress={() => handleAddToPlaylist(item.id)}
+                >
+                  <Icon name="folder-plus" size={18} color="#ffffff" />
+                  <Text style={styles.sheetActionText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+          <TouchableOpacity style={styles.sheetAction} onPress={() => setPlaylistPickerVisible(false)}>
+            <Icon name="x" size={18} color="#f87171" />
+            <Text style={[styles.sheetActionText, styles.sheetDangerText]}>Cancel</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
     </View>
@@ -502,6 +607,10 @@ const styles = StyleSheet.create({
   },
   disabledControl: {
     opacity: 0.5,
+  },
+  shuffleActive: {
+    borderWidth: 1,
+    borderColor: 'rgba(29,185,84,0.4)',
   },
   playBtn: {
     width: 76,
@@ -631,6 +740,12 @@ const styles = StyleSheet.create({
   sheetEmpty: {
     color: '#6b7280',
     fontSize: 14,
+  },
+  playlistList: {
+    maxHeight: 240,
+  },
+  playlistListContent: {
+    gap: 4,
   },
 });
 
