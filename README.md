@@ -27,6 +27,9 @@ Cross-platform music streaming app for iOS and Android with offline caching, bui
 # Install dependencies
 npm install
 
+# Link vector icon fonts (required after installing dependencies)
+npx react-native-asset
+
 # iOS setup
 cd ios
 pod install

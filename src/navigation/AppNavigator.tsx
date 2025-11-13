@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import Icon from 'react-native-vector-icons/Feather';
 
 import { useAuth } from '../context/AuthContext';
 import MiniPlayer from '../components/MiniPlayer';
@@ -36,6 +37,14 @@ const navigationTheme = {
   },
 };
 
+const TAB_ICON_MAP: Record<keyof AppTabsParamList, string> = {
+  Home: 'home',
+  Library: 'layers',
+  Search: 'search',
+  Downloads: 'download',
+  Settings: 'settings',
+};
+
 const AuthNavigator = () => (
   <AuthStack.Navigator
     screenOptions={{
@@ -50,55 +59,34 @@ const AuthNavigator = () => (
 
 const AppTabsNavigator = () => (
   <Tabs.Navigator
-    screenOptions={{
-      headerTitleAlign: 'center',
-      tabBarStyle: {
-        backgroundColor: '#121212',
-        borderTopWidth: 0,
-        height: 64,
-        paddingBottom: 12,
-        paddingTop: 12,
-      },
-      tabBarActiveTintColor: '#ffffff',
-      tabBarInactiveTintColor: '#9090a5',
-      tabBarLabelStyle: tabLabelStyles.label,
-    }}
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarShowLabel: false,
+      tabBarStyle: tabStyles.tabBar,
+      tabBarItemStyle: tabStyles.tabItem,
+      tabBarBackground: () => <View style={tabStyles.tabBackground} />,
+      tabBarIcon: ({ focused }) => (
+        <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
+          <Icon
+            name={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+            size={18}
+            color={focused ? '#ffffff' : '#7c8297'}
+          />
+          <Text
+            style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]}
+            numberOfLines={1}
+          >
+            {route.name}
+          </Text>
+        </View>
+      ),
+    })}
   >
-    <Tabs.Screen
-      name="Home"
-      component={HomeScreen}
-      options={{
-        title: 'Home',
-      }}
-    />
-    <Tabs.Screen
-      name="Library"
-      component={LibraryScreen}
-      options={{
-        title: 'Library',
-      }}
-    />
-    <Tabs.Screen
-      name="Search"
-      component={SearchScreen}
-      options={{
-        title: 'Search',
-      }}
-    />
-    <Tabs.Screen
-      name="Downloads"
-      component={DownloadsScreen}
-      options={{
-        title: 'Downloads',
-      }}
-    />
-    <Tabs.Screen
-      name="Settings"
-      component={SettingsScreen}
-      options={{
-        title: 'Settings',
-      }}
-    />
+    <Tabs.Screen name="Home" component={HomeScreen} />
+    <Tabs.Screen name="Library" component={LibraryScreen} />
+    <Tabs.Screen name="Search" component={SearchScreen} />
+    <Tabs.Screen name="Downloads" component={DownloadsScreen} />
+    <Tabs.Screen name="Settings" component={SettingsScreen} />
   </Tabs.Navigator>
 );
 
@@ -144,9 +132,48 @@ const AppNavigator = () => {
 
 export default AppNavigator;
 
-const tabLabelStyles = StyleSheet.create({
-  label: {
+const tabStyles = StyleSheet.create({
+  tabBar: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 20,
+    borderRadius: 999,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+    elevation: 0,
+    height: 84,
+    paddingVertical: 10,
+  },
+  tabBackground: {
+    flex: 1,
+    backgroundColor: '#0d0d14',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  tabItem: {
+    borderRadius: 999,
+    paddingVertical: 10,
+  },
+  iconBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+  iconBadgeActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  iconLabel: {
     fontSize: 12,
+    fontWeight: '600',
+    color: '#7c8297',
+  },
+  iconLabelActive: {
+    color: '#ffffff',
   },
 });
-

@@ -18,10 +18,9 @@ import { useOffline } from '../../context/OfflineContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
-import { playSong } from '../../services/player/PlayerService';
 import ArtworkImage from '../../components/ArtworkImage';
 
-type LibraryView = 'artists' | 'albums' | 'tracks' | 'playlists';
+type LibraryView = 'artists' | 'albums' | 'playlists';
 
 interface Artist {
   id: string;
@@ -151,35 +150,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     refetchPlaylists();
   };
 
-  const handlePlaySong = useCallback(
-    (song: Song) => {
-      const queue = songs.filter(entry => entry.id !== song.id);
-      playSong(song, queue).catch(error => console.error('Failed to play song', error));
-    },
-    [songs],
-  );
-
-  const renderSong = useCallback(
-    ({ item }: { item: Song }) => (
-      <TouchableOpacity style={styles.songRow} onPress={() => handlePlaySong(item)}>
-        <ArtworkImage
-          uri={item.albumCover}
-          size={52}
-          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
-        />
-        <View style={styles.songDetails}>
-          <Text style={styles.songTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.songSubtitle} numberOfLines={1}>
-            {item.artist}
-          </Text>
-        </View>
-      </TouchableOpacity>
-    ),
-    [handlePlaySong],
-  );
-
   const renderArtist = useCallback(
     ({ item }: { item: Artist }) => (
       <TouchableOpacity style={styles.gridCard}>
@@ -221,7 +191,15 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     ({ item }: { item: Playlist }) => (
       <TouchableOpacity
         style={styles.gridCard}
-        onPress={() => navigation.navigate('PlaylistDetail', { playlistId: item.id })}
+        onPress={() =>
+          navigation.navigate('PlaylistDetail', {
+            playlistId: item.id,
+            playlistName: item.name,
+            description: item.description,
+            coverUrl: item.coverUrl ?? undefined,
+            trackCount: item.trackCount,
+          })
+        }
       >
         <ArtworkImage
           uri={item.coverUrl}
@@ -256,23 +234,9 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const currentData =
-    activeView === 'artists'
-      ? artists
-      : activeView === 'albums'
-        ? albums
-        : activeView === 'playlists'
-          ? playlists
-          : songs;
+  const currentData = activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists;
 
-  const currentRenderer =
-    activeView === 'artists'
-      ? renderArtist
-      : activeView === 'albums'
-        ? renderAlbum
-        : activeView === 'playlists'
-          ? renderPlaylist
-          : renderSong;
+  const currentRenderer = activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist;
 
   return (
     <View style={styles.container}>
@@ -302,14 +266,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
             📂 Playlists
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeView === 'tracks' && styles.tabActive]}
-          onPress={() => setActiveView('tracks')}
-        >
-          <Text style={[styles.tabText, activeView === 'tracks' && styles.tabTextActive]}>
-            🎵 Tracks
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -317,9 +273,9 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         data={currentData as any[]}
         keyExtractor={item => `${item.id}`}
         renderItem={currentRenderer as any}
-        numColumns={activeView === 'tracks' ? 1 : 2}
+        numColumns={2}
         key={activeView}
-        columnWrapperStyle={activeView !== 'tracks' ? styles.gridRow : undefined}
+        columnWrapperStyle={styles.gridRow}
         contentContainerStyle={currentData.length === 0 ? styles.emptyContainer : styles.listContent}
         refreshControl={
           <RefreshControl
@@ -331,7 +287,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         ListEmptyComponent={
           <View style={styles.centered}>
             <Text style={styles.emptyIcon}>
-              {activeView === 'artists' ? '🎤' : activeView === 'albums' ? '💿' : activeView === 'playlists' ? '📂' : '🎵'}
+              {activeView === 'artists' ? '🎤' : activeView === 'albums' ? '💿' : '📂'}
             </Text>
             <Text style={styles.emptyText}>
               {connectivity.isOffline
@@ -437,26 +393,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#9090a5',
     textAlign: 'center',
-  },
-  songRow: {
-    flexDirection: 'row',
-    gap: 12,
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#1e1e2c',
-  },
-  songDetails: {
-    flex: 1,
-  },
-  songTitle: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  songSubtitle: {
-    color: '#9090a5',
-    marginTop: 4,
   },
 });
 

@@ -10,13 +10,19 @@ import {
   View,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { fetchLibraryStats, fetchPlaylists, fetchSongs } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 import Icon from 'react-native-vector-icons/Feather';
+import type { AppStackParamList } from '../../navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 const HomeScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp>();
   const {
     data: stats,
     isLoading: statsLoading,
@@ -74,7 +80,13 @@ const HomeScreen: React.FC = () => {
     <TouchableOpacity
       style={styles.playlistCard}
       onPress={() => {
-        console.log('Navigate to playlist', item.id);
+        navigation.navigate('PlaylistDetail', {
+          playlistId: item.id,
+          playlistName: item.name,
+          description: item.description,
+          coverUrl: item.coverUrl ?? undefined,
+          trackCount: item.trackCount,
+        });
       }}
     >
       <ArtworkImage

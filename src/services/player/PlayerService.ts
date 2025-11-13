@@ -8,7 +8,7 @@ import TrackPlayer, {
 } from 'react-native-track-player';
 
 import { offlineManager } from '../offline/OfflineManager';
-import { getStreamUrl } from '../../api/service';
+import { getApiBaseUrl, getStreamUrl } from '../../api/service';
 import type { Song } from '../../types/models';
 
 let isSetup = false;
@@ -48,13 +48,32 @@ const resolveSongUrl = (song: Song) => {
   return getStreamUrl(song.id) ?? `https://stream.noxamusic.com/api/library/stream/${song.id}`;
 };
 
+const isAbsoluteUri = (uri: string) =>
+  /^https?:\/\//.test(uri) || /^file:/.test(uri) || /^content:/.test(uri) || /^data:/.test(uri);
+
+const resolveArtworkUri = (song: Song) => {
+  const offlineArtwork = offlineManager.artworkUri(song.id);
+  if (offlineArtwork) {
+    return offlineArtwork;
+  }
+  if (!song.albumCover) {
+    return undefined;
+  }
+  if (isAbsoluteUri(song.albumCover)) {
+    return song.albumCover;
+  }
+  const base = getApiBaseUrl().replace(/\/+$/, '');
+  const path = song.albumCover.startsWith('/') ? song.albumCover : `/${song.albumCover}`;
+  return `${base}${path}`;
+};
+
 export const songToTrack = (song: Song): Track => ({
   id: `${song.id}`,
   url: resolveSongUrl(song),
   title: song.title,
   artist: song.artist,
   album: song.album ?? undefined,
-  artwork: offlineManager.artworkUri(song.id) ?? song.albumCover ?? undefined,
+  artwork: resolveArtworkUri(song),
   duration: song.duration ?? undefined,
 });
 
@@ -64,6 +83,7 @@ export const playSong = async (song: Song, queue: Song[] = []) => {
   const tracks = [song, ...queue].map(songToTrack);
   await TrackPlayer.add(tracks);
   await TrackPlayer.play();
+  await updateNowPlaying(song);
 };
 
 export const updateNowPlaying = async (song: Song) => {
@@ -94,4 +114,3 @@ export const registerPlayerListeners = () => {
   TrackPlayer.addEventListener(Event.RemoteNext, TrackPlayer.skipToNext);
   TrackPlayer.addEventListener(Event.RemotePrevious, TrackPlayer.skipToPrevious);
 };
-

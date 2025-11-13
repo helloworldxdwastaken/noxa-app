@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -17,29 +17,57 @@ import {
   fetchPlaylistTracks,
   removeTrackFromPlaylist,
   updatePlaylist,
+  fetchPlaylists,
 } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
 import type { AppStackParamList } from '../../navigation/types';
-import type { Song } from '../../types/models';
+import type { Playlist, Song } from '../../types/models';
+import ArtworkImage from '../../components/ArtworkImage';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'PlaylistDetail'>;
 
 const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { playlistId } = route.params;
+  const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
   const queryClient = useQueryClient();
-  const { downloadPlaylist, removePlaylist, isPlaylistDownloaded } = useOffline();
+  const { state: offlineState, downloadPlaylist, removePlaylist, isPlaylistDownloaded } = useOffline();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState('');
-  const [editedDesc, setEditedDesc] = useState('');
+  const [nameInput, setNameInput] = useState(initialName ?? '');
+  const [descInput, setDescInput] = useState(initialDescription ?? '');
 
   const { data: tracks = [], isLoading, refetch } = useQuery({
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => fetchPlaylistTracks(playlistId),
   });
 
+  const { data: playlistMeta } = useQuery({
+    queryKey: ['playlists', playlistId, 'meta'],
+    queryFn: async () => {
+      const list = await fetchPlaylists();
+      return list.find(item => item.id === playlistId);
+    },
+  });
+
+  const derivedName = playlistMeta?.name ?? initialName ?? 'Untitled Playlist';
+  const derivedDesc = playlistMeta?.description ?? initialDescription ?? '';
+  const derivedCover = playlistMeta?.coverUrl ?? initialCover ?? null;
+  const derivedTrackCount = playlistMeta?.trackCount ?? route.params.trackCount ?? tracks.length;
+  const playlistProgress = offlineState.downloadProgress[playlistId] ?? 0;
+  const isDownloading = offlineState.activePlaylists.includes(playlistId);
+  const isDownloaded = isPlaylistDownloaded(playlistId);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setNameInput(derivedName);
+      setDescInput(derivedDesc);
+    }
+  }, [derivedName, derivedDesc, isEditing]);
+
+  const displayName = isEditing ? nameInput : derivedName;
+  const displayDesc = isEditing ? descInput : derivedDesc;
+
   const updateMutation = useMutation({
-    mutationFn: () => updatePlaylist(playlistId, { name: editedName, description: editedDesc }),
+    mutationFn: () => updatePlaylist(playlistId, { name: nameInput, description: descInput }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
       setIsEditing(false);
@@ -85,13 +113,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       Alert.alert('No Tracks', 'Add tracks to this playlist before downloading.');
       return;
     }
-    const playlist = {
+    const playlistPayload: Playlist = {
       id: playlistId,
-      name: editedName,
-      trackCount: tracks.length,
-      coverUrl: null,
+      name: derivedName,
+      description: derivedDesc,
+      coverUrl: derivedCover,
+      trackCount: derivedTrackCount ?? tracks.length,
     };
-    await downloadPlaylist(playlist, tracks);
+    await downloadPlaylist(playlistPayload, tracks);
     Alert.alert('Download Started', 'Playlist is being downloaded for offline playback.');
   };
 
@@ -109,14 +138,13 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const renderTrack = ({ item, index }: { item: Song; index: number }) => (
-    <TouchableOpacity
-      style={styles.trackRow}
-      onLongPress={() => handleRemoveTrack(item)}
-    >
+    <TouchableOpacity style={styles.trackRow} onLongPress={() => handleRemoveTrack(item)}>
       <Text style={styles.trackNumber}>{index + 1}</Text>
-      <View style={styles.trackArtwork}>
-        <Text style={styles.trackIcon}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
-      </View>
+      <ArtworkImage
+        uri={item.albumCover}
+        size={48}
+        fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+      />
       <View style={styles.trackInfo}>
         <Text style={styles.trackTitle} numberOfLines={1}>
           {item.title}
@@ -144,34 +172,43 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <View style={styles.headerInfo}>
-          {isEditing ? (
-            <>
-              <TextInput
-                style={styles.nameInput}
-                value={editedName}
-                onChangeText={setEditedName}
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+          <View style={styles.coverWrapper}>
+            <ArtworkImage
+              uri={derivedCover ?? tracks[0]?.albumCover ?? null}
+              size={84}
+              fallbackLabel={displayName?.[0]?.toUpperCase() ?? '♪'}
+            />
+          </View>
+          <View style={styles.headerInfo}>
+            {isEditing ? (
+              <>
+                <TextInput
+                  style={styles.nameInput}
+                  value={nameInput}
+                onChangeText={setNameInput}
                 placeholder="Playlist name"
                 placeholderTextColor="#606072"
               />
               <TextInput
                 style={styles.descInput}
-                value={editedDesc}
-                onChangeText={setEditedDesc}
+                value={descInput}
+                onChangeText={setDescInput}
                 placeholder="Description (optional)"
                 placeholderTextColor="#606072"
               />
             </>
           ) : (
             <>
-              <Text style={styles.playlistName}>{editedName || 'Untitled Playlist'}</Text>
-              {editedDesc && <Text style={styles.playlistDesc}>{editedDesc}</Text>}
-              <Text style={styles.trackCount}>{tracks.length} songs</Text>
+              <Text style={styles.playlistName}>{displayName}</Text>
+              {displayDesc ? <Text style={styles.playlistDesc}>{displayDesc}</Text> : null}
+              <Text style={styles.trackCount}>{derivedTrackCount} songs</Text>
             </>
           )}
+          </View>
         </View>
       </View>
 
@@ -197,8 +234,8 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <TouchableOpacity
               style={styles.actionBtn}
               onPress={() => {
-                setEditedName(editedName);
-                setEditedDesc(editedDesc);
+                setNameInput(derivedName);
+                setDescInput(derivedDesc);
                 setIsEditing(true);
               }}
             >
@@ -207,13 +244,17 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
               <Text style={styles.actionTextDanger}>🗑️ Delete</Text>
             </TouchableOpacity>
-            {isPlaylistDownloaded(playlistId) ? (
+            {isDownloading ? (
+              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnDisabled]} disabled>
+                <Text style={styles.actionText}>{`Downloading ${Math.round(playlistProgress * 100)}%`}</Text>
+              </TouchableOpacity>
+            ) : isDownloaded ? (
               <TouchableOpacity style={styles.actionBtn} onPress={handleRemoveOffline}>
-                <Text style={styles.actionText}>✓ Downloaded</Text>
+                <Text style={styles.actionText}>✓ Remove Offline</Text>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.actionBtn} onPress={handleDownloadOffline}>
-                <Text style={styles.actionText}>⬇ Offline</Text>
+                <Text style={styles.actionText}>⬇ Save Offline</Text>
               </TouchableOpacity>
             )}
           </>
@@ -253,11 +294,24 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
+    paddingBottom: 12,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 16,
+  },
+  coverWrapper: {
+    borderRadius: 16,
+    overflow: 'hidden',
   },
   backBtn: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: '#121212',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   backIcon: {
     fontSize: 28,
@@ -265,6 +319,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     gap: 8,
+    flex: 1,
   },
   playlistName: {
     fontSize: 32,
@@ -309,6 +364,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#121212',
   },
+  actionBtnDisabled: {
+    opacity: 0.6,
+  },
   actionText: {
     color: '#ffffff',
     fontSize: 14,
@@ -332,19 +390,6 @@ const styles = StyleSheet.create({
     width: 24,
     color: '#9090a5',
     fontSize: 14,
-  },
-  trackArtwork: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: '#282828',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  trackIcon: {
-    fontSize: 20,
-    color: '#8aa4ff',
-    fontWeight: '600',
   },
   trackInfo: {
     flex: 1,
@@ -376,4 +421,3 @@ const styles = StyleSheet.create({
 });
 
 export default PlaylistDetailScreen;
-
