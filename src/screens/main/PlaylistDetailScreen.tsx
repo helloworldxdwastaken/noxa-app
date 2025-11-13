@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+
 import {
   deletePlaylist,
   fetchPlaylistTracks,
@@ -25,6 +26,7 @@ import { useOffline } from '../../context/OfflineContext';
 import type { AppStackParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
+import { playSong } from '../../services/player/PlayerService';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'PlaylistDetail'>;
 
@@ -140,8 +142,20 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     ]);
   };
 
+  const handlePlaySong = useCallback(
+    (song: Song) => {
+      const queue = tracks.filter(track => track.id !== song.id);
+      playSong(song, queue).catch(error => console.error('Failed to start playback', error));
+    },
+    [tracks],
+  );
+
   const renderTrack = ({ item, index }: { item: Song; index: number }) => (
-    <TouchableOpacity style={styles.trackRow} onLongPress={() => handleRemoveTrack(item)}>
+    <TouchableOpacity
+      style={styles.trackRow}
+      onPress={() => handlePlaySong(item)}
+      onLongPress={() => handleRemoveTrack(item)}
+    >
       <Text style={styles.trackNumber}>{index + 1}</Text>
       <ArtworkImage
         uri={item.albumCover}
@@ -156,6 +170,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           {item.artist}
         </Text>
       </View>
+      {offlineState.tracks[item.id] ? (
+        <Icon name="check-circle" size={16} color="#4ade80" style={styles.downloadedIcon} />
+      ) : null}
       <Text style={styles.trackDuration}>
         {item.duration ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, '0')}` : '--:--'}
       </Text>
@@ -438,6 +455,9 @@ const styles = StyleSheet.create({
   trackDuration: {
     color: '#9090a5',
     fontSize: 14,
+  },
+  downloadedIcon: {
+    marginRight: 8,
   },
   emptyContainer: {
     flexGrow: 1,

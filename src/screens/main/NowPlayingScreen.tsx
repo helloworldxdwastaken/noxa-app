@@ -115,7 +115,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const glowStyles = useMemo(
     () => [
       styles.artworkWrapper,
-      isPlaying ? styles.artworkGlowOn : styles.artworkGlowOff,
+      styles.artworkGlowBase,
     ],
     [isPlaying],
   );
@@ -394,19 +394,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  artworkGlowOn: {
+  artworkGlowBase: {
     shadowColor: '#1db954',
-    shadowOpacity: 0.8,
-    shadowRadius: 30,
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
     shadowOffset: { width: 0, height: 12 },
-    elevation: 16,
-  },
-  artworkGlowOff: {
-    shadowColor: '#111827',
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    elevation: 12,
   },
   placeholderArtwork: {
     width: 300,

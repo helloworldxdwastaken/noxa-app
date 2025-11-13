@@ -59,10 +59,7 @@ const AuthNavigator = () => (
 );
 
 const AppTabsNavigator = () => (
-  <Tabs.Navigator
-    tabBar={props => <CustomTabBar {...props} />}
-    screenOptions={{ headerShown: false }}
-  >
+  <Tabs.Navigator screenOptions={{ headerShown: false }} tabBar={customTabBarRenderer}>
     <Tabs.Screen name="Home" component={HomeScreen} />
     <Tabs.Screen name="Library" component={LibraryScreen} />
     <Tabs.Screen name="Search" component={SearchScreen} />
@@ -92,6 +89,7 @@ const AppStackNavigator = () => (
       />
     </AppStack.Navigator>
     <MiniPlayer />
+    <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }} pointerEvents="box-none" />
   </>
 );
 
@@ -160,12 +158,14 @@ const tabStyles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#1db954',
+    backgroundColor: '#0d0d14',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 12,
-    shadowColor: '#1db954',
-    shadowOpacity: 0.6,
+    shadowColor: '#000',
+    shadowOpacity: 0.35,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
@@ -180,12 +180,14 @@ type TabBarIconProps = {
 
 const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
   <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
-    <Icon name={iconName} size={18} color={focused ? '#ffffff' : '#7c8297'} />
+    <Icon name={iconName} size={18} color={focused ? '#1db954' : '#7c8297'} />
     <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
       {label}
     </Text>
   </View>
 );
+
+const customTabBarRenderer = (props: BottomTabBarProps) => <CustomTabBar {...props} />;
 
 const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
@@ -230,7 +232,7 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
           style={tabStyles.searchBubble}
           onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
         >
-          <Icon name="search" size={24} color="#050505" />
+          <Icon name="search" size={24} color="#1db954" />
         </TouchableOpacity>
       ) : null}
     </View>

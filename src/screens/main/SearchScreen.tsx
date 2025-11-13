@@ -14,7 +14,13 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { requestDownloadAdd, searchLibrary, searchOnlineTracks } from '../../api/service';
+import {
+  fetchPlaylists,
+  requestDownloadAdd,
+  searchLibrary,
+  searchOnlineTracks,
+  addTrackToPlaylist,
+} from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { RemoteTrack, Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
@@ -35,6 +41,8 @@ const SearchScreen: React.FC<Props> = () => {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');
+  const [playlistSheet, setPlaylistSheet] = useState<{ track: RemoteTrack } | null>(null);
+  const { data: playlists = [] } = useQuery({ queryKey: ['playlists'], queryFn: fetchPlaylists });
 
   const { data: localResults, isFetching: localFetching } = useQuery({
     queryKey: ['library', 'search', query],
@@ -104,7 +112,7 @@ const SearchScreen: React.FC<Props> = () => {
         </View>
         <TouchableOpacity
           style={styles.downloadBtn}
-          onPress={() => downloadMutation.mutate(item)}
+          onPress={() => setPlaylistSheet({ track: item })}
           disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
         >
           {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
@@ -251,6 +259,40 @@ const SearchScreen: React.FC<Props> = () => {
           }
         />
       )}
+      {playlistSheet ? (
+        <View style={styles.sheetOverlay}>
+          <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setPlaylistSheet(null)} />
+          <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={styles.sheetTitle}>Download options</Text>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => {
+                downloadMutation.mutate(playlistSheet.track);
+                setPlaylistSheet(null);
+              }}
+            >
+              <Icon name="download" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>Download only</Text>
+            </TouchableOpacity>
+            <View style={styles.sheetDivider} />
+            <Text style={styles.sheetSubtitle}>Download & add to playlist</Text>
+            {playlists.map(playlist => (
+              <TouchableOpacity
+                key={playlist.id}
+                style={styles.sheetAction}
+                onPress={() => {
+                  downloadMutation.mutate(playlistSheet.track);
+                  addTrackToPlaylist(playlist.id, Number(playlistSheet.track.id)).catch(console.error);
+                  setPlaylistSheet(null);
+                }}
+              >
+                <Icon name="plus-circle" size={18} color="#ffffff" />
+                <Text style={styles.sheetActionText}>{playlist.name}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 };
@@ -380,6 +422,48 @@ const styles = StyleSheet.create({
     backgroundColor: '#1db954',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  sheetOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'flex-end',
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sheetContainer: {
+    backgroundColor: '#0d0d14',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 16,
+  },
+  sheetTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sheetSubtitle: {
+    color: '#9090a5',
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  sheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 10,
+  },
+  sheetActionText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sheetDivider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: '#1c1c23',
   },
 });
 

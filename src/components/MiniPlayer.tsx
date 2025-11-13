@@ -109,9 +109,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1db954',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#1db954',
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
 });
 
