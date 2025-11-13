@@ -5,40 +5,13 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, '15.1'
+platform :ios, '15.0'
 prepare_react_native_project!
-
-ENV['RCT_NEW_ARCH_ENABLED'] = '1' if ENV['RCT_NEW_ARCH_ENABLED'].nil?
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
   use_frameworks! :linkage => linkage.to_sym
-end
-
-pre_install do |installer|
-  # Patch codegen-generated podspecs to iOS 15.0 BEFORE dependency resolution
-  generated_dir = File.join(__dir__, 'build', 'generated', 'ios')
-  if Dir.exist?(generated_dir)
-    puts "🔧 Patching generated podspecs deployment target to 15.0..."
-    Dir.glob(File.join(generated_dir, '*.podspec')).each do |podspec_path|
-      content = File.read(podspec_path)
-      patched = false
-      # Match iOS version strings like "15.1", "15.2", etc.
-      if content =~ /"1[5-9]\.\d+"/
-        content.gsub!(/"1[5-9]\.\d+"/, '"15.0"')
-        patched = true
-      end
-      if content =~ /'1[5-9]\.\d+'/
-        content.gsub!(/'1[5-9]\.\d+'/, "'15.0'")
-        patched = true
-      end
-      if patched
-        File.write(podspec_path, content)
-        puts "  ✅ Patched #{File.basename(podspec_path)}"
-      end
-    end
-  end
 end
 
 target 'music_app' do

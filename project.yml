@@ -3,7 +3,7 @@ name: MusicApp
 options:
   bundleIdPrefix: com.noxamusic
   deploymentTarget:
-    iOS: 15.1
+    iOS: 15.0
 
 settings:
   base:
@@ -18,7 +18,7 @@ targets:
   music_app:
     type: application
     platform: iOS
-    deploymentTarget: "15.1"
+    deploymentTarget: "15.0"
     sources:
       - path: ios/music_app
     settings:
