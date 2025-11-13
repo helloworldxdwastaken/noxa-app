@@ -1,6 +1,7 @@
 import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import Icon from 'react-native-vector-icons/Feather';
 
 import { fetchDownloads } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
@@ -100,7 +101,12 @@ const statusColorMap: Record<DownloadItem['status'], string> = {
 const DownloadRow = ({ item }: { item: DownloadItem }) => (
   <View style={styles.row}>
     <View style={styles.rowText}>
-      <Text style={styles.title}>{item.title}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{item.title}</Text>
+        {item.status === 'completed' ? (
+          <Icon name="check-circle" size={16} color="#4ade80" />
+        ) : null}
+      </View>
       <Text style={styles.subtitle}>{item.artist}</Text>
       {item.album ? <Text style={styles.album}>{item.album}</Text> : null}
     </View>
@@ -193,6 +199,11 @@ const styles = StyleSheet.create({
   subtitle: {
     color: '#9090a5',
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   album: {
     color: '#606072',
     fontSize: 12,
@@ -210,4 +221,3 @@ const styles = StyleSheet.create({
 });
 
 export default DownloadsScreen;
-

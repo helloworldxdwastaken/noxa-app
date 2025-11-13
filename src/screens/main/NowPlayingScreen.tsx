@@ -1,6 +1,10 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
+  Modal,
+  PanResponder,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -18,11 +22,14 @@ import TrackPlayer, {
   State as TrackState,
 } from 'react-native-track-player';
 import Icon from 'react-native-vector-icons/Feather';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppStackParamList } from '../../navigation/types';
 import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
 import { togglePlayback } from '../../services/player/PlayerService';
+import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
+import type { Playlist } from '../../types/models';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NowPlaying'>;
 
@@ -40,6 +47,10 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const progress = useProgress(250);
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
+  const [actionsVisible, setActionsVisible] = useState(false);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
 
@@ -49,6 +60,18 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       setQueue(currentQueue);
     } catch {
       setQueue([]);
+    }
+  }, []);
+
+  const loadPlaylists = useCallback(async () => {
+    setLoadingPlaylists(true);
+    try {
+      const list = await fetchPlaylists();
+      setPlaylists(list);
+    } catch (error) {
+      console.error('Failed to load playlists', error);
+    } finally {
+      setLoadingPlaylists(false);
     }
   }, []);
 
@@ -77,6 +100,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       };
     }, []),
   );
+
+  useEffect(() => {
+    if (actionsVisible && playlists.length === 0 && !loadingPlaylists) {
+      loadPlaylists();
+    }
+  }, [actionsVisible, playlists.length, loadingPlaylists, loadPlaylists]);
 
   const activeIndex = useMemo(
     () => queue.findIndex(item => item.id === track?.id),
@@ -122,14 +151,55 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     await TrackPlayer.setRepeatMode(nextMode);
   };
 
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 12,
+        onPanResponderRelease: (_, gestureState) => {
+          if (gestureState.dy > 80) {
+            navigation.goBack();
+          }
+        },
+      }),
+    [navigation],
+  );
+
+  const handleAddToPlaylist = async (playlistId: number) => {
+    if (!track) {
+      return;
+    }
+    try {
+      await addTrackToPlaylist(playlistId, Number(track.id));
+      Alert.alert('Added', 'Track added to playlist.');
+      setActionsVisible(false);
+    } catch (error) {
+      Alert.alert('Failed', error instanceof Error ? error.message : 'Unable to add to playlist');
+    }
+  };
+
+  const handleDeleteTrack = async (permanent: boolean) => {
+    if (!track) {
+      return;
+    }
+    try {
+      await deleteTrack(Number(track.id), permanent);
+      Alert.alert('Removed', permanent ? 'Track deleted permanently.' : 'Track removed from library.');
+      setActionsVisible(false);
+    } catch (error) {
+      Alert.alert('Failed', error instanceof Error ? error.message : 'Unable to delete track');
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={styles.container} {...panResponder.panHandlers}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
           <Icon name="chevron-down" size={24} color="#ffffff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Now Playing</Text>
-        <View style={styles.spacer} />
+        <TouchableOpacity style={styles.menuBtn} onPress={() => setActionsVisible(true)}>
+          <Icon name="more-vertical" size={22} color="#ffffff" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -206,11 +276,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               return (
                 <View key={`${item.id}-${index}`} style={styles.queueItem}>
                   <View style={[styles.queueArtwork, isActive && styles.queueArtworkActive]}>
-                    {item.title ? (
-                      <Text style={styles.queueIcon}>{item.title[0]?.toUpperCase()}</Text>
-                    ) : (
-                      <Icon name="music" size={18} color="#8aa4ff" />
-                    )}
+                    <ArtworkImage
+                      uri={typeof item.artwork === 'string' ? item.artwork : null}
+                      size={42}
+                      fallbackLabel={item.title?.[0]?.toUpperCase()}
+                    />
                   </View>
                   <View style={styles.queueInfo}>
                     <Text
@@ -230,6 +300,43 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
+
+      <Modal transparent visible={actionsVisible} animationType="fade" onRequestClose={() => setActionsVisible(false)}>
+        <Pressable style={styles.sheetBackdrop} onPress={() => setActionsVisible(false)} />
+        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <Text style={styles.sheetTitle}>Track Actions</Text>
+          <View style={styles.sheetSection}>
+            <Text style={styles.sheetSubtitle}>Add to Playlist</Text>
+            {loadingPlaylists ? (
+              <ActivityIndicator color="#ffffff" />
+            ) : playlists.length === 0 ? (
+              <Text style={styles.sheetEmpty}>No playlists available</Text>
+            ) : (
+              playlists.map(playlist => (
+                <TouchableOpacity
+                  key={playlist.id}
+                  style={styles.sheetAction}
+                  onPress={() => handleAddToPlaylist(playlist.id)}
+                >
+                  <Icon name="plus-circle" size={18} color="#ffffff" />
+                  <Text style={styles.sheetActionText}>{playlist.name}</Text>
+                </TouchableOpacity>
+              ))
+            )}
+          </View>
+          <View style={styles.sheetSection}>
+            <Text style={styles.sheetSubtitle}>Library</Text>
+            <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
+              <Icon name="minus-circle" size={18} color="#fbbf24" />
+              <Text style={styles.sheetActionText}>Remove from library</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(true)}>
+              <Icon name="trash-2" size={18} color="#f87171" />
+              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>Delete permanently</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -244,9 +351,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 12,
   },
   closeBtn: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 20,
+    backgroundColor: '#12121b',
+  },
+  menuBtn: {
     width: 40,
     height: 40,
     justifyContent: 'center',
@@ -403,20 +518,14 @@ const styles = StyleSheet.create({
     borderBottomColor: '#1c1c23',
   },
   queueArtwork: {
-    width: 46,
-    height: 46,
-    borderRadius: 12,
-    backgroundColor: '#15151f',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 14,
+    overflow: 'hidden',
   },
   queueArtworkActive: {
-    backgroundColor: '#1db95422',
-  },
-  queueIcon: {
-    color: '#8aa4ff',
-    fontWeight: '600',
-    fontSize: 18,
+    borderWidth: 2,
+    borderColor: '#1db954',
   },
   queueInfo: {
     flex: 1,
@@ -444,6 +553,53 @@ const styles = StyleSheet.create({
   },
   emptyQueue: {
     color: '#6b7280',
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  sheetContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#0c0c13',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  sheetTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sheetSection: {
+    gap: 12,
+  },
+  sheetSubtitle: {
+    color: '#9090a5',
+    fontSize: 13,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  sheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 8,
+  },
+  sheetActionText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  sheetDangerText: {
+    color: '#f87171',
+  },
+  sheetEmpty: {
+    color: '#6b7280',
+    fontSize: 14,
   },
 });
 

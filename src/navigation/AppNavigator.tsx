@@ -128,8 +128,10 @@ const tabStyles = StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',
-    padding: 4,
+    paddingHorizontal: 4,
     gap: 6,
+    minHeight: 64,
+    alignItems: 'center',
   },
   iconBadge: {
     flexDirection: 'row',

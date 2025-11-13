@@ -13,6 +13,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchPlaylists, fetchSongs } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
@@ -52,6 +53,7 @@ const TAB_ITEMS: Array<{ key: LibraryView; label: string; icon: string }> = [
 ];
 
 const LibraryScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const { state: offlineState } = useOffline();
   const connectivity = useConnectivity();
   const [activeView, setActiveView] = useState<LibraryView>('artists');
@@ -246,7 +248,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
   const currentRenderer = activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* View Tabs */}
       <View style={styles.tabs}>
         {TAB_ITEMS.map(item => {

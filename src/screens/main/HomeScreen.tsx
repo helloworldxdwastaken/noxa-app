@@ -18,11 +18,13 @@ import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 import Icon from 'react-native-vector-icons/Feather';
 import type { AppStackParamList } from '../../navigation/types';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const {
     data: stats,
     isLoading: statsLoading,
@@ -121,7 +123,7 @@ const HomeScreen: React.FC = () => {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { paddingTop: insets.top + 12 }]}
       refreshControl={
         <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#ffffff" />
       }

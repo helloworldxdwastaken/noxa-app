@@ -20,6 +20,7 @@ import type { RemoteTrack, Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
 import ArtworkImage from '../../components/ArtworkImage';
 import Icon from 'react-native-vector-icons/Feather';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type SearchMode = 'local' | 'online';
 type OnlineSearchType = 'track' | 'artist' | 'album';
@@ -30,6 +31,7 @@ type Props = CompositeScreenProps<
 >;
 
 const SearchScreen: React.FC<Props> = () => {
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');
@@ -117,7 +119,7 @@ const SearchScreen: React.FC<Props> = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <TextInput
         style={styles.searchInput}
         placeholder={mode === 'local' ? 'Search your library' : 'Search online catalog'}

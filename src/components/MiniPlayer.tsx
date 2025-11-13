@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { State } from 'react-native-track-player';
+import Icon from 'react-native-vector-icons/Feather';
 
 import type { AppStackParamList } from '../navigation/types';
 import ArtworkImage from './ArtworkImage';
@@ -32,7 +33,10 @@ const MiniPlayer: React.FC = () => {
   }
 
   return (
-    <View pointerEvents="box-none" style={[styles.wrapper, { bottom: (insets.bottom || 16) + 24 }]}> 
+    <View
+      pointerEvents="box-none"
+      style={[styles.wrapper, { bottom: (insets.bottom || 12) + 84 }]}
+    >
       <TouchableOpacity
         style={styles.container}
         activeOpacity={0.9}
@@ -59,7 +63,7 @@ const MiniPlayer: React.FC = () => {
             togglePlayback().catch(err => console.warn('Toggle playback failed', err));
           }}
         >
-          <Text style={styles.playIcon}>{isPlaying ? '⏸' : '▶️'}</Text>
+          <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#050505" />
         </TouchableOpacity>
       </TouchableOpacity>
     </View>
@@ -108,9 +112,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  playIcon: {
-    fontSize: 18,
   },
 });
 
