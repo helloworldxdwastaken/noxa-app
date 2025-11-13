@@ -31,18 +31,21 @@ target 'music_app' do
       # :ccache_enabled => true
     )
     
+    # Patch Folly Expected.h to avoid missing coroutine header
+    folly_expected = File.join(__dir__, 'Pods', 'RCT-Folly', 'folly', 'Expected.h')
+    if File.exist?(folly_expected)
+      content = File.read(folly_expected)
+      if content.include?('#include <folly/coro/Coroutine.h>')
+        content.gsub!(/#include <folly\/coro\/Coroutine\.h>/, '// #include <folly/coro/Coroutine.h> // Patched: header not available')
+        File.write(folly_expected, content)
+        puts "✅ Patched RCT-Folly Expected.h to remove coroutine dependency"
+      end
+    end
+    
     # Fix for RCT-Folly and New Architecture compatibility
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
-        
-        # Disable coroutine support in Folly to avoid missing headers
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
-        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'FOLLY_HAVE_COROUTINES=0'
-        
-        # Compiler flags for compatibility
-        config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= '$(inherited)'
-        config.build_settings['OTHER_CPLUSPLUSFLAGS'] << ' -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_HAVE_COROUTINES=0'
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
       end
     end
