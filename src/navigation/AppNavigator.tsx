@@ -12,7 +12,6 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SplashScreen from '../screens/common/SplashScreen';
 import DownloadRequestScreen from '../screens/main/DownloadRequestScreen';
-import DownloadsScreen from '../screens/main/DownloadsScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 import LibraryScreen from '../screens/main/LibraryScreen';
 import NowPlayingScreen from '../screens/main/NowPlayingScreen';
@@ -42,7 +41,6 @@ const TAB_ICON_MAP: Record<keyof AppTabsParamList, string> = {
   Home: 'home',
   Library: 'layers',
   Search: 'search',
-  Downloads: 'download',
   Settings: 'settings',
 };
 
@@ -63,7 +61,6 @@ const AppTabsNavigator = () => (
     <Tabs.Screen name="Home" component={HomeScreen} />
     <Tabs.Screen name="Library" component={LibraryScreen} />
     <Tabs.Screen name="Search" component={SearchScreen} />
-    <Tabs.Screen name="Downloads" component={DownloadsScreen} />
     <Tabs.Screen name="Settings" component={SettingsScreen} />
   </Tabs.Navigator>
 );
@@ -89,7 +86,7 @@ const AppStackNavigator = () => (
       />
     </AppStack.Navigator>
     <MiniPlayer />
-    <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }} pointerEvents="box-none" />
+    <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
   </>
 );
 
@@ -169,6 +166,12 @@ const tabStyles = StyleSheet.create({
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
+  },
+  miniPlayerSpacer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
 });
 

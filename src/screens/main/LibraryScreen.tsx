@@ -21,8 +21,9 @@ import { useConnectivity } from '../../hooks/useConnectivity';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
+import DownloadsScreen from './DownloadsScreen';
 
-type LibraryView = 'artists' | 'albums' | 'playlists';
+type LibraryView = 'artists' | 'albums' | 'playlists' | 'downloads';
 
 interface Artist {
   id: string;
@@ -50,6 +51,7 @@ const TAB_ITEMS: Array<{ key: LibraryView; label: string; icon: string }> = [
   { key: 'artists', label: 'Artists', icon: 'mic' },
   { key: 'albums', label: 'Albums', icon: 'disc' },
   { key: 'playlists', label: 'Playlists', icon: 'music' },
+  { key: 'downloads', label: 'Downloads', icon: 'download' },
 ];
 
 const LibraryScreen: React.FC<Props> = ({ navigation }) => {
@@ -243,10 +245,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     );
   }
 
-  const currentData = activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists;
-
-  const currentRenderer = activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist;
-
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* View Tabs */}
@@ -273,43 +271,53 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       {/* Content */}
-      <FlatList
-        data={currentData as any[]}
-        keyExtractor={item => `${item.id}`}
-        renderItem={currentRenderer as any}
-        numColumns={2}
-        key={activeView}
-        columnWrapperStyle={styles.gridRow}
-        contentContainerStyle={currentData.length === 0 ? styles.emptyContainer : styles.listContent}
-        refreshControl={
-          <RefreshControl
-            refreshing={!connectivity.isOffline && isRefetching}
-            onRefresh={connectivity.isOffline ? undefined : handleRefresh}
-            tintColor="#ffffff"
-          />
-        }
-        ListEmptyComponent={
-          <View style={styles.centered}>
-            <View style={styles.emptyIconCircle}>
-              <Icon
-                name={activeView === 'artists' ? 'mic' : activeView === 'albums' ? 'disc' : 'music'}
-                size={28}
-                color="#8aa4ff"
-              />
+      {activeView === 'downloads' ? (
+        <View style={styles.downloadsWrapper}>
+          <DownloadsScreen />
+        </View>
+      ) : (
+        <FlatList
+          data={(activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists) as any[]}
+          keyExtractor={item => `${item.id}`}
+          renderItem={(activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist) as any}
+          numColumns={2}
+          key={activeView}
+          columnWrapperStyle={styles.gridRow}
+          contentContainerStyle={
+            (activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists).length === 0
+              ? styles.emptyContainer
+              : styles.listContent
+          }
+          refreshControl={
+            <RefreshControl
+              refreshing={!connectivity.isOffline && isRefetching}
+              onRefresh={connectivity.isOffline ? undefined : handleRefresh}
+              tintColor="#ffffff"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.centered}>
+              <View style={styles.emptyIconCircle}>
+                <Icon
+                  name={activeView === 'artists' ? 'mic' : activeView === 'albums' ? 'disc' : 'music'}
+                  size={28}
+                  color="#8aa4ff"
+                />
+              </View>
+              <Text style={styles.emptyText}>
+                {connectivity.isOffline
+                  ? `No offline ${activeView} available`
+                  : `No ${activeView} found yet`}
+              </Text>
+              <Text style={styles.emptySubtext}>
+                {connectivity.isOffline
+                  ? 'Download content while online to access it here.'
+                  : 'Add music to your library to see it here.'}
+              </Text>
             </View>
-            <Text style={styles.emptyText}>
-              {connectivity.isOffline
-                ? `No offline ${activeView} available`
-                : `No ${activeView} found yet`}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {connectivity.isOffline
-                ? 'Download content while online to access it here.'
-                : 'Add music to your library to see it here.'}
-            </Text>
-          </View>
-        }
-      />
+          }
+        />
+      )}
     </View>
   );
 };
@@ -385,6 +393,9 @@ const styles = StyleSheet.create({
   emptySubtext: {
     color: '#9090a5',
     textAlign: 'center',
+  },
+  downloadsWrapper: {
+    flex: 1,
   },
   listContent: {
     padding: 16,

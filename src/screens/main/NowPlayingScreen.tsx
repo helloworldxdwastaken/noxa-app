@@ -116,6 +116,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     () => [
       styles.artworkWrapper,
       styles.artworkGlowBase,
+      isPlaying ? styles.artworkGlowPlaying : styles.artworkGlowIdle,
     ],
     [isPlaying],
   );
@@ -396,10 +397,18 @@ const styles = StyleSheet.create({
   },
   artworkGlowBase: {
     shadowColor: '#1db954',
+  },
+  artworkGlowPlaying: {
     shadowOpacity: 0.55,
     shadowRadius: 28,
     shadowOffset: { width: 0, height: 12 },
     elevation: 12,
+  },
+  artworkGlowIdle: {
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
   },
   placeholderArtwork: {
     width: 300,
