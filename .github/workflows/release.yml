@@ -89,10 +89,18 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO
 
-      - name: Upload iOS Archive to Release
+      - name: Export unsigned IPA
+        run: |
+          cd ios
+          mkdir -p build/Payload
+          cp -r build/music_app.xcarchive/Products/Applications/music_app.app build/Payload/
+          cd build
+          zip -r music_app-unsigned.ipa Payload
+
+      - name: Upload iOS IPA to Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ios/build/music_app.xcarchive/**/*
+          files: ios/build/music_app-unsigned.ipa
           draft: false
           prerelease: false
         env:
