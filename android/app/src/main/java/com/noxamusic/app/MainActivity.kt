@@ -1,4 +1,4 @@
-package com.music_app
+package com.noxamusic.app
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
