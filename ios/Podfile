@@ -8,7 +8,7 @@ require Pod::Executable.execute_command('node', ['-p',
 platform :ios, '15.0'
 prepare_react_native_project!
 
-ENV['RCT_NEW_ARCH_ENABLED'] = '0'
+ENV['RCT_NEW_ARCH_ENABLED'] = '1' if ENV['RCT_NEW_ARCH_ENABLED'].nil?
 
 linkage = ENV['USE_FRAMEWORKS']
 if linkage != nil
@@ -32,9 +32,9 @@ target 'music_app' do
       puts "Patching generated podspecs deployment target to 15.0..."
       Dir.glob(File.join(generated_dir, '*.podspec')).each do |podspec_path|
         content = File.read(podspec_path)
-        if content.include?('15.1')
-          content.gsub!('"15.1"', '"15.0"')
-          content.gsub!("'15.1'", "'15.0'")
+        if content =~ /\"1[5-9]\.[0-9]+\"/ || content =~ /'1[5-9]\.[0-9]+'/
+          content.gsub!(/\"1[5-9]\.[0-9]+\"/, '"15.0"')
+          content.gsub!(/'1[5-9]\.[0-9]+'/, "'15.0'")
           File.write(podspec_path, content)
           puts "  ✓ Patched #{File.basename(podspec_path)}"
         end

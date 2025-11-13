@@ -69,9 +69,11 @@ jobs:
         run: bash scripts/patch-codegen-deployment-target.sh
 
       - name: Install CocoaPods dependencies
+        env:
+          RCT_NEW_ARCH_ENABLED: "1"
         run: |
           cd ios
-          pod install
+          RCT_NEW_ARCH_ENABLED=1 pod install
 
       - name: Build iOS Archive
         run: |
