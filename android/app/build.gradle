@@ -89,7 +89,8 @@ android {
         versionName "1.0"
         externalNativeBuild {
             cmake {
-                arguments "-DANDROID_STL=c++_shared"
+                arguments "-DANDROID_STL=c++_shared",
+                          "-DIS_NEW_ARCHITECTURE_ENABLED=false"
             }
         }
     }
