@@ -41,7 +41,8 @@ const SearchScreen: React.FC<Props> = () => {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');
-  const [playlistSheet, setPlaylistSheet] = useState<{ track: RemoteTrack } | null>(null);
+  const [downloadOptionsTrack, setDownloadOptionsTrack] = useState<RemoteTrack | null>(null);
+  const [playlistPickerTrack, setPlaylistPickerTrack] = useState<RemoteTrack | null>(null);
   const { data: playlists = [] } = useQuery({ queryKey: ['playlists'], queryFn: fetchPlaylists });
 
   const { data: localResults, isFetching: localFetching } = useQuery({
@@ -112,7 +113,7 @@ const SearchScreen: React.FC<Props> = () => {
         </View>
         <TouchableOpacity
           style={styles.downloadBtn}
-          onPress={() => setPlaylistSheet({ track: item })}
+          onPress={() => setDownloadOptionsTrack(item)}
           disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
         >
           {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
@@ -259,37 +260,73 @@ const SearchScreen: React.FC<Props> = () => {
           }
         />
       )}
-      {playlistSheet ? (
+      {downloadOptionsTrack ? (
         <View style={styles.sheetOverlay}>
-          <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setPlaylistSheet(null)} />
+          <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setDownloadOptionsTrack(null)} />
           <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
-            <Text style={styles.sheetTitle}>Download options</Text>
+            <Text style={styles.sheetTitle}>Choose an action</Text>
             <TouchableOpacity
               style={styles.sheetAction}
               onPress={() => {
-                downloadMutation.mutate(playlistSheet.track);
-                setPlaylistSheet(null);
+                downloadMutation.mutate(downloadOptionsTrack);
+                setDownloadOptionsTrack(null);
               }}
             >
               <Icon name="download" size={18} color="#ffffff" />
-              <Text style={styles.sheetActionText}>Download only</Text>
+              <View style={styles.sheetActionTextGroup}>
+                <Text style={styles.sheetActionText}>Download</Text>
+                <Text style={styles.sheetActionSubtext}>Save to offline downloads</Text>
+              </View>
             </TouchableOpacity>
-            <View style={styles.sheetDivider} />
-            <Text style={styles.sheetSubtitle}>Download & add to playlist</Text>
-            {playlists.map(playlist => (
-              <TouchableOpacity
-                key={playlist.id}
-                style={styles.sheetAction}
-                onPress={() => {
-                  downloadMutation.mutate(playlistSheet.track);
-                  addTrackToPlaylist(playlist.id, Number(playlistSheet.track.id)).catch(console.error);
-                  setPlaylistSheet(null);
-                }}
-              >
-                <Icon name="plus-circle" size={18} color="#ffffff" />
-                <Text style={styles.sheetActionText}>{playlist.name}</Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => {
+                if (playlists.length === 0) {
+                  Alert.alert('No playlists found', 'Create a playlist first in your library.');
+                  setDownloadOptionsTrack(null);
+                  return;
+                }
+                setDownloadOptionsTrack(null);
+                setPlaylistPickerTrack(downloadOptionsTrack);
+              }}
+            >
+              <Icon name="plus-circle" size={18} color="#1db954" />
+              <View style={styles.sheetActionTextGroup}>
+                <Text style={[styles.sheetActionText, styles.sheetActionAccent]}>
+                  Download & add to playlist
+                </Text>
+                <Text style={styles.sheetActionSubtext}>Choose where to store this track</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+      {playlistPickerTrack ? (
+        <View style={styles.sheetOverlay}>
+          <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setPlaylistPickerTrack(null)} />
+          <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+            <Text style={styles.sheetTitle}>Select playlist</Text>
+            {playlists.length === 0 ? (
+              <Text style={styles.sheetEmpty}>Create a playlist first.</Text>
+            ) : (
+              playlists.map(playlist => (
+                <TouchableOpacity
+                  key={playlist.id}
+                  style={styles.sheetAction}
+                  onPress={() => {
+                    downloadMutation.mutate(playlistPickerTrack);
+                    addTrackToPlaylist(playlist.id, Number(playlistPickerTrack.id)).catch(error => {
+                      console.error('Failed to add track', error);
+                      Alert.alert('Unable to add track', 'Please try again later.');
+                    });
+                    setPlaylistPickerTrack(null);
+                  }}
+                >
+                  <Icon name="folder-plus" size={18} color="#ffffff" />
+                  <Text style={styles.sheetActionText}>{playlist.name}</Text>
+                </TouchableOpacity>
+              ))
+            )}
           </View>
         </View>
       ) : null}
@@ -444,12 +481,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  sheetSubtitle: {
-    color: '#9090a5',
-    fontSize: 13,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   sheetAction: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -460,6 +491,21 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 15,
     fontWeight: '600',
+  },
+  sheetActionTextGroup: {
+    flex: 1,
+    gap: 2,
+  },
+  sheetActionSubtext: {
+    color: '#8a8aa1',
+    fontSize: 12,
+  },
+  sheetActionAccent: {
+    color: '#1db954',
+  },
+  sheetEmpty: {
+    color: '#8a8aa1',
+    fontSize: 14,
   },
   sheetDivider: {
     height: StyleSheet.hairlineWidth,

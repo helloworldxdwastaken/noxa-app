@@ -7,7 +7,6 @@ export type AppTabsParamList = {
   Home: undefined;
   Library: undefined;
   Search: undefined;
-  Downloads: undefined;
   Settings: undefined;
 };
 

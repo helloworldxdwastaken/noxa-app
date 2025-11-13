@@ -1,7 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Animated,
+  GestureResponderEvent,
   Modal,
   PanResponder,
   Pressable,
@@ -50,9 +52,10 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [actionsVisible, setActionsVisible] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
-  const insets = useSafeAreaInsets();
-
+  const [progressBarWidth, setProgressBarWidth] = useState(0);
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
+  const insets = useSafeAreaInsets();
+  const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
 
   const loadQueue = useCallback(async () => {
     try {
@@ -112,13 +115,34 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     [queue, track?.id],
   );
 
-  const glowStyles = useMemo(
-    () => [
-      styles.artworkWrapper,
-      styles.artworkGlowBase,
-      isPlaying ? styles.artworkGlowPlaying : styles.artworkGlowIdle,
-    ],
-    [isPlaying],
+  useEffect(() => {
+    Animated.timing(glowAnim, {
+      toValue: isPlaying ? 1 : 0,
+      duration: 250,
+      useNativeDriver: false,
+    }).start();
+  }, [glowAnim, isPlaying]);
+
+  const artworkAnimatedStyle = useMemo(
+    () => ({
+      transform: [
+        {
+          scale: glowAnim.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.92, 1],
+          }),
+        },
+      ],
+      shadowOpacity: glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.12, 0.55],
+      }),
+      shadowRadius: glowAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [12, 28],
+      }),
+    }),
+    [glowAnim],
   );
 
   const duration = track?.duration ?? progress.duration;
@@ -191,6 +215,18 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
+  const handleProgressGesture = useCallback(
+    (event: GestureResponderEvent) => {
+      if (!duration || progressBarWidth <= 0) {
+        return;
+      }
+      const { locationX } = event.nativeEvent;
+      const fraction = Math.min(Math.max(locationX / progressBarWidth, 0), 1);
+      TrackPlayer.seekTo(duration * fraction);
+    },
+    [duration, progressBarWidth],
+  );
+
   return (
     <View style={styles.container} {...panResponder.panHandlers}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
@@ -205,7 +241,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.artworkContainer}>
-          <View style={glowStyles}>
+          <Animated.View style={[styles.artworkWrapper, styles.artworkGlowBase, artworkAnimatedStyle]}>
             {track ? (
               <ArtworkImage
                 uri={track.artwork ?? undefined}
@@ -217,7 +253,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 <Icon name="music" size={64} color="#8aa4ff" />
               </View>
             )}
-          </View>
+          </Animated.View>
         </View>
 
         <View style={styles.trackInfo}>
@@ -227,7 +263,14 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.progressSection}>
-          <View style={styles.progressBar}>
+          <View
+            style={styles.progressBar}
+            onLayout={event => setProgressBarWidth(event.nativeEvent.layout.width)}
+            onStartShouldSetResponder={() => true}
+            onResponderGrant={handleProgressGesture}
+            onResponderMove={handleProgressGesture}
+            onResponderRelease={handleProgressGesture}
+          >
             <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
           </View>
           <View style={styles.progressTimes}>
@@ -390,25 +433,11 @@ const styles = StyleSheet.create({
     width: 320,
     height: 320,
     borderRadius: 32,
-    padding: 10,
-    backgroundColor: '#11111b',
     justifyContent: 'center',
     alignItems: 'center',
   },
   artworkGlowBase: {
     shadowColor: '#1db954',
-  },
-  artworkGlowPlaying: {
-    shadowOpacity: 0.55,
-    shadowRadius: 28,
-    shadowOffset: { width: 0, height: 12 },
-    elevation: 12,
-  },
-  artworkGlowIdle: {
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 4,
   },
   placeholderArtwork: {
     width: 300,

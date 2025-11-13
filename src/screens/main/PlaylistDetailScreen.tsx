@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
   FlatList,
+  PanResponder,
   StyleSheet,
   Text,
   TextInput,
@@ -19,6 +20,7 @@ import {
   deletePlaylist,
   fetchPlaylistTracks,
   removeTrackFromPlaylist,
+  reorderPlaylist,
   updatePlaylist,
   fetchPlaylists,
 } from '../../api/service';
@@ -29,6 +31,7 @@ import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'PlaylistDetail'>;
+const ROW_HEIGHT = 76;
 
 const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
@@ -39,6 +42,13 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(initialName ?? '');
   const [descInput, setDescInput] = useState(initialDescription ?? '');
+  const [orderedTracks, setOrderedTracks] = useState<Song[]>([]);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [orderDirty, setOrderDirty] = useState(false);
+
+  const orderedTracksRef = useRef<Song[]>([]);
+  const dragIndexRef = useRef<number | null>(null);
+  const dragOffsetRef = useRef(0);
 
   const { data: tracks = [], isLoading, refetch } = useQuery({
     queryKey: ['playlists', playlistId, 'tracks'],
@@ -68,17 +78,67 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   }, [derivedName, derivedDesc, isEditing]);
 
+  useEffect(() => {
+    if (!orderDirty || !isEditing) {
+      setOrderedTracks(tracks);
+      orderedTracksRef.current = tracks;
+    }
+  }, [tracks, orderDirty, isEditing]);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setOrderedTracks(tracks);
+      orderedTracksRef.current = tracks;
+      setOrderDirty(false);
+      setDraggingIndex(null);
+      dragIndexRef.current = null;
+      dragOffsetRef.current = 0;
+    }
+  }, [isEditing, tracks]);
+
+  useEffect(() => {
+    orderedTracksRef.current = orderedTracks;
+  }, [orderedTracks]);
+
   const displayName = isEditing ? nameInput : derivedName;
   const displayDesc = isEditing ? descInput : derivedDesc;
 
   const updateMutation = useMutation({
-    mutationFn: () => updatePlaylist(playlistId, { name: nameInput, description: descInput }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['playlists'] });
-      setIsEditing(false);
-      Alert.alert('Success', 'Playlist updated');
+    mutationFn: async () => {
+      const trimmedName = nameInput.trim() || 'Untitled Playlist';
+      const hasMetaChanges =
+        trimmedName !== (derivedName ?? '') || (descInput ?? '') !== (derivedDesc ?? '');
+      const operations: Array<Promise<void>> = [];
+      if (hasMetaChanges) {
+        operations.push(updatePlaylist(playlistId, { name: trimmedName, description: descInput }));
+      }
+      if (orderDirty) {
+        const orders = orderedTracksRef.current.map((track, index) => ({
+          musicId: track.id,
+          position: index + 1,
+        }));
+        operations.push(reorderPlaylist(playlistId, orders));
+      }
+      if (operations.length === 0) {
+        return false;
+      }
+      await Promise.all(operations);
+      return true;
     },
-    onError: () => Alert.alert('Error', 'Failed to update playlist'),
+    onSuccess: changed => {
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      queryClient.invalidateQueries({ queryKey: ['playlists', playlistId, 'tracks'] });
+      setIsEditing(false);
+      setOrderDirty(false);
+      setDraggingIndex(null);
+      dragIndexRef.current = null;
+      dragOffsetRef.current = 0;
+      if (changed) {
+        Alert.alert('Success', 'Playlist updated');
+      }
+    },
+    onError: error =>
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update playlist'),
   });
 
   const deleteMutation = useMutation({
@@ -150,11 +210,90 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     [tracks],
   );
 
+  const startDrag = (index: number) => {
+    if (!isEditing) {
+      return;
+    }
+    dragIndexRef.current = index;
+    dragOffsetRef.current = 0;
+    setDraggingIndex(index);
+  };
+
+  const finishDrag = () => {
+    dragIndexRef.current = null;
+    dragOffsetRef.current = 0;
+    setDraggingIndex(null);
+  };
+
+  const shiftTrack = useCallback((from: number, to: number) => {
+    setOrderedTracks(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(to, 0, moved);
+      orderedTracksRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: () => dragIndexRef.current !== null,
+      onMoveShouldSetPanResponder: () => dragIndexRef.current !== null,
+      onPanResponderMove: (_, gesture) => {
+        if (dragIndexRef.current === null) {
+          return;
+        }
+        const threshold = ROW_HEIGHT * 0.6;
+        const delta = gesture.dy - dragOffsetRef.current;
+        if (delta > threshold && dragIndexRef.current < orderedTracksRef.current.length - 1) {
+          const newIndex = dragIndexRef.current + 1;
+          shiftTrack(dragIndexRef.current, newIndex);
+          dragIndexRef.current = newIndex;
+          dragOffsetRef.current += ROW_HEIGHT;
+          setDraggingIndex(newIndex);
+          setOrderDirty(true);
+        } else if (delta < -threshold && dragIndexRef.current > 0) {
+          const newIndex = dragIndexRef.current - 1;
+          shiftTrack(dragIndexRef.current, newIndex);
+          dragIndexRef.current = newIndex;
+          dragOffsetRef.current -= ROW_HEIGHT;
+          setDraggingIndex(newIndex);
+          setOrderDirty(true);
+        }
+      },
+      onPanResponderRelease: () => finishDrag(),
+      onPanResponderTerminate: () => finishDrag(),
+    }),
+  ).current;
+
+  const handleSave = () => {
+    if (updateMutation.isPending) {
+      return;
+    }
+    updateMutation.mutate();
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setNameInput(derivedName);
+    setDescInput(derivedDesc);
+    setOrderedTracks(tracks);
+    orderedTracksRef.current = tracks;
+    setOrderDirty(false);
+    finishDrag();
+  };
+
+  const displayedTracks = isEditing ? orderedTracks : tracks;
+
   const renderTrack = ({ item, index }: { item: Song; index: number }) => (
     <TouchableOpacity
-      style={styles.trackRow}
-      onPress={() => handlePlaySong(item)}
-      onLongPress={() => handleRemoveTrack(item)}
+      style={[
+        styles.trackRow,
+        isEditing && draggingIndex === index && styles.draggingRow,
+      ]}
+      onPress={!isEditing ? () => handlePlaySong(item) : undefined}
+      onLongPress={!isEditing ? () => handleRemoveTrack(item) : undefined}
+      activeOpacity={isEditing ? 0.85 : 0.6}
     >
       <Text style={styles.trackNumber}>{index + 1}</Text>
       <ArtworkImage
@@ -174,8 +313,19 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         <Icon name="check-circle" size={16} color="#4ade80" style={styles.downloadedIcon} />
       ) : null}
       <Text style={styles.trackDuration}>
-        {item.duration ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, '0')}` : '--:--'}
+        {item.duration
+          ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, '0')}`
+          : '--:--'}
       </Text>
+      {isEditing ? (
+        <TouchableOpacity
+          style={styles.dragHandle}
+          onLongPress={() => startDrag(index)}
+          delayLongPress={120}
+        >
+          <Icon name="move" size={18} color="#9ca3af" />
+        </TouchableOpacity>
+      ) : null}
     </TouchableOpacity>
   );
 
@@ -189,7 +339,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+    <View
+      style={[styles.container, { paddingTop: insets.top + 12 }]}
+      {...(isEditing ? panResponder.panHandlers : {})}
+    >
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
@@ -238,7 +391,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           <>
             <TouchableOpacity
               style={styles.actionBtn}
-              onPress={() => updateMutation.mutate()}
+              onPress={handleSave}
               disabled={updateMutation.isPending}
             >
               <View style={styles.actionContent}>
@@ -252,7 +405,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </Text>
               </View>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionBtn} onPress={() => setIsEditing(false)}>
+            <TouchableOpacity style={styles.actionBtn} onPress={handleCancelEditing}>
               <View style={styles.actionContent}>
                 <Icon name="x" size={16} color="#ffffff" />
                 <Text style={styles.actionText}>Cancel</Text>
@@ -288,10 +441,13 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 </View>
               </TouchableOpacity>
             ) : isDownloaded ? (
-              <TouchableOpacity style={styles.actionBtn} onPress={handleRemoveOffline}>
+              <TouchableOpacity
+                style={[styles.actionBtn, styles.actionBtnSuccess]}
+                onPress={handleRemoveOffline}
+              >
                 <View style={styles.actionContent}>
-                  <Icon name="check-circle" size={16} color="#ffffff" />
-                  <Text style={styles.actionText}>Remove Offline</Text>
+                  <Icon name="check-circle" size={16} color="#050505" />
+                  <Text style={styles.actionTextOnBright}>Downloaded</Text>
                 </View>
               </TouchableOpacity>
             ) : (
@@ -308,10 +464,11 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
       {/* Tracks */}
       <FlatList
-        data={tracks}
+        data={displayedTracks}
         renderItem={renderTrack}
         keyExtractor={item => `${item.id}`}
-        contentContainerStyle={tracks.length === 0 && styles.emptyContainer}
+        scrollEnabled={!isEditing || draggingIndex === null}
+        contentContainerStyle={displayedTracks.length === 0 && styles.emptyContainer}
         ListEmptyComponent={
           <View style={styles.centered}>
             <View style={styles.emptyIconCircle}>
@@ -420,6 +577,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
+  actionBtnSuccess: {
+    backgroundColor: '#1db954',
+  },
+  actionTextOnBright: {
+    color: '#050505',
+    fontSize: 14,
+    fontWeight: '600',
+  },
   actionTextDanger: {
     color: '#ff6b6b',
     fontSize: 14,
@@ -433,6 +598,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#282828',
+    minHeight: 76,
+  },
+  draggingRow: {
+    backgroundColor: '#11111b',
   },
   trackNumber: {
     width: 24,
@@ -458,6 +627,10 @@ const styles = StyleSheet.create({
   },
   downloadedIcon: {
     marginRight: 8,
+  },
+  dragHandle: {
+    padding: 8,
+    marginLeft: 4,
   },
   emptyContainer: {
     flexGrow: 1,
