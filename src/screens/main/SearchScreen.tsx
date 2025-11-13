@@ -29,7 +29,7 @@ type Props = CompositeScreenProps<
   NativeStackScreenProps<AppStackParamList>
 >;
 
-const SearchScreen: React.FC<Props> = ({ navigation }) => {
+const SearchScreen: React.FC<Props> = () => {
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');

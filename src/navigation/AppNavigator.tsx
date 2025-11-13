@@ -66,19 +66,11 @@ const AppTabsNavigator = () => (
       tabBarItemStyle: tabStyles.tabItem,
       tabBarBackground: () => <View style={tabStyles.tabBackground} />,
       tabBarIcon: ({ focused }) => (
-        <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
-          <Icon
-            name={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
-            size={18}
-            color={focused ? '#ffffff' : '#7c8297'}
-          />
-          <Text
-            style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]}
-            numberOfLines={1}
-          >
-            {route.name}
-          </Text>
-        </View>
+        <TabBarIcon
+          label={route.name}
+          iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+          focused={focused}
+        />
       ),
     })}
   >
@@ -177,3 +169,18 @@ const tabStyles = StyleSheet.create({
     color: '#ffffff',
   },
 });
+
+type TabBarIconProps = {
+  label: string;
+  iconName: string;
+  focused: boolean;
+};
+
+const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
+  <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
+    <Icon name={iconName} size={18} color={focused ? '#ffffff' : '#7c8297'} />
+    <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
+      {label}
+    </Text>
+  </View>
+);
