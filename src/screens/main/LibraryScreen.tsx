@@ -9,8 +9,6 @@ import {
   View,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -18,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { fetchPlaylists, fetchSongs } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
-import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
+import type { LibraryStackParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import DownloadsScreen from './DownloadsScreen';
@@ -42,10 +40,7 @@ interface Album {
   artwork?: string | null;
 }
 
-type Props = CompositeScreenProps<
-  BottomTabScreenProps<AppTabsParamList, 'Library'>,
-  NativeStackScreenProps<AppStackParamList>
->;
+type Props = NativeStackScreenProps<LibraryStackParamList, 'LibraryMain'>;
 
 const TAB_ITEMS: Array<{ key: LibraryView; label: string; icon: string }> = [
   { key: 'artists', label: 'Artists', icon: 'mic' },

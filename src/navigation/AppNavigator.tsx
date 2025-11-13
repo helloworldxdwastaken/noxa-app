@@ -18,11 +18,17 @@ import NowPlayingScreen from '../screens/main/NowPlayingScreen';
 import PlaylistDetailScreen from '../screens/main/PlaylistDetailScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
-import type { AppStackParamList, AppTabsParamList, AuthStackParamList } from './types';
+import type {
+  AppStackParamList,
+  AppTabsParamList,
+  AuthStackParamList,
+  LibraryStackParamList,
+} from './types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabsParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
+const LibraryStack = createNativeStackNavigator<LibraryStackParamList>();
 
 const navigationTheme = {
   ...DarkTheme,
@@ -59,10 +65,17 @@ const AuthNavigator = () => (
 const AppTabsNavigator = () => (
   <Tabs.Navigator screenOptions={{ headerShown: false }} tabBar={customTabBarRenderer}>
     <Tabs.Screen name="Home" component={HomeScreen} />
-    <Tabs.Screen name="Library" component={LibraryScreen} />
+    <Tabs.Screen name="Library" component={LibraryStackNavigator} />
     <Tabs.Screen name="Search" component={SearchScreen} />
     <Tabs.Screen name="Settings" component={SettingsScreen} />
   </Tabs.Navigator>
+);
+
+const LibraryStackNavigator = () => (
+  <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
+    <LibraryStack.Screen name="LibraryMain" component={LibraryScreen} />
+    <LibraryStack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
+  </LibraryStack.Navigator>
 );
 
 const AppStackNavigator = () => (
@@ -74,7 +87,6 @@ const AppStackNavigator = () => (
       }}
     >
       <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
-      <AppStack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
       <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
       <AppStack.Screen
         name="NowPlaying"

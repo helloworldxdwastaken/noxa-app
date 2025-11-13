@@ -11,17 +11,21 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { fetchLibraryStats, fetchPlaylists, fetchSongs } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 import Icon from 'react-native-vector-icons/Feather';
-import type { AppStackParamList } from '../../navigation/types';
+import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnectivity } from '../../hooks/useConnectivity';
 
-type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
+type HomeTabNav = BottomTabNavigationProp<AppTabsParamList, 'Home'>;
+type RootStackNav = NativeStackNavigationProp<AppStackParamList>;
+type NavigationProp = CompositeNavigationProp<HomeTabNav, RootStackNav>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -84,12 +88,15 @@ const HomeScreen: React.FC = () => {
     <TouchableOpacity
       style={styles.playlistCard}
       onPress={() => {
-        navigation.navigate('PlaylistDetail', {
-          playlistId: item.id,
-          playlistName: item.name,
-          description: item.description,
-          coverUrl: item.coverUrl ?? undefined,
-          trackCount: item.trackCount,
+        navigation.navigate('Library', {
+          screen: 'PlaylistDetail',
+          params: {
+            playlistId: item.id,
+            playlistName: item.name,
+            description: item.description,
+            coverUrl: item.coverUrl ?? undefined,
+            trackCount: item.trackCount,
+          },
         });
       }}
     >

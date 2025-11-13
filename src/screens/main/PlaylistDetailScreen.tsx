@@ -26,19 +26,13 @@ import {
 } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
-import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
+import type { LibraryStackParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'PlaylistDetail'>;
+type Props = NativeStackScreenProps<LibraryStackParamList, 'PlaylistDetail'>;
 const ROW_HEIGHT = 76;
-const TAB_SHORTCUTS: Array<{ key: keyof AppTabsParamList; label: string; icon: string }> = [
-  { key: 'Home', label: 'Home', icon: 'home' },
-  { key: 'Library', label: 'Library', icon: 'layers' },
-  { key: 'Search', label: 'Search', icon: 'search' },
-  { key: 'Settings', label: 'Settings', icon: 'settings' },
-];
 
 const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
@@ -365,10 +359,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     );
   }
 
-  const handleTabShortcut = (tab: keyof AppTabsParamList) => {
-    navigation.navigate('Tabs', { screen: tab });
-  };
-
   return (
     <View
       style={[styles.container, { paddingTop: insets.top + 12 }]}
@@ -512,28 +502,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
         }
       />
-      <View style={[styles.tabShortcutContainer, { paddingBottom: insets.bottom + 10 }]}>
-        <View style={styles.tabShortcutBackground}>
-          {TAB_SHORTCUTS.map(item => {
-            const isActive = item.key === 'Library';
-            return (
-              <TouchableOpacity
-                key={item.key}
-                style={[styles.tabShortcutBtn, isActive && styles.tabShortcutBtnActive]}
-                onPress={() => handleTabShortcut(item.key)}
-              >
-                <Icon name={item.icon} size={18} color={isActive ? '#1db954' : '#7c8297'} />
-                <Text
-                  style={[styles.tabShortcutLabel, isActive && styles.tabShortcutLabelActive]}
-                  numberOfLines={1}
-                >
-                  {item.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-      </View>
     </View>
   );
 };
@@ -705,40 +673,6 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#9090a5',
     fontSize: 16,
-  },
-  tabShortcutContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-  },
-  tabShortcutBackground: {
-    flexDirection: 'row',
-    backgroundColor: '#0d0d14',
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    padding: 6,
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  tabShortcutBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderRadius: 999,
-    paddingVertical: 10,
-  },
-  tabShortcutBtnActive: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-  },
-  tabShortcutLabel: {
-    color: '#7c8297',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  tabShortcutLabelActive: {
-    color: '#ffffff',
   },
 });
 
