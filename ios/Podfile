@@ -31,21 +31,18 @@ target 'music_app' do
       # :ccache_enabled => true
     )
     
-    # Fix for RCT-Folly missing headers with New Architecture
+    # Fix for RCT-Folly and New Architecture compatibility
     installer.pods_project.targets.each do |target|
       target.build_configurations.each do |config|
         config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
         
-        # Add header search paths for Folly
-        if target.name == 'RCT-Folly'
-          config.build_settings['HEADER_SEARCH_PATHS'] ||= '$(inherited) '
-          config.build_settings['HEADER_SEARCH_PATHS'] << '"${PODS_ROOT}/Headers/Public/RCT-Folly" '
-          config.build_settings['HEADER_SEARCH_PATHS'] << '"${PODS_ROOT}/RCT-Folly" '
-        end
+        # Disable coroutine support in Folly to avoid missing headers
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] << 'FOLLY_HAVE_COROUTINES=0'
         
-        # Compiler flags for New Architecture compatibility
+        # Compiler flags for compatibility
         config.build_settings['OTHER_CPLUSPLUSFLAGS'] ||= '$(inherited)'
-        config.build_settings['OTHER_CPLUSPLUSFLAGS'] << ' -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1'
+        config.build_settings['OTHER_CPLUSPLUSFLAGS'] << ' -DFOLLY_NO_CONFIG -DFOLLY_MOBILE=1 -DFOLLY_USE_LIBCPP=1 -DFOLLY_HAVE_COROUTINES=0'
         config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++20'
       end
     end
