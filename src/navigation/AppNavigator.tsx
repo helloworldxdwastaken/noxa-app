@@ -143,6 +143,9 @@ const tabStyles = StyleSheet.create({
   iconBadgeActive: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
+  tabButton: {
+    flex: 1,
+  },
   iconLabel: {
     fontSize: 12,
     fontWeight: '600',
@@ -182,7 +185,7 @@ const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
   </View>
 );
 
-const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
   const searchRoute = state.routes.find(route => route.name === 'Search');
   const mainRoutes = state.routes.filter(route => route.name !== 'Search');
@@ -206,10 +209,10 @@ const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => 
           return (
             <TouchableOpacity
               key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              onPress={() => handlePress(route.name, route.key, isFocused)}
-              style={{ flex: 1 }}
+             accessibilityRole="button"
+             accessibilityState={isFocused ? { selected: true } : {}}
+             onPress={() => handlePress(route.name, route.key, isFocused)}
+              style={[tabStyles.tabButton]}
             >
               <TabBarIcon
                 label={route.name}

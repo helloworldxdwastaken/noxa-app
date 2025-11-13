@@ -226,8 +226,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 <Icon
                   name="save"
                   size={16}
-                  color="#ffffff"
-                  style={updateMutation.isPending ? { opacity: 0.7 } : null}
+                  color={updateMutation.isPending ? '#a3a3b3' : '#ffffff'}
                 />
                 <Text style={styles.actionText}>
                   {updateMutation.isPending ? 'Saving…' : 'Save'}
