@@ -18,6 +18,7 @@ import NowPlayingScreen from '../screens/main/NowPlayingScreen';
 import PlaylistDetailScreen from '../screens/main/PlaylistDetailScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import { useLanguage } from '../context/LanguageContext';
 import type {
   AppStackParamList,
   AppTabsParamList,
@@ -206,8 +207,15 @@ const customTabBarRenderer = (props: BottomTabBarProps) => <CustomTabBar {...pro
 
 const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const searchRoute = state.routes.find(route => route.name === 'Search');
   const mainRoutes = state.routes.filter(route => route.name !== 'Search');
+  const labelMap: Record<string, string> = {
+    Home: t('tabs.Home'),
+    Library: t('tabs.Library'),
+    Search: t('tabs.Search'),
+    Settings: t('tabs.Settings'),
+  };
 
   const handlePress = (routeName: string, key: string, isFocused: boolean) => {
     const event = navigation.emit({ type: 'tabPress', target: key, canPreventDefault: true });
@@ -234,7 +242,7 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
               style={[tabStyles.tabButton]}
             >
               <TabBarIcon
-                label={route.name}
+                label={labelMap[route.name] ?? route.name}
                 iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
                 focused={isFocused}
               />

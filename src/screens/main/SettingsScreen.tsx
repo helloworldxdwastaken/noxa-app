@@ -3,6 +3,7 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
   StyleSheet,
   Switch,
   Text,
@@ -71,7 +72,11 @@ const SettingsScreen: React.FC = () => {
       style={[styles.container, { paddingTop: insets.top + 12 }]}
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
-      <View style={styles.section}>
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.serverTitle')}</Text>
         <Text style={styles.sectionSubtitle}>{t('settings.serverSubtitle')}</Text>
         <TextInput
@@ -85,9 +90,9 @@ const SettingsScreen: React.FC = () => {
         <TouchableOpacity style={styles.button} onPress={handleSaveServer}>
           <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
         </TouchableOpacity>
-      </View>
+        </View>
 
-      <View style={styles.section}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.adminTitle')}</Text>
         <Text style={styles.sectionSubtitle}>{t('settings.adminSubtitle')}</Text>
         <TextInput
@@ -111,9 +116,9 @@ const SettingsScreen: React.FC = () => {
         <TouchableOpacity style={styles.button} onPress={handleSaveAdmin}>
           <Text style={styles.buttonText}>{t('settings.saveAdmin')}</Text>
         </TouchableOpacity>
-      </View>
+        </View>
 
-      <View style={styles.section}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
         <Text style={styles.sectionSubtitle}>{t('settings.languageSubtitle')}</Text>
         <View style={styles.languageToggle}>
@@ -134,14 +139,15 @@ const SettingsScreen: React.FC = () => {
             );
           })}
         </View>
-      </View>
+        </View>
 
-      <View style={styles.section}>
+        <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
         <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleLogout}>
           <Text style={styles.buttonText}>{t('settings.signOut')}</Text>
         </TouchableOpacity>
-      </View>
+        </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -151,6 +157,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: '#000000',
+  },
+  scrollContent: {
     gap: 24,
   },
   section: {

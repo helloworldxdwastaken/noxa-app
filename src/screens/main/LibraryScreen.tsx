@@ -20,6 +20,7 @@ import type { LibraryStackParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import DownloadsScreen from './DownloadsScreen';
+import { useLanguage } from '../../context/LanguageContext';
 
 type LibraryView = 'artists' | 'albums' | 'playlists' | 'downloads';
 
@@ -42,17 +43,11 @@ interface Album {
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'LibraryMain'>;
 
-const TAB_ITEMS: Array<{ key: LibraryView; label: string; icon: string }> = [
-  { key: 'artists', label: 'Artists', icon: 'mic' },
-  { key: 'albums', label: 'Albums', icon: 'disc' },
-  { key: 'playlists', label: 'Playlists', icon: 'music' },
-  { key: 'downloads', label: 'Downloads', icon: 'download' },
-];
-
 const LibraryScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { state: offlineState } = useOffline();
   const connectivity = useConnectivity();
+  const { t } = useLanguage();
   const [activeView, setActiveView] = useState<LibraryView>('artists');
 
   const {
@@ -98,7 +93,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
   const artists = useMemo<Artist[]>(() => {
     const grouped = songs.reduce(
       (acc, song) => {
-        const artistName = song.artist || 'Unknown Artist';
+        const artistName = song.artist || t('library.unknownArtist');
         if (!acc[artistName]) {
           acc[artistName] = {
             id: artistName,
@@ -118,13 +113,13 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
       {} as Record<string, Artist>,
     );
     return Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
-  }, [songs]);
+  }, [songs, t]);
 
   // Group songs by album
   const albums = useMemo<Album[]>(() => {
     const grouped = songs.reduce(
       (acc, song) => {
-        const albumTitle = song.album || 'Unknown Album';
+        const albumTitle = song.album || t('library.unknownAlbum');
         const key = `${albumTitle}-${song.artist}`;
         if (!acc[key]) {
           acc[key] = {
@@ -146,7 +141,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
       {} as Record<string, Album>,
     );
     return Object.values(grouped).sort((a, b) => a.title.localeCompare(b.title));
-  }, [songs]);
+  }, [songs, t]);
 
   const isLoading = songsLoading || playlistsLoading;
   const isRefetching = songsRefetching || playlistsRefetching;
@@ -155,6 +150,33 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     refetchSongs();
     refetchPlaylists();
   };
+
+  const labelForView = useCallback(
+    (view: LibraryView) => {
+      switch (view) {
+        case 'artists':
+          return t('library.artists');
+        case 'albums':
+          return t('library.albums');
+        case 'playlists':
+          return t('library.playlists');
+        case 'downloads':
+        default:
+          return t('library.downloads');
+      }
+    },
+    [t],
+  );
+
+  const tabItems = useMemo(
+    () => [
+      { key: 'artists' as LibraryView, label: t('library.artists'), icon: 'mic' as const },
+      { key: 'albums' as LibraryView, label: t('library.albums'), icon: 'disc' as const },
+      { key: 'playlists' as LibraryView, label: t('library.playlists'), icon: 'music' as const },
+      { key: 'downloads' as LibraryView, label: t('library.downloads'), icon: 'download' as const },
+    ],
+    [t],
+  );
 
   const renderArtist = useCallback(
     ({ item }: { item: Artist }) => (
@@ -168,10 +190,12 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.name}
         </Text>
-        <Text style={styles.gridSubtitle}>{item.trackCount} songs</Text>
+        <Text style={styles.gridSubtitle}>
+          {t('playlist.trackCount', { count: item.trackCount })}
+        </Text>
       </TouchableOpacity>
     ),
-    [],
+    [t],
   );
 
   const renderAlbum = useCallback(
@@ -215,17 +239,19 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.name}
         </Text>
-        <Text style={styles.gridSubtitle}>{item.trackCount} tracks</Text>
+        <Text style={styles.gridSubtitle}>
+          {t('playlist.trackCount', { count: item.trackCount })}
+        </Text>
       </TouchableOpacity>
     ),
-    [navigation],
+    [navigation, t],
   );
 
   if (!connectivity.isOffline && isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color="#ffffff" />
-        <Text style={styles.loadingText}>Loading library…</Text>
+        <Text style={styles.loadingText}>{t('library.loading')}</Text>
       </View>
     );
   }
@@ -234,17 +260,20 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorText}>
-          {songsError instanceof Error ? songsError.message : 'Failed to load library'}
+          {songsError instanceof Error ? songsError.message : t('library.error')}
         </Text>
       </View>
     );
   }
 
+  const activeLabel = labelForView(activeView);
+  const activeLabelLower = activeLabel.toLowerCase();
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* View Tabs */}
       <View style={styles.tabs}>
-        {TAB_ITEMS.map(item => {
+        {tabItems.map(item => {
           const isActive = activeView === item.key;
           return (
             <TouchableOpacity
@@ -301,13 +330,13 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
               </View>
               <Text style={styles.emptyText}>
                 {connectivity.isOffline
-                  ? `No offline ${activeView} available`
-                  : `No ${activeView} found yet`}
+                  ? t('library.noOfflineData', { view: activeLabelLower })
+                  : t('library.noData', { view: activeLabelLower })}
               </Text>
               <Text style={styles.emptySubtext}>
                 {connectivity.isOffline
-                  ? 'Download content while online to access it here.'
-                  : 'Add music to your library to see it here.'}
+                  ? t('library.downloadsHint')
+                  : t('library.libraryHint')}
               </Text>
             </View>
           }

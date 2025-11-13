@@ -30,6 +30,18 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       showAll: 'Show all',
       recentlyAdded: 'Recently Added',
       offline: 'Offline mode',
+      stats: {
+        songs: 'Songs',
+        artists: 'Artists',
+        albums: 'Albums',
+        storage: 'Storage',
+      },
+    },
+    tabs: {
+      Home: 'Home',
+      Library: 'Library',
+      Search: 'Search',
+      Settings: 'Settings',
     },
     search: {
       placeholderLocal: 'Search your library',
@@ -91,6 +103,12 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       emptyPlaylist: 'No tracks in this playlist yet.',
       downloadStarted: 'Playlist is being downloaded for offline playback.',
       noTracksDownload: 'Add tracks to this playlist before downloading.',
+      unknownArtist: 'Unknown Artist',
+      unknownAlbum: 'Unknown Album',
+      downloadsHint: 'Download content while online to access it here.',
+      libraryHint: 'Add music to your library to see it here.',
+      noData: 'No {{view}} found yet',
+      noOfflineData: 'No offline {{view}} available',
     },
     playlist: {
       edit: 'Edit',
@@ -164,6 +182,18 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       showAll: 'Ver todo',
       recentlyAdded: 'Recientemente añadido',
       offline: 'Modo sin conexión',
+      stats: {
+        songs: 'Canciones',
+        artists: 'Artistas',
+        albums: 'Álbumes',
+        storage: 'Almacenamiento',
+      },
+    },
+    tabs: {
+      Home: 'Inicio',
+      Library: 'Biblioteca',
+      Search: 'Buscar',
+      Settings: 'Ajustes',
     },
     search: {
       placeholderLocal: 'Busca en tu biblioteca',
@@ -225,6 +255,12 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       emptyPlaylist: 'Aún no hay canciones en esta lista.',
       downloadStarted: 'La lista se está descargando para usar sin conexión.',
       noTracksDownload: 'Añade canciones antes de descargar.',
+      unknownArtist: 'Artista desconocido',
+      unknownAlbum: 'Álbum desconocido',
+      downloadsHint: 'Descarga contenido estando en línea para verlo aquí.',
+      libraryHint: 'Añade música a tu biblioteca para verla aquí.',
+      noData: 'No se encontraron {{view}}',
+      noOfflineData: 'No hay {{view}} sin conexión',
     },
     playlist: {
       edit: 'Editar',

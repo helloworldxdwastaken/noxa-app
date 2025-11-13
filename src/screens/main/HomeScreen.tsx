@@ -22,6 +22,7 @@ import Icon from 'react-native-vector-icons/Feather';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useConnectivity } from '../../hooks/useConnectivity';
+import { useLanguage } from '../../context/LanguageContext';
 
 type HomeTabNav = BottomTabNavigationProp<AppTabsParamList, 'Home'>;
 type RootStackNav = NativeStackNavigationProp<AppStackParamList>;
@@ -31,6 +32,7 @@ const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const connectivity = useConnectivity();
+  const { t } = useLanguage();
   const {
     data: stats,
     isLoading: statsLoading,
@@ -68,12 +70,16 @@ const HomeScreen: React.FC = () => {
 
   const statCards = useMemo(
     () => [
-      { label: 'Songs', value: stats?.totalSongs ?? '--', icon: 'music' as const },
-      { label: 'Artists', value: stats?.totalArtists ?? '--', icon: 'mic' as const },
-      { label: 'Albums', value: stats?.totalAlbums ?? '--', icon: 'disc' as const },
-      { label: 'Storage', value: stats?.totalStorage ?? '--', icon: 'hard-drive' as const },
+      { label: t('home.stats.songs'), value: stats?.totalSongs ?? '--', icon: 'music' as const },
+      { label: t('home.stats.artists'), value: stats?.totalArtists ?? '--', icon: 'mic' as const },
+      { label: t('home.stats.albums'), value: stats?.totalAlbums ?? '--', icon: 'disc' as const },
+      {
+        label: t('home.stats.storage'),
+        value: stats?.totalStorage ?? '--',
+        icon: 'hard-drive' as const,
+      },
     ],
-    [stats?.totalAlbums, stats?.totalArtists, stats?.totalSongs, stats?.totalStorage],
+    [stats?.totalAlbums, stats?.totalArtists, stats?.totalSongs, stats?.totalStorage, t],
   );
 
   const handlePlayTrack = useCallback(
@@ -139,11 +145,11 @@ const HomeScreen: React.FC = () => {
     >
       {/* Greeting Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Good Evening</Text>
+        <Text style={styles.greeting}>{t('home.greeting')}</Text>
         {connectivity.isOffline ? (
           <View style={styles.offlineBanner}>
             <Icon name="wifi-off" size={16} color="#fcd34d" />
-            <Text style={styles.offlineText}>Offline mode</Text>
+            <Text style={styles.offlineText}>{t('home.offline')}</Text>
           </View>
         ) : null}
       </View>
@@ -165,9 +171,9 @@ const HomeScreen: React.FC = () => {
       {playlists.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Your Playlists</Text>
+            <Text style={styles.sectionTitle}>{t('home.playlists')}</Text>
             <TouchableOpacity>
-              <Text style={styles.showAll}>Show all</Text>
+              <Text style={styles.showAll}>{t('home.showAll')}</Text>
             </TouchableOpacity>
           </View>
           <FlatList
@@ -185,9 +191,9 @@ const HomeScreen: React.FC = () => {
       {recentTracks.length > 0 && (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recently Added</Text>
+            <Text style={styles.sectionTitle}>{t('home.recentlyAdded')}</Text>
             <TouchableOpacity>
-              <Text style={styles.showAll}>Show all</Text>
+              <Text style={styles.showAll}>{t('home.showAll')}</Text>
             </TouchableOpacity>
           </View>
           <FlatList
