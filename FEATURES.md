@@ -155,3 +155,4 @@
 4. Add app icons for both platforms
 5. Configure code signing for distribution
 
+

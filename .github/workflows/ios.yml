@@ -40,7 +40,19 @@ jobs:
             archive \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO
+            CODE_SIGNING_ALLOWED=NO \
+            -allowProvisioningUpdates \
+            | xcpretty || true
+
+      - name: Check if archive exists
+        run: |
+          if [ -d "ios/build/music_app.xcarchive" ]; then
+            echo "✅ Archive created successfully"
+            ls -la ios/build/music_app.xcarchive/Products/Applications/ || true
+          else
+            echo "❌ Archive not found"
+            exit 1
+          fi
 
       - name: Export unsigned IPA
         run: |
@@ -49,6 +61,7 @@ jobs:
           cp -r build/music_app.xcarchive/Products/Applications/music_app.app build/Payload/
           cd build
           zip -r music_app-unsigned.ipa Payload
+          ls -lh music_app-unsigned.ipa
           
       - name: Upload iOS IPA (Unsigned)
         uses: actions/upload-artifact@v4
@@ -56,4 +69,5 @@ jobs:
           name: ios-unsigned-ipa
           path: ios/build/music_app-unsigned.ipa
           retention-days: 30
+
 
