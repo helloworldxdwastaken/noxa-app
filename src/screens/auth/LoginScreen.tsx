@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -47,6 +48,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <View style={styles.card}>
+        <Image source={require('../../assets/images/logo.png')} style={styles.logo} />
         <Text style={styles.title}>Welcome to Noxa Music</Text>
         <Text style={styles.subtitle}>Sign in to access your library anywhere.</Text>
 
@@ -116,6 +118,12 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     gap: 16,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    marginBottom: 4,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 24,
