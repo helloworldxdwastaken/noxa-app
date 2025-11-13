@@ -15,5 +15,6 @@ export type AppStackParamList = {
   Tabs: undefined;
   PlaylistDetail: { playlistId: number };
   NowPlaying: undefined;
+  DownloadRequest: undefined;
 };
 

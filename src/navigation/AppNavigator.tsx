@@ -5,18 +5,23 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import { useAuth } from '../context/AuthContext';
+import MiniPlayer from '../components/MiniPlayer';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SplashScreen from '../screens/common/SplashScreen';
+import DownloadRequestScreen from '../screens/main/DownloadRequestScreen';
 import DownloadsScreen from '../screens/main/DownloadsScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 import LibraryScreen from '../screens/main/LibraryScreen';
+import NowPlayingScreen from '../screens/main/NowPlayingScreen';
+import PlaylistDetailScreen from '../screens/main/PlaylistDetailScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
-import type { AppTabsParamList, AuthStackParamList } from './types';
+import type { AppStackParamList, AppTabsParamList, AuthStackParamList } from './types';
 
 const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabsParamList>();
+const AppStack = createNativeStackNavigator<AppStackParamList>();
 
 const navigationTheme = {
   ...DarkTheme,
@@ -97,6 +102,30 @@ const AppTabsNavigator = () => (
   </Tabs.Navigator>
 );
 
+const AppStackNavigator = () => (
+  <>
+    <AppStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+    >
+      <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
+      <AppStack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
+      <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
+      <AppStack.Screen
+        name="NowPlaying"
+        component={NowPlayingScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+        }}
+      />
+    </AppStack.Navigator>
+    <MiniPlayer />
+  </>
+);
+
 const AppNavigator = () => {
   const {
     state: { isBootstrapped, user },
@@ -108,7 +137,7 @@ const AppNavigator = () => {
 
   return (
     <NavigationContainer theme={navigationTheme}>
-      {user ? <AppTabsNavigator /> : <AuthNavigator />}
+      {user ? <AppStackNavigator /> : <AuthNavigator />}
     </NavigationContainer>
   );
 };
