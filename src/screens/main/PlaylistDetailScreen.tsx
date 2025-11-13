@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   deletePlaylist,
@@ -31,6 +32,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
   const queryClient = useQueryClient();
   const { state: offlineState, downloadPlaylist, removePlaylist, isPlaylistDownloaded } = useOffline();
+  const insets = useSafeAreaInsets();
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(initialName ?? '');
@@ -170,7 +172,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>

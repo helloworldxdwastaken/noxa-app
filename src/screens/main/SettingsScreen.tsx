@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../context/AuthContext';
 
@@ -61,9 +62,11 @@ const SettingsScreen: React.FC = () => {
     await logout();
   };
 
+  const insets = useSafeAreaInsets();
+
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { paddingTop: insets.top + 12 }]}
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <View style={styles.section}>

@@ -2,6 +2,7 @@ import React from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import Icon from 'react-native-vector-icons/Feather';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchDownloads } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
@@ -9,6 +10,7 @@ import type { DownloadItem } from '../../types/models';
 
 const DownloadsScreen: React.FC = () => {
   const { state: offlineState } = useOffline();
+  const insets = useSafeAreaInsets();
 
   const {
     data = [],
@@ -73,7 +75,7 @@ const DownloadsScreen: React.FC = () => {
     <FlatList
       data={data}
       keyExtractor={item => item.id}
-      style={styles.list}
+      style={[styles.list, { paddingTop: insets.top + 12 }]}
       onRefresh={refetch}
       refreshing={isRefetching}
       ListHeaderComponent={headerComponent}
