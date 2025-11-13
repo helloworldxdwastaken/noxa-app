@@ -81,9 +81,6 @@ android {
     buildFeatures {
         prefab true
     }
-    prefab {
-        packages "hermes-engine"
-    }
     defaultConfig {
         applicationId "com.music_app"
         minSdkVersion rootProject.ext.minSdkVersion
