@@ -65,6 +65,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Patch codegen deployment targets
+        run: bash scripts/patch-codegen-deployment-target.sh
+
       - name: Install CocoaPods dependencies
         run: |
           cd ios
