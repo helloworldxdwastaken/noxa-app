@@ -19,12 +19,14 @@ import { playSong } from '../../services/player/PlayerService';
 import Icon from 'react-native-vector-icons/Feather';
 import type { AppStackParamList } from '../../navigation/types';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useConnectivity } from '../../hooks/useConnectivity';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
 
 const HomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
+  const connectivity = useConnectivity();
   const {
     data: stats,
     isLoading: statsLoading,
@@ -131,6 +133,12 @@ const HomeScreen: React.FC = () => {
       {/* Greeting Header */}
       <View style={styles.header}>
         <Text style={styles.greeting}>Good Evening</Text>
+        {connectivity.isOffline ? (
+          <View style={styles.offlineBanner}>
+            <Icon name="wifi-off" size={16} color="#fcd34d" />
+            <Text style={styles.offlineText}>Offline mode</Text>
+          </View>
+        ) : null}
       </View>
 
       {/* Library Stats */}
@@ -208,6 +216,22 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: '#ffffff',
+  },
+  offlineBanner: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: 'rgba(250, 204, 21, 0.15)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  offlineText: {
+    color: '#fcd34d',
+    fontWeight: '600',
+    fontSize: 13,
   },
   statsGrid: {
     flexDirection: 'row',

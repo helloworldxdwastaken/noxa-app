@@ -16,6 +16,7 @@ type OfflineContextValue = {
   localUri: (songId: number) => string | null;
   isSongDownloaded: (songId: number) => boolean;
   isPlaylistDownloaded: (playlistId: number) => boolean;
+  playlistSongs: (playlistId: number) => Song[];
 };
 
 const OfflineContext = createContext<OfflineContextValue | undefined>(undefined);
@@ -50,6 +51,7 @@ export const OfflineProvider = ({ children }: { children: ReactNode }) => {
       localUri: songId => offlineManager.localUri(songId),
       isSongDownloaded: songId => offlineManager.isSongDownloaded(songId),
       isPlaylistDownloaded: playlistId => offlineManager.isPlaylistDownloaded(playlistId),
+      playlistSongs: playlistId => offlineManager.playlistSongs(playlistId),
     }),
     [state],
   );
@@ -64,4 +66,3 @@ export const useOffline = () => {
   }
   return context;
 };
-

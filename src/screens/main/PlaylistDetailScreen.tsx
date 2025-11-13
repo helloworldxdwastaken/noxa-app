@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -25,18 +25,27 @@ import {
   fetchPlaylists,
 } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
-import type { AppStackParamList } from '../../navigation/types';
+import { useConnectivity } from '../../hooks/useConnectivity';
+import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'PlaylistDetail'>;
 const ROW_HEIGHT = 76;
+const TAB_SHORTCUTS: Array<{ key: keyof AppTabsParamList; label: string; icon: string }> = [
+  { key: 'Home', label: 'Home', icon: 'home' },
+  { key: 'Library', label: 'Library', icon: 'layers' },
+  { key: 'Search', label: 'Search', icon: 'search' },
+  { key: 'Settings', label: 'Settings', icon: 'settings' },
+];
 
 const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
   const queryClient = useQueryClient();
-  const { state: offlineState, downloadPlaylist, removePlaylist, isPlaylistDownloaded } = useOffline();
+  const { state: offlineState, downloadPlaylist, removePlaylist, isPlaylistDownloaded } =
+    useOffline();
+  const connectivity = useConnectivity();
   const insets = useSafeAreaInsets();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -53,6 +62,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const { data: tracks = [], isLoading, refetch } = useQuery({
     queryKey: ['playlists', playlistId, 'tracks'],
     queryFn: () => fetchPlaylistTracks(playlistId),
+    enabled: !connectivity.isOffline,
   });
 
   const { data: playlistMeta } = useQuery({
@@ -71,6 +81,21 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const isDownloading = offlineState.activePlaylists.includes(playlistId);
   const isDownloaded = isPlaylistDownloaded(playlistId);
 
+  const offlineTracks = useMemo(() => {
+    if (!connectivity.isOffline) {
+      return [];
+    }
+    const entry = offlineState.playlists[playlistId];
+    if (!entry) {
+      return [];
+    }
+    return entry.songIds
+      .map(id => offlineState.tracks[id]?.song)
+      .filter((song): song is Song => Boolean(song));
+  }, [connectivity.isOffline, offlineState.playlists, offlineState.tracks, playlistId]);
+
+  const baseTracks = connectivity.isOffline ? offlineTracks : tracks;
+
   useEffect(() => {
     if (!isEditing) {
       setNameInput(derivedName);
@@ -80,21 +105,21 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   useEffect(() => {
     if (!orderDirty || !isEditing) {
-      setOrderedTracks(tracks);
-      orderedTracksRef.current = tracks;
+      setOrderedTracks(baseTracks);
+      orderedTracksRef.current = baseTracks;
     }
-  }, [tracks, orderDirty, isEditing]);
+  }, [baseTracks, orderDirty, isEditing]);
 
   useEffect(() => {
     if (!isEditing) {
-      setOrderedTracks(tracks);
-      orderedTracksRef.current = tracks;
+      setOrderedTracks(baseTracks);
+      orderedTracksRef.current = baseTracks;
       setOrderDirty(false);
       setDraggingIndex(null);
       dragIndexRef.current = null;
       dragOffsetRef.current = 0;
     }
-  }, [isEditing, tracks]);
+  }, [isEditing, baseTracks]);
 
   useEffect(() => {
     orderedTracksRef.current = orderedTracks;
@@ -174,7 +199,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   };
 
   const handleDownloadOffline = async () => {
-    if (tracks.length === 0) {
+    if (baseTracks.length === 0) {
       Alert.alert('No Tracks', 'Add tracks to this playlist before downloading.');
       return;
     }
@@ -183,9 +208,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       name: derivedName,
       description: derivedDesc,
       coverUrl: derivedCover,
-      trackCount: derivedTrackCount ?? tracks.length,
+      trackCount: derivedTrackCount ?? baseTracks.length,
     };
-    await downloadPlaylist(playlistPayload, tracks);
+    await downloadPlaylist(playlistPayload, baseTracks);
     Alert.alert('Download Started', 'Playlist is being downloaded for offline playback.');
   };
 
@@ -204,10 +229,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handlePlaySong = useCallback(
     (song: Song) => {
-      const queue = tracks.filter(track => track.id !== song.id);
+      const queue = baseTracks.filter(track => track.id !== song.id);
       playSong(song, queue).catch(error => console.error('Failed to start playback', error));
     },
-    [tracks],
+    [baseTracks],
   );
 
   const startDrag = (index: number) => {
@@ -283,7 +308,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     finishDrag();
   };
 
-  const displayedTracks = isEditing ? orderedTracks : tracks;
+  const displayedTracks = isEditing ? orderedTracks : baseTracks;
 
   const renderTrack = ({ item, index }: { item: Song; index: number }) => (
     <TouchableOpacity
@@ -337,6 +362,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       </View>
     );
   }
+
+  const handleTabShortcut = (tab: keyof AppTabsParamList) => {
+    navigation.navigate('Tabs', { screen: tab });
+  };
 
   return (
     <View
@@ -468,7 +497,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         renderItem={renderTrack}
         keyExtractor={item => `${item.id}`}
         scrollEnabled={!isEditing || draggingIndex === null}
-        contentContainerStyle={displayedTracks.length === 0 && styles.emptyContainer}
+        contentContainerStyle={[
+          displayedTracks.length === 0 && styles.emptyContainer,
+          styles.listContentPadding,
+        ]}
         ListEmptyComponent={
           <View style={styles.centered}>
             <View style={styles.emptyIconCircle}>
@@ -478,6 +510,28 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
           </View>
         }
       />
+      <View style={[styles.tabShortcutContainer, { paddingBottom: insets.bottom + 10 }]}>
+        <View style={styles.tabShortcutBackground}>
+          {TAB_SHORTCUTS.map(item => {
+            const isActive = item.key === 'Library';
+            return (
+              <TouchableOpacity
+                key={item.key}
+                style={[styles.tabShortcutBtn, isActive && styles.tabShortcutBtnActive]}
+                onPress={() => handleTabShortcut(item.key)}
+              >
+                <Icon name={item.icon} size={18} color={isActive ? '#1db954' : '#7c8297'} />
+                <Text
+                  style={[styles.tabShortcutLabel, isActive && styles.tabShortcutLabelActive]}
+                  numberOfLines={1}
+                >
+                  {item.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
     </View>
   );
 };
@@ -635,6 +689,9 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flexGrow: 1,
   },
+  listContentPadding: {
+    paddingBottom: 120,
+  },
   emptyIconCircle: {
     width: 72,
     height: 72,
@@ -646,6 +703,40 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#9090a5',
     fontSize: 16,
+  },
+  tabShortcutContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 12,
+  },
+  tabShortcutBackground: {
+    flexDirection: 'row',
+    backgroundColor: '#0d0d14',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 6,
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  tabShortcutBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderRadius: 999,
+    paddingVertical: 10,
+  },
+  tabShortcutBtnActive: {
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  tabShortcutLabel: {
+    color: '#7c8297',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  tabShortcutLabelActive: {
+    color: '#ffffff',
   },
 });
 

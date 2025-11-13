@@ -11,7 +11,11 @@ export type AppTabsParamList = {
 };
 
 export type AppStackParamList = {
-  Tabs: undefined;
+  Tabs:
+    | {
+        screen?: keyof AppTabsParamList;
+      }
+    | undefined;
   PlaylistDetail: {
     playlistId: number;
     playlistName?: string | null;
