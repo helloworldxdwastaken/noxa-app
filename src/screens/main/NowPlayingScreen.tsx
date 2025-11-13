@@ -5,6 +5,7 @@ import {
   FlatList,
   Animated,
   GestureResponderEvent,
+  ImageBackground,
   Modal,
   PanResponder,
   Pressable,
@@ -153,6 +154,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const position = progress.position;
   const progressPct = duration ? Math.min(100, (position / duration) * 100) : 0;
   const canShuffle = queue.length > 1;
+  const backgroundSource = useMemo(() => {
+    if (track?.artwork && typeof track.artwork === 'string') {
+      return { uri: track.artwork };
+    }
+    return null;
+  }, [track?.artwork]);
 
   const handleSkipNext = async () => {
     try {
@@ -292,7 +299,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     [duration, progressBarWidth],
   );
 
-  return (
+  const content = (
     <View style={styles.container} {...panResponder.panHandlers}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
@@ -488,12 +495,30 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       </Modal>
     </View>
   );
+
+  if (backgroundSource) {
+    return (
+      <ImageBackground source={backgroundSource} blurRadius={45} style={styles.backgroundImage}>
+        <View style={styles.backdropOverlay} />
+        {content}
+      </ImageBackground>
+    );
+  }
+
+  return content;
 };
 
 const styles = StyleSheet.create({
+  backgroundImage: {
+    flex: 1,
+  },
+  backdropOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(5,5,10,0.8)',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0,0,0,0.35)',
   },
   header: {
     flexDirection: 'row',

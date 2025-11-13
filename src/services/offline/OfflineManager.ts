@@ -1,4 +1,5 @@
 import RNFS from 'react-native-fs';
+import { Platform } from 'react-native';
 
 import { getAuthToken } from '../../api/client';
 import { getStreamUrl } from '../../api/service';
@@ -35,7 +36,18 @@ type OfflineSnapshot = {
 
 type Listener = (snapshot: OfflineSnapshot) => void;
 
-const CACHE_DIR = `${RNFS.DocumentDirectoryPath}/OfflineCache`;
+const resolveBaseDirectory = () => {
+  if (Platform.OS === 'android') {
+    return RNFS.ExternalDirectoryPath ?? RNFS.DocumentDirectoryPath;
+  }
+  if (RNFS.LibraryDirectoryPath) {
+    return RNFS.LibraryDirectoryPath;
+  }
+  return RNFS.DocumentDirectoryPath;
+};
+
+const BASE_DIR = resolveBaseDirectory();
+const CACHE_DIR = `${BASE_DIR}/OfflineCache`;
 const ARTWORK_DIR = `${CACHE_DIR}/Artwork`;
 const METADATA_FILE = `${CACHE_DIR}/offline-metadata.json`;
 
@@ -464,4 +476,3 @@ export class OfflineManager {
 }
 
 export const offlineManager = new OfflineManager();
-
