@@ -65,7 +65,7 @@ jobs:
 
   build-ios:
     name: Build iOS
-    runs-on: macos-14
+    runs-on: macos-15
     needs: lint-and-typecheck
     steps:
       - name: Checkout code
