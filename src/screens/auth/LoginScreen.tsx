@@ -109,10 +109,10 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     padding: 24,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   card: {
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 16,
     padding: 24,
     gap: 16,
@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   input: {
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -148,8 +148,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   checkboxChecked: {
-    backgroundColor: '#4b67ff',
-    borderColor: '#4b67ff',
+    backgroundColor: '#1db954',
+    borderColor: '#1db954',
   },
   checkboxDot: {
     width: 10,
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     color: '#e6e6f2',
   },
   button: {
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',

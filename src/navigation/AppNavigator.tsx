@@ -27,12 +27,12 @@ const navigationTheme = {
   ...DarkTheme,
   colors: {
     ...DarkTheme.colors,
-    background: '#0b0b0f',
-    card: '#161621',
-    primary: '#4b67ff',
+    background: '#000000',
+    card: '#121212',
+    primary: '#1db954',
     text: '#ffffff',
-    border: '#1f1f2b',
-    notification: '#4b67ff',
+    border: '#282828',
+    notification: '#1db954',
   },
 };
 
@@ -53,7 +53,7 @@ const AppTabsNavigator = () => (
     screenOptions={{
       headerTitleAlign: 'center',
       tabBarStyle: {
-        backgroundColor: '#161621',
+        backgroundColor: '#121212',
         borderTopWidth: 0,
         height: 64,
         paddingBottom: 12,

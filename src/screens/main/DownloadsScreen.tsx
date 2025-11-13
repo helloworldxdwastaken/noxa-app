@@ -113,7 +113,7 @@ const DownloadRow = ({ item }: { item: DownloadItem }) => (
 const styles = StyleSheet.create({
   list: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   offlineHeader: {
     paddingHorizontal: 16,
@@ -143,12 +143,12 @@ const styles = StyleSheet.create({
   offlineProgressBarContainer: {
     height: 6,
     borderRadius: 999,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     overflow: 'hidden',
   },
   offlineProgressBar: {
     height: '100%',
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
   },
   centered: {
     flex: 1,
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   statusText: {
-    color: '#0b0b0f',
+    color: '#000000',
     fontWeight: '700',
     fontSize: 12,
   },

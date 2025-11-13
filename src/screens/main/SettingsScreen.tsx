@@ -124,11 +124,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
     gap: 24,
   },
   section: {
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 16,
     padding: 20,
     gap: 16,
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     color: '#9090a5',
   },
   input: {
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     color: '#e6e6f2',
   },
   button: {
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',

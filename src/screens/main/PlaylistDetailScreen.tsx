@@ -240,7 +240,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   centered: {
     flex: 1,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
   descInput: {
     fontSize: 14,
     color: '#ffffff',
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
   },
   actionText: {
     color: '#ffffff',
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#1f1f2b',
+    borderBottomColor: '#282828',
   },
   trackNumber: {
     width: 24,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },

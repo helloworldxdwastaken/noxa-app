@@ -239,7 +239,7 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   content: {
     padding: 20,
@@ -272,11 +272,11 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 20,
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     alignItems: 'center',
   },
   modeBtnActive: {
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
   },
   modeBtnText: {
     fontSize: 14,
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   input: {
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -308,14 +308,14 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   submitBtn: {
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
     borderRadius: 24,
     paddingVertical: 16,
     alignItems: 'center',
     marginTop: 8,
   },
   submitBtnDisabled: {
-    backgroundColor: '#2a2a3e',
+    backgroundColor: '#1a1a1a',
   },
   submitText: {
     fontSize: 16,

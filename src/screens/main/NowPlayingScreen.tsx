@@ -105,7 +105,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   header: {
     flexDirection: 'row',
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#1f1f2b',
+    borderBottomColor: '#282828',
   },
   closeBtn: {
     width: 40,
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 16,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 4,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     borderRadius: 2,
     overflow: 'hidden',
   },
@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 8,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },

@@ -171,7 +171,7 @@ const HomeScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   header: {
     padding: 24,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     borderRadius: 16,
     padding: 20,
     alignItems: 'center',
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 12,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     width: 160,
     height: 160,
     borderRadius: 12,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },

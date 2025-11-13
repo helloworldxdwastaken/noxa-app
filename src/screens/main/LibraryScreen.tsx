@@ -319,7 +319,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   tabs: {
     flexDirection: 'row',
@@ -327,18 +327,18 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#1f1f2b',
+    borderBottomColor: '#282828',
   },
   tab: {
     flex: 1,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 16,
-    backgroundColor: '#161621',
+    backgroundColor: '#121212',
     alignItems: 'center',
   },
   tabActive: {
-    backgroundColor: '#4b67ff',
+    backgroundColor: '#1db954',
   },
   tabText: {
     fontSize: 12,
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
     gap: 12,
     paddingHorizontal: 24,
   },
@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: 16,
-    backgroundColor: '#0b0b0f',
+    backgroundColor: '#000000',
   },
   gridRow: {
     gap: 16,
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
     width: '100%',
     aspectRatio: 1,
     borderRadius: 12,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -425,7 +425,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#1f1f2b',
+    backgroundColor: '#282828',
     justifyContent: 'center',
     alignItems: 'center',
   },
