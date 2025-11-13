@@ -1,97 +1,109 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Noxa Music - React Native
 
-# Getting Started
+Cross-platform music streaming app for iOS and Android with offline caching, built with React Native.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- 🎵 **Music Streaming** - Stream from `https://stream.noxamusic.com`
+- 📥 **Offline Mode** - Download playlists and tracks for offline playback
+- 🎨 **Modern UI** - Dark theme with smooth animations
+- 🔐 **Authentication** - Secure login/signup with session management
+- 📱 **Dynamic Island** - iOS Live Activities support for now playing
+- 🎧 **Background Playback** - Continue listening when app is in background
+- 🔍 **Search** - Browse library and search online catalog
+- 📂 **Playlists** - Create, edit, and manage playlists
+- ⬇️ **Downloads** - Track download progress and manage offline content
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Requirements
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Node.js >= 20.19.4
+- iOS 15.0+
+- Android API 21+ (Android 5.0)
+- React Native 0.82+
 
-```sh
-# Using npm
-npm start
+## Installation
 
-# OR using Yarn
-yarn start
-```
+```bash
+# Install dependencies
+npm install
 
-## Step 2: Build and run your app
+# iOS setup
+cd ios
+pod install
+cd ..
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+# Run on iOS
 npm run ios
 
-# OR using Yarn
-yarn ios
+# Run on Android
+npm run android
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+## Backend
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+This app connects to the music streaming backend at:
+- Production: `https://stream.noxamusic.com`
+- Local dev: Configure in Settings screen
 
-## Step 3: Modify your app
+Backend source: `/home/tokyo/Desktop/music_app`
 
-Now that you have successfully run the app, let's make changes!
+## Architecture
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```
+src/
+├── api/           # API client and service layer
+├── context/       # React Context providers (Auth, Offline)
+├── hooks/         # Custom React hooks
+├── navigation/    # React Navigation setup
+├── screens/       # App screens
+├── services/      # Offline manager, player service
+└── types/         # TypeScript type definitions
+```
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## Key Technologies
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+- **React Native 0.82** - Cross-platform framework
+- **TypeScript** - Type safety
+- **React Navigation** - Navigation library
+- **TanStack Query** - Data fetching and caching
+- **Axios** - HTTP client
+- **AsyncStorage** - Local storage
+- **react-native-track-player** - Audio playback with system integration
+- **react-native-fs** - File system operations for offline cache
+- **NetInfo** - Network connectivity detection
 
-## Congratulations! :tada:
+## Building
 
-You've successfully run and modified your React Native App. :partying_face:
+### Android Release
 
-### Now what?
+```bash
+cd android
+./gradlew assembleRelease
+# APK output: android/app/build/outputs/apk/release/app-release.apk
+```
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### iOS Release
 
-# Troubleshooting
+```bash
+cd ios
+xcodebuild -workspace music_app.xcworkspace \
+  -scheme music_app \
+  -configuration Release \
+  -sdk iphoneos \
+  -archivePath build/music_app.xcarchive \
+  archive
+```
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+## GitHub Actions
 
-# Learn More
+CI/CD workflows included:
+- **ci.yml** - Runs on every push (lint, typecheck, build)
+- **release.yml** - Creates releases when pushing version tags
 
-To learn more about React Native, take a look at the following resources:
+## License
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+MIT
+
+## Author
+
+Noxa Music Team

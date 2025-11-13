@@ -20,7 +20,9 @@ DerivedData
 *.hmap
 *.ipa
 *.xcuserstate
-**/.xcode.env.local
+*.xcworkspace
+!default.xcworkspace
+ios/.xcode.env.local
 
 # Android/IntelliJ
 #
@@ -33,7 +35,6 @@ local.properties
 .cxx/
 *.keystore
 !debug.keystore
-.kotlin/
 
 # node.js
 #
@@ -57,10 +58,10 @@ yarn-error.log
 *.jsbundle
 
 # Ruby / CocoaPods
-**/Pods/
+/ios/Pods/
 /vendor/bundle/
 
-# Temporary files created by Metro to check the health of the file watcher
+# Temporary files created by Metro
 .metro-health-check*
 
 # testing
