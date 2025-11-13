@@ -3,7 +3,9 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Modal,
   PanResponder,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -17,7 +19,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 import {
+  addTrackToPlaylist,
   deletePlaylist,
+  deleteTrack,
   fetchPlaylistTracks,
   removeTrackFromPlaylist,
   reorderPlaylist,
@@ -30,6 +34,7 @@ import type { LibraryStackParamList } from '../../navigation/types';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
+import { useLanguage } from '../../context/LanguageContext';
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'PlaylistDetail'>;
 const ROW_HEIGHT = 76;
@@ -41,6 +46,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     useOffline();
   const connectivity = useConnectivity();
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(initialName ?? '');
@@ -48,6 +54,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [orderedTracks, setOrderedTracks] = useState<Song[]>([]);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [orderDirty, setOrderDirty] = useState(false);
+  const [trackMenuVisible, setTrackMenuVisible] = useState(false);
+  const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
+  const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
 
   const orderedTracksRef = useRef<Song[]>([]);
   const dragIndexRef = useRef<number | null>(null);
@@ -59,15 +68,23 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     enabled: !connectivity.isOffline,
   });
 
-  const { data: playlistMeta } = useQuery({
-    queryKey: ['playlists', playlistId, 'meta'],
-    queryFn: async () => {
-      const list = await fetchPlaylists();
-      return list.find(item => item.id === playlistId);
-    },
+  const {
+    data: availablePlaylists = [],
+    isLoading: playlistsLoading,
+  } = useQuery({
+    queryKey: ['playlists'],
+    queryFn: fetchPlaylists,
+    enabled: !connectivity.isOffline,
   });
 
-  const derivedName = playlistMeta?.name ?? initialName ?? 'Untitled Playlist';
+  const playlistMeta = availablePlaylists.find(item => item.id === playlistId);
+  const selectablePlaylists = useMemo(
+    () => availablePlaylists.filter(item => item.id !== playlistId),
+    [availablePlaylists, playlistId],
+  );
+  const canAddToPlaylist = selectablePlaylists.length > 0 && !connectivity.isOffline;
+
+  const derivedName = playlistMeta?.name ?? initialName ?? t('playlist.untitled');
   const derivedDesc = playlistMeta?.description ?? initialDescription ?? '';
   const derivedCover = playlistMeta?.coverUrl ?? initialCover ?? null;
   const derivedTrackCount = playlistMeta?.trackCount ?? route.params.trackCount ?? tracks.length;
@@ -153,11 +170,11 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       dragIndexRef.current = null;
       dragOffsetRef.current = 0;
       if (changed) {
-        Alert.alert('Success', 'Playlist updated');
+        Alert.alert(t('common.ok'), t('playlist.updated'));
       }
     },
     onError: error =>
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to update playlist'),
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error')),
   });
 
   const deleteMutation = useMutation({
@@ -166,7 +183,8 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
       navigation.goBack();
     },
-    onError: () => Alert.alert('Error', 'Failed to delete playlist'),
+    onError: error =>
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error')),
   });
 
   const removeTrackMutation = useMutation({
@@ -179,22 +197,22 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   });
 
   const handleDelete = () => {
-    Alert.alert('Delete Playlist', 'Are you sure you want to delete this playlist?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: () => deleteMutation.mutate() },
+    Alert.alert(t('playlist.delete'), t('playlist.deleteConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('playlist.delete'), style: 'destructive', onPress: () => deleteMutation.mutate() },
     ]);
   };
 
   const handleRemoveTrack = (song: Song) => {
-    Alert.alert('Remove Track', `Remove "${song.title}" from this playlist?`, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => removeTrackMutation.mutate(song.id) },
+    Alert.alert(t('playlist.removeTitle'), t('playlist.removePrompt', { track: song.title }), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.removeFromPlaylist'), style: 'destructive', onPress: () => removeTrackMutation.mutate(song.id) },
     ]);
   };
 
   const handleDownloadOffline = async () => {
     if (baseTracks.length === 0) {
-      Alert.alert('No Tracks', 'Add tracks to this playlist before downloading.');
+      Alert.alert(t('playlist.noTracksTitle'), t('library.noTracksDownload'));
       return;
     }
     const playlistPayload: Playlist = {
@@ -205,14 +223,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       trackCount: derivedTrackCount ?? baseTracks.length,
     };
     await downloadPlaylist(playlistPayload, baseTracks);
-    Alert.alert('Download Started', 'Playlist is being downloaded for offline playback.');
+    Alert.alert(t('common.ok'), t('library.downloadStarted'));
   };
 
   const handleRemoveOffline = async () => {
-    Alert.alert('Remove Offline', 'Delete this playlist from offline cache?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('playlist.removeOfflineTitle'), t('playlist.removeOfflineConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete',
+        text: t('playlist.delete'),
         style: 'destructive',
         onPress: async () => {
           await removePlaylist(playlistId);
@@ -228,6 +246,73 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     },
     [baseTracks],
   );
+
+  const handleRemoveSelectedTrack = () => {
+    if (!selectedTrack) {
+      return;
+    }
+    const target = selectedTrack;
+    closeTrackMenu();
+    handleRemoveTrack(target);
+  };
+
+  const openTrackMenu = (song: Song) => {
+    setSelectedTrack(song);
+    setTrackMenuVisible(true);
+  };
+
+  const closeTrackMenu = () => {
+    setTrackMenuVisible(false);
+    setSelectedTrack(null);
+  };
+
+  const openPlaylistPicker = () => {
+    setTrackMenuVisible(false);
+    setPlaylistPickerVisible(true);
+  };
+
+  const closePlaylistPicker = () => {
+    setPlaylistPickerVisible(false);
+    if (!trackMenuVisible) {
+      setSelectedTrack(null);
+    }
+  };
+
+  const handleAddTrackToAnotherPlaylist = async (targetPlaylistId: number) => {
+    if (!selectedTrack) {
+      return;
+    }
+    try {
+      await addTrackToPlaylist(targetPlaylistId, selectedTrack.id);
+      Alert.alert(t('common.ok'), t('common.addedToPlaylist'));
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+    } catch (error) {
+      Alert.alert(
+        t('common.error'),
+        error instanceof Error ? error.message : t('common.unableToAddTrack'),
+      );
+    } finally {
+      closePlaylistPicker();
+    }
+  };
+
+  const handleDeleteTrackFromLibrary = async (permanent: boolean) => {
+    if (!selectedTrack) {
+      return;
+    }
+    try {
+      await deleteTrack(selectedTrack.id, permanent);
+      Alert.alert(
+        t('common.ok'),
+        permanent ? t('common.deletePermanent') : t('common.removeFromLibrary'),
+      );
+      closeTrackMenu();
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ['playlists'] });
+    } catch (error) {
+      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error'));
+    }
+  };
 
   const startDrag = (index: number) => {
     if (!isEditing) {
@@ -311,7 +396,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         isEditing && draggingIndex === index && styles.draggingRow,
       ]}
       onPress={!isEditing ? () => handlePlaySong(item) : undefined}
-      onLongPress={!isEditing ? () => handleRemoveTrack(item) : undefined}
       activeOpacity={isEditing ? 0.85 : 0.6}
     >
       <Text style={styles.trackNumber}>{index + 1}</Text>
@@ -344,7 +428,11 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         >
           <Icon name="move" size={18} color="#9ca3af" />
         </TouchableOpacity>
-      ) : null}
+      ) : (
+        <TouchableOpacity style={styles.trackMenuButton} onPress={() => openTrackMenu(item)}>
+          <Icon name="more-vertical" size={18} color="#ffffff" />
+        </TouchableOpacity>
+      )}
     </TouchableOpacity>
   );
 
@@ -354,7 +442,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator color="#ffffff" />
-        <Text style={styles.loadingText}>Loading playlist…</Text>
+        <Text style={styles.loadingText}>{t('playlist.loading')}</Text>
       </View>
     );
   }
@@ -384,14 +472,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   style={styles.nameInput}
                   value={nameInput}
                 onChangeText={setNameInput}
-                placeholder="Playlist name"
+                placeholder={t('playlist.namePlaceholder')}
                 placeholderTextColor="#606072"
               />
               <TextInput
                 style={styles.descInput}
                 value={descInput}
                 onChangeText={setDescInput}
-                placeholder="Description (optional)"
+                placeholder={t('playlist.descriptionPlaceholder')}
                 placeholderTextColor="#606072"
               />
             </>
@@ -399,7 +487,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <>
               <Text style={styles.playlistName}>{displayName}</Text>
               {displayDesc ? <Text style={styles.playlistDesc}>{displayDesc}</Text> : null}
-              <Text style={styles.trackCount}>{derivedTrackCount} songs</Text>
+              <Text style={styles.trackCount}>
+                {t('playlist.trackCount', { count: derivedTrackCount ?? tracks.length })}
+              </Text>
             </>
           )}
           </View>
@@ -422,14 +512,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                   color={updateMutation.isPending ? '#a3a3b3' : '#ffffff'}
                 />
                 <Text style={styles.actionText}>
-                  {updateMutation.isPending ? 'Saving…' : 'Save'}
+                  {updateMutation.isPending ? '...' : t('playlist.save')}
                 </Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={handleCancelEditing}>
               <View style={styles.actionContent}>
                 <Icon name="x" size={16} color="#ffffff" />
-                <Text style={styles.actionText}>Cancel</Text>
+                <Text style={styles.actionText}>{t('playlist.cancel')}</Text>
               </View>
             </TouchableOpacity>
           </>
@@ -445,20 +535,22 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             >
               <View style={styles.actionContent}>
                 <Icon name="edit-3" size={16} color="#ffffff" />
-                <Text style={styles.actionText}>Edit</Text>
+                <Text style={styles.actionText}>{t('playlist.edit')}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
               <View style={styles.actionContent}>
                 <Icon name="trash-2" size={16} color="#ff6b6b" />
-                <Text style={styles.actionTextDanger}>Delete</Text>
+                <Text style={styles.actionTextDanger}>{t('playlist.delete')}</Text>
               </View>
             </TouchableOpacity>
             {isDownloading ? (
               <TouchableOpacity style={[styles.actionBtn, styles.actionBtnDisabled]} disabled>
                 <View style={styles.actionContent}>
                   <Icon name="download" size={16} color="#ffffff" />
-                  <Text style={styles.actionText}>{`Downloading ${Math.round(playlistProgress * 100)}%`}</Text>
+                  <Text style={styles.actionText}>
+                    {t('playlist.downloading', { percent: Math.round(playlistProgress * 100) })}
+                  </Text>
                 </View>
               </TouchableOpacity>
             ) : isDownloaded ? (
@@ -468,14 +560,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               >
                 <View style={styles.actionContent}>
                   <Icon name="check-circle" size={16} color="#050505" />
-                  <Text style={styles.actionTextOnBright}>Downloaded</Text>
+                  <Text style={styles.actionTextOnBright}>{t('playlist.downloaded')}</Text>
                 </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.actionBtn} onPress={handleDownloadOffline}>
                 <View style={styles.actionContent}>
                   <Icon name="download" size={16} color="#ffffff" />
-                  <Text style={styles.actionText}>Save Offline</Text>
+                  <Text style={styles.actionText}>{t('playlist.saveOffline')}</Text>
                 </View>
               </TouchableOpacity>
             )}
@@ -498,10 +590,102 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.emptyIconCircle}>
               <Icon name="music" size={32} color="#8aa4ff" />
             </View>
-            <Text style={styles.emptyText}>No tracks in this playlist yet.</Text>
+            <Text style={styles.emptyText}>{t('library.emptyPlaylist')}</Text>
           </View>
         }
       />
+      <Modal
+        transparent
+        visible={trackMenuVisible}
+        animationType="fade"
+        onRequestClose={closeTrackMenu}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={closeTrackMenu} />
+        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <Text style={styles.sheetTitle}>
+            {selectedTrack?.title ?? t('playlist.optionsTitle')}
+          </Text>
+          <View style={styles.sheetSection}>
+            <TouchableOpacity
+              style={[styles.sheetAction, !canAddToPlaylist && styles.sheetActionDisabled]}
+              onPress={() => {
+                if (!canAddToPlaylist) {
+                  Alert.alert(t('common.unavailable'), t('common.noPlaylists'));
+                  return;
+                }
+                openPlaylistPicker();
+              }}
+              disabled={!canAddToPlaylist}
+            >
+              <Icon name="plus-circle" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={handleRemoveSelectedTrack}
+            >
+              <Icon name="minus-circle" size={18} color="#fbbf24" />
+              <Text style={styles.sheetActionText}>{t('common.removeFromPlaylist')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => handleDeleteTrackFromLibrary(false)}
+            >
+              <Icon name="trash-2" size={18} color="#fbbf24" />
+              <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => handleDeleteTrackFromLibrary(true)}
+            >
+              <Icon name="alert-triangle" size={18} color="#f87171" />
+              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
+                {t('common.deletePermanent')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>
+            <Icon name="x" size={18} color="#ffffff" />
+            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+      <Modal
+        transparent
+        visible={playlistPickerVisible}
+        animationType="fade"
+        onRequestClose={closePlaylistPicker}
+      >
+        <Pressable style={styles.sheetBackdrop} onPress={closePlaylistPicker} />
+        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+          <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
+          {playlistsLoading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : selectablePlaylists.length === 0 ? (
+            <Text style={styles.sheetEmpty}>{t('playlist.noOtherPlaylists')}</Text>
+          ) : (
+            <FlatList
+              data={selectablePlaylists}
+              keyExtractor={item => `${item.id}`}
+              style={styles.playlistList}
+              contentContainerStyle={styles.playlistListContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.sheetAction}
+                  onPress={() => handleAddTrackToAnotherPlaylist(item.id)}
+                >
+                  <Icon name="folder-plus" size={18} color="#ffffff" />
+                  <Text style={styles.sheetActionText}>{item.name}</Text>
+                </TouchableOpacity>
+              )}
+            />
+          )}
+          <TouchableOpacity style={styles.sheetAction} onPress={closePlaylistPicker}>
+            <Icon name="x" size={18} color="#ffffff" />
+            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -656,6 +840,10 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 4,
   },
+  trackMenuButton: {
+    padding: 8,
+    marginLeft: 4,
+  },
   emptyContainer: {
     flexGrow: 1,
   },
@@ -673,6 +861,57 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#9090a5',
     fontSize: 16,
+  },
+  sheetBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  sheetContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: '#0d0d14',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 16,
+  },
+  sheetTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sheetSection: {
+    gap: 12,
+  },
+  sheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+  },
+  sheetActionText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sheetDangerText: {
+    color: '#f87171',
+  },
+  sheetEmpty: {
+    color: '#9090a5',
+    fontSize: 14,
+  },
+  sheetActionDisabled: {
+    opacity: 0.5,
+  },
+  playlistList: {
+    maxHeight: 260,
+  },
+  playlistListContent: {
+    gap: 8,
   },
 });
 

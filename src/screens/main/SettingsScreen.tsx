@@ -13,6 +13,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '../../context/AuthContext';
+import { useLanguage } from '../../context/LanguageContext';
+import type { SupportedLanguage } from '../../i18n/translations';
 
 const SettingsScreen: React.FC = () => {
   const {
@@ -26,18 +28,19 @@ const SettingsScreen: React.FC = () => {
   const [adminUser, setAdminUser] = useState(adminCredentials?.username ?? '');
   const [adminPass, setAdminPass] = useState(adminCredentials?.password ?? '');
   const [rememberAdmin, setRememberAdmin] = useState(Boolean(adminCredentials));
+  const { t, language, setLanguage } = useLanguage();
 
   const handleSaveServer = async () => {
     if (!serverUrl.trim()) {
-      Alert.alert('Invalid URL', 'Please enter a valid server address.');
+      Alert.alert(t('common.error'), t('settings.serverInvalid'));
       return;
     }
     try {
       await updateServerUrl(serverUrl.trim());
-      Alert.alert('Success', 'Server URL updated.');
+      Alert.alert(t('common.ok'), t('settings.serverSuccess'));
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update server URL';
-      Alert.alert('Error', message);
+      const message = error instanceof Error ? error.message : t('common.error');
+      Alert.alert(t('common.error'), message);
     }
   };
 
@@ -45,16 +48,15 @@ const SettingsScreen: React.FC = () => {
     if (!adminUser || !adminPass) {
       await setAdminCredentials(null);
       setRememberAdmin(false);
-      Alert.alert('Admin cleared', 'Admin credentials removed.');
+      Alert.alert(t('common.ok'), t('settings.adminCleared'));
       return;
     }
     try {
       await setAdminCredentials({ username: adminUser.trim(), password: adminPass }, rememberAdmin);
-      Alert.alert('Saved', 'Admin credentials updated.');
+      Alert.alert(t('common.ok'), t('settings.adminSaved'));
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to store admin credentials';
-      Alert.alert('Error', message);
+      const message = error instanceof Error ? error.message : t('common.error');
+      Alert.alert(t('common.error'), message);
     }
   };
 
@@ -70,53 +72,74 @@ const SettingsScreen: React.FC = () => {
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Server</Text>
-        <Text style={styles.sectionSubtitle}>Point the app to your Noxa Music backend.</Text>
+        <Text style={styles.sectionTitle}>{t('settings.serverTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('settings.serverSubtitle')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="https://stream.noxamusic.com"
+          placeholder={t('settings.serverPlaceholder')}
           value={serverUrl}
           onChangeText={setServerUrl}
           autoCapitalize="none"
           autoCorrect={false}
         />
         <TouchableOpacity style={styles.button} onPress={handleSaveServer}>
-          <Text style={styles.buttonText}>Save Server URL</Text>
+          <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Admin Console</Text>
-        <Text style={styles.sectionSubtitle}>
-          Store credentials to unlock admin-only actions from the app.
-        </Text>
+        <Text style={styles.sectionTitle}>{t('settings.adminTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('settings.adminSubtitle')}</Text>
         <TextInput
           style={styles.input}
-          placeholder="Admin username"
+          placeholder={t('settings.adminUser')}
           autoCapitalize="none"
           value={adminUser}
           onChangeText={setAdminUser}
         />
         <TextInput
           style={styles.input}
-          placeholder="Admin password"
+          placeholder={t('settings.adminPass')}
           secureTextEntry
           value={adminPass}
           onChangeText={setAdminPass}
         />
         <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>Remember on this device</Text>
+          <Text style={styles.switchLabel}>{t('settings.remember')}</Text>
           <Switch value={rememberAdmin} onValueChange={setRememberAdmin} />
         </View>
         <TouchableOpacity style={styles.button} onPress={handleSaveAdmin}>
-          <Text style={styles.buttonText}>Save Admin Credentials</Text>
+          <Text style={styles.buttonText}>{t('settings.saveAdmin')}</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
+        <Text style={styles.sectionSubtitle}>{t('settings.languageSubtitle')}</Text>
+        <View style={styles.languageToggle}>
+          {(['en', 'es'] as SupportedLanguage[]).map(option => {
+            const isActive = language === option;
+            return (
+              <TouchableOpacity
+                key={option}
+                style={[styles.languageBtn, isActive && styles.languageBtnActive]}
+                onPress={() => setLanguage(option)}
+              >
+                <Text
+                  style={[styles.languageBtnText, isActive && styles.languageBtnTextActive]}
+                >
+                  {option === 'en' ? t('settings.english') : t('settings.spanish')}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
         <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Sign Out</Text>
+          <Text style={styles.buttonText}>{t('settings.signOut')}</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -171,6 +194,29 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontWeight: '600',
+  },
+  languageToggle: {
+    flexDirection: 'row',
+    borderRadius: 999,
+    backgroundColor: '#1a1a1a',
+    padding: 4,
+    gap: 4,
+  },
+  languageBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 999,
+    alignItems: 'center',
+  },
+  languageBtnActive: {
+    backgroundColor: '#1db954',
+  },
+  languageBtnText: {
+    color: '#9090a5',
+    fontWeight: '600',
+  },
+  languageBtnTextActive: {
+    color: '#050505',
   },
 });
 

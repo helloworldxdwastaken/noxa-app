@@ -8,6 +8,7 @@ import { enableScreens } from 'react-native-screens';
 import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { OfflineProvider } from './src/context/OfflineContext';
+import { LanguageProvider } from './src/context/LanguageContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,7 +28,9 @@ const App = () => (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <OfflineProvider>
-          <AppNavigator />
+          <LanguageProvider>
+            <AppNavigator />
+          </LanguageProvider>
         </OfflineProvider>
       </AuthProvider>
     </QueryClientProvider>

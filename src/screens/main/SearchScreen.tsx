@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   ActivityIndicator,
@@ -26,9 +26,11 @@ import {
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { RemoteTrack, Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
+import { playPreview, subscribeToPreview } from '../../services/player/PreviewManager';
 import ArtworkImage from '../../components/ArtworkImage';
 import Icon from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLanguage } from '../../context/LanguageContext';
 
 type SearchMode = 'local' | 'online';
 type OnlineSearchType = 'track' | 'artist' | 'album';
@@ -40,6 +42,7 @@ type Props = CompositeScreenProps<
 
 const SearchScreen: React.FC<Props> = () => {
   const insets = useSafeAreaInsets();
+  const { t } = useLanguage();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');
@@ -67,11 +70,11 @@ const SearchScreen: React.FC<Props> = () => {
     mutationFn: (track: RemoteTrack) =>
       requestDownloadAdd(track.title, track.artistName, track.albumTitle ?? undefined),
     onSuccess: () => {
-      Alert.alert('Download queued', 'Track added to the download queue.');
+      Alert.alert(t('common.ok'), t('search.downloadQueued'));
     },
     onError: error => {
-      const message = error instanceof Error ? error.message : 'Failed to queue download.';
-      Alert.alert('Download failed', message);
+      const message = error instanceof Error ? error.message : t('search.downloadFailed');
+      Alert.alert(t('common.error'), message);
     },
   });
 
@@ -100,43 +103,69 @@ const SearchScreen: React.FC<Props> = () => {
     [handlePlayLocalSong],
   );
 
+  const [previewingId, setPreviewingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToPreview(id => setPreviewingId(id));
+    return unsubscribe;
+  }, []);
+
+  const handlePreview = useCallback(async (track: RemoteTrack) => {
+    Keyboard.dismiss();
+    try {
+      await playPreview(track);
+    } catch (error) {
+      Alert.alert(
+        t('common.error'),
+        error instanceof Error ? error.message : t('common.error'),
+      );
+    }
+  }, [t]);
+
   const renderOnlineItem = useCallback(
-    ({ item }: { item: RemoteTrack }) => (
-      <View style={styles.resultRow}>
-        <ArtworkImage uri={item.image} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
-        <View style={styles.resultInfo}>
-          <Text style={styles.resultTitle} numberOfLines={1}>
-            {item.title}
-          </Text>
-          <Text style={styles.resultSubtitle} numberOfLines={1}>
-            {item.artistName}
-          </Text>
-          {item.albumTitle && <Text style={styles.resultAlbum}>{item.albumTitle}</Text>}
-        </View>
-        <TouchableOpacity
-          style={styles.downloadBtn}
-          onPress={() => {
-            Keyboard.dismiss();
-            setDownloadOptionsTrack(item);
-          }}
-          disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
-        >
-          {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
-            <ActivityIndicator color="#050505" size="small" />
-          ) : (
-            <Icon name="download" size={16} color="#050505" />
-          )}
+    ({ item }: { item: RemoteTrack }) => {
+      const isPreviewing = previewingId === item.id;
+      return (
+        <TouchableOpacity style={styles.resultRow} onPress={() => handlePreview(item)} activeOpacity={0.8}>
+          <ArtworkImage uri={item.image} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
+          <View style={styles.resultInfo}>
+            <Text style={styles.resultTitle} numberOfLines={1}>
+              {item.title}
+            </Text>
+            <Text style={styles.resultSubtitle} numberOfLines={1}>
+              {item.artistName}
+            </Text>
+            {item.albumTitle && <Text style={styles.resultAlbum}>{item.albumTitle}</Text>}
+            {isPreviewing ? <Text style={styles.previewBadge}>{t('common.previewing')}</Text> : null}
+          </View>
+          <TouchableOpacity
+            style={styles.downloadBtn}
+            onPress={event => {
+              event.stopPropagation();
+              Keyboard.dismiss();
+              setDownloadOptionsTrack(item);
+            }}
+            disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
+          >
+            {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
+              <ActivityIndicator color="#050505" size="small" />
+            ) : (
+              <Icon name="download" size={16} color="#050505" />
+            )}
+          </TouchableOpacity>
         </TouchableOpacity>
-      </View>
-    ),
-    [downloadMutation],
+      );
+    },
+    [downloadMutation, handlePreview, previewingId, t],
   );
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <TextInput
         style={styles.searchInput}
-        placeholder={mode === 'local' ? 'Search your library' : 'Search online catalog'}
+        placeholder={
+          mode === 'local' ? t('search.placeholderLocal') : t('search.placeholderOnline')
+        }
         placeholderTextColor="#606072"
         value={query}
         onChangeText={setQuery}
@@ -152,7 +181,7 @@ const SearchScreen: React.FC<Props> = () => {
           onPress={() => setMode('local')}
         >
           <Text style={[styles.modeBtnText, mode === 'local' && styles.modeBtnTextActive]}>
-            Local
+            {t('search.modes.local')}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -160,7 +189,7 @@ const SearchScreen: React.FC<Props> = () => {
           onPress={() => setMode('online')}
         >
           <Text style={[styles.modeBtnText, mode === 'online' && styles.modeBtnTextActive]}>
-            Online
+            {t('search.modes.online')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -173,7 +202,7 @@ const SearchScreen: React.FC<Props> = () => {
             onPress={() => setOnlineType('track')}
           >
             <Text style={[styles.typeChipText, onlineType === 'track' && styles.typeChipTextActive]}>
-              Songs
+              {t('search.types.track')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -183,7 +212,7 @@ const SearchScreen: React.FC<Props> = () => {
             <Text
               style={[styles.typeChipText, onlineType === 'artist' && styles.typeChipTextActive]}
             >
-              Artists
+              {t('search.types.artist')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -191,7 +220,7 @@ const SearchScreen: React.FC<Props> = () => {
             onPress={() => setOnlineType('album')}
           >
             <Text style={[styles.typeChipText, onlineType === 'album' && styles.typeChipTextActive]}>
-              Albums
+              {t('search.types.album')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -200,7 +229,7 @@ const SearchScreen: React.FC<Props> = () => {
       {isFetching ? (
         <View style={styles.centered}>
           <ActivityIndicator color="#ffffff" />
-          <Text style={styles.loadingText}>Searching…</Text>
+          <Text style={styles.loadingText}>{t('search.loading')}</Text>
         </View>
       ) : mode === 'local' ? (
         <FlatList<Song>
@@ -217,11 +246,9 @@ const SearchScreen: React.FC<Props> = () => {
                 <View style={styles.emptyIcon}>
                   <Icon name="search" size={24} color="#8aa4ff" />
                 </View>
-                <Text style={styles.emptyTitle}>Search for music</Text>
+                <Text style={styles.emptyTitle}>{t('search.searchForMusic')}</Text>
                 <Text style={styles.emptyText}>
-                  {mode === 'local'
-                    ? 'Find songs in your library'
-                    : 'Discover millions of tracks online'}
+                  {mode === 'local' ? t('search.localDescription') : t('search.discover')}
                 </Text>
               </View>
             ) : (
@@ -229,8 +256,8 @@ const SearchScreen: React.FC<Props> = () => {
                 <View style={styles.emptyIcon}>
                   <Icon name="slash" size={24} color="#f87171" />
                 </View>
-                <Text style={styles.emptyTitle}>No results found</Text>
-                <Text style={styles.emptyText}>Try different keywords or check your spelling</Text>
+                <Text style={styles.emptyTitle}>{t('search.noResults')}</Text>
+                <Text style={styles.emptyText}>{t('search.noResultsDescription')}</Text>
               </View>
             )
           }
@@ -250,16 +277,16 @@ const SearchScreen: React.FC<Props> = () => {
                 <View style={styles.emptyIcon}>
                   <Icon name="search" size={24} color="#8aa4ff" />
                 </View>
-                <Text style={styles.emptyTitle}>Search for music</Text>
-                <Text style={styles.emptyText}>Discover millions of tracks online</Text>
+                <Text style={styles.emptyTitle}>{t('search.searchForMusic')}</Text>
+                <Text style={styles.emptyText}>{t('search.discover')}</Text>
               </View>
             ) : (
               <View style={styles.centered}>
                 <View style={styles.emptyIcon}>
                   <Icon name="slash" size={24} color="#f87171" />
                 </View>
-                <Text style={styles.emptyTitle}>No results found</Text>
-                <Text style={styles.emptyText}>Try different keywords or check your spelling</Text>
+                <Text style={styles.emptyTitle}>{t('search.noResults')}</Text>
+                <Text style={styles.emptyText}>{t('search.noResultsDescription')}</Text>
               </View>
             )
           }
@@ -269,7 +296,7 @@ const SearchScreen: React.FC<Props> = () => {
         <View style={styles.dialogOverlay}>
           <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setDownloadOptionsTrack(null)} />
           <View style={styles.dialogContainer}>
-            <Text style={styles.sheetTitle}>Choose an action</Text>
+            <Text style={styles.sheetTitle}>{t('search.chooseAction')}</Text>
             <TouchableOpacity
               style={styles.sheetAction}
               onPress={() => {
@@ -279,15 +306,15 @@ const SearchScreen: React.FC<Props> = () => {
             >
               <Icon name="download" size={18} color="#ffffff" />
               <View style={styles.sheetActionTextGroup}>
-                <Text style={styles.sheetActionText}>Download</Text>
-                <Text style={styles.sheetActionSubtext}>Save to offline downloads</Text>
+                <Text style={styles.sheetActionText}>{t('search.downloadOnly')}</Text>
+                <Text style={styles.sheetActionSubtext}>{t('search.saveOffline')}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.sheetAction}
               onPress={() => {
                 if (playlists.length === 0) {
-                  Alert.alert('No playlists found', 'Create a playlist first in your library.');
+                  Alert.alert(t('common.error'), t('search.noPlaylistsAction'));
                   setDownloadOptionsTrack(null);
                   return;
                 }
@@ -298,13 +325,13 @@ const SearchScreen: React.FC<Props> = () => {
               <Icon name="plus-circle" size={18} color="#1db954" />
               <View style={styles.sheetActionTextGroup}>
                 <Text style={[styles.sheetActionText, styles.sheetActionAccent]}>
-                  Download & add to playlist
+                  {t('search.downloadAdd')}
                 </Text>
-                <Text style={styles.sheetActionSubtext}>Choose where to store this track</Text>
+                <Text style={styles.sheetActionSubtext}>{t('search.chooseStorage')}</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.dialogCancelBtn} onPress={() => setDownloadOptionsTrack(null)}>
-              <Text style={styles.dialogCancelText}>Cancel</Text>
+              <Text style={styles.dialogCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -313,9 +340,9 @@ const SearchScreen: React.FC<Props> = () => {
         <View style={styles.dialogOverlay}>
           <TouchableOpacity style={styles.sheetBackdrop} onPress={() => setPlaylistPickerTrack(null)} />
           <View style={[styles.dialogContainer, styles.playlistDialog]}>
-            <Text style={styles.sheetTitle}>Select playlist</Text>
+            <Text style={styles.sheetTitle}>{t('search.selectPlaylist')}</Text>
             {playlists.length === 0 ? (
-              <Text style={styles.sheetEmpty}>Create a playlist first.</Text>
+              <Text style={styles.sheetEmpty}>{t('search.noPlaylistsAction')}</Text>
             ) : (
               <ScrollView
                 style={styles.playlistScroll}
@@ -330,7 +357,7 @@ const SearchScreen: React.FC<Props> = () => {
                       downloadMutation.mutate(playlistPickerTrack);
                       addTrackToPlaylist(playlist.id, Number(playlistPickerTrack.id)).catch(error => {
                         console.error('Failed to add track', error);
-                        Alert.alert('Unable to add track', 'Please try again later.');
+                        Alert.alert(t('common.error'), t('common.unableToAddTrack'));
                       });
                       setPlaylistPickerTrack(null);
                     }}
@@ -342,7 +369,7 @@ const SearchScreen: React.FC<Props> = () => {
               </ScrollView>
             )}
             <TouchableOpacity style={styles.dialogCancelBtn} onPress={() => setPlaylistPickerTrack(null)}>
-              <Text style={styles.dialogCancelText}>Cancel</Text>
+              <Text style={styles.dialogCancelText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -537,6 +564,17 @@ const styles = StyleSheet.create({
   sheetDivider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: '#1c1c23',
+  },
+  previewBadge: {
+    marginTop: 6,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 999,
+    backgroundColor: 'rgba(29,185,84,0.12)',
+    color: '#1db954',
+    fontSize: 11,
+    fontWeight: '600',
   },
   dialogCancelBtn: {
     marginTop: 4,

@@ -10,6 +10,7 @@ import TrackPlayer, {
 import { offlineManager } from '../offline/OfflineManager';
 import { getApiBaseUrl, getStreamUrl } from '../../api/service';
 import type { Song } from '../../types/models';
+import { cancelPreview } from './PreviewManager';
 
 let isSetup = false;
 
@@ -78,6 +79,7 @@ export const songToTrack = (song: Song): Track => ({
 });
 
 export const playSong = async (song: Song, queue: Song[] = []) => {
+  await cancelPreview();
   await setupPlayer();
   await TrackPlayer.reset();
   const tracks = [song, ...queue].map(songToTrack);
