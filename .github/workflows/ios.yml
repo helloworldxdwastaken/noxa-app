@@ -59,7 +59,14 @@ jobs:
         run: |
           cd ios
           mkdir -p build/Payload
-          cp -r build/music_app.xcarchive/Products/Applications/music_app.app build/Payload/
+          APP_PATH=$(find build/music_app.xcarchive/Products/Applications -maxdepth 1 -type d -name "*.app" | head -n 1)
+          if [ -z "$APP_PATH" ]; then
+            echo "❌ No .app bundle found inside the archive"
+            ls -la build/music_app.xcarchive/Products/Applications || true
+            exit 1
+          fi
+          echo "📦 Found app bundle: $APP_PATH"
+          cp -r "$APP_PATH" build/Payload/
           cd build
           zip -r music_app-unsigned.ipa Payload
           ls -lh music_app-unsigned.ipa
@@ -70,5 +77,4 @@ jobs:
           name: ios-unsigned-ipa
           path: ios/build/music_app-unsigned.ipa
           retention-days: 30
-
 
