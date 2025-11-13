@@ -9,6 +9,7 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SplashScreen from '../screens/common/SplashScreen';
 import DownloadsScreen from '../screens/main/DownloadsScreen';
+import HomeScreen from '../screens/main/HomeScreen';
 import LibraryScreen from '../screens/main/LibraryScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
@@ -58,6 +59,13 @@ const AppTabsNavigator = () => (
       tabBarLabelStyle: tabLabelStyles.label,
     }}
   >
+    <Tabs.Screen
+      name="Home"
+      component={HomeScreen}
+      options={{
+        title: 'Home',
+      }}
+    />
     <Tabs.Screen
       name="Library"
       component={LibraryScreen}
