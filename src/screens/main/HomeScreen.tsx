@@ -92,7 +92,7 @@ const HomeScreen: React.FC = () => {
       <ArtworkImage
         uri={item.coverUrl}
         size={88}
-        fallbackLabel={item.name?.[0]?.toUpperCase() ?? '♪'}
+        fallbackLabel={item.name?.[0]?.toUpperCase()}
       />
       <Text style={styles.playlistName} numberOfLines={2}>
         {item.name}
@@ -106,7 +106,7 @@ const HomeScreen: React.FC = () => {
       <ArtworkImage
         uri={item.albumCover}
         size={64}
-        fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+        fallbackLabel={item.title?.[0]?.toUpperCase()}
       />
       <View style={styles.trackInfo}>
         <Text style={styles.trackTitle} numberOfLines={1}>

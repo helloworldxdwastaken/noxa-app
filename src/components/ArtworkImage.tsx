@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 
 import { useAuth } from '../context/AuthContext';
 
@@ -16,12 +17,7 @@ const isAbsoluteUri = (value: string) =>
   value.startsWith('file://') ||
   value.startsWith('data:');
 
-const ArtworkImage: React.FC<ArtworkImageProps> = ({
-  uri,
-  size,
-  fallbackLabel = '♪',
-  shape = 'rounded',
-}) => {
+const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, shape = 'rounded' }) => {
   const {
     state: { baseUrl },
   } = useAuth();
@@ -51,6 +47,8 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({
     );
   }
 
+  const showInitial = Boolean(fallbackLabel && fallbackLabel !== '♪');
+
   return (
     <View
       style={[
@@ -62,7 +60,11 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({
         },
       ]}
     >
-      <Text style={styles.fallbackText}>{fallbackLabel}</Text>
+      {showInitial ? (
+        <Text style={styles.fallbackText}>{fallbackLabel}</Text>
+      ) : (
+        <Icon name="music" size={Math.max(16, size * 0.4)} color="#9ca3af" />
+      )}
     </View>
   );
 };

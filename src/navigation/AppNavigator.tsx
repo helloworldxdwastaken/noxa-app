@@ -1,8 +1,9 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
 
 import { useAuth } from '../context/AuthContext';
@@ -59,20 +60,8 @@ const AuthNavigator = () => (
 
 const AppTabsNavigator = () => (
   <Tabs.Navigator
-    screenOptions={({ route }) => ({
-      headerShown: false,
-      tabBarShowLabel: false,
-      tabBarStyle: tabStyles.tabBar,
-      tabBarItemStyle: tabStyles.tabItem,
-      tabBarBackground: () => <View style={tabStyles.tabBackground} />,
-      tabBarIcon: ({ focused }) => (
-        <TabBarIcon
-          label={route.name}
-          iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
-          focused={focused}
-        />
-      ),
-    })}
+    tabBar={props => <CustomTabBar {...props} />}
+    screenOptions={{ headerShown: false }}
   >
     <Tabs.Screen name="Home" component={HomeScreen} />
     <Tabs.Screen name="Library" component={LibraryScreen} />
@@ -125,28 +114,22 @@ const AppNavigator = () => {
 export default AppNavigator;
 
 const tabStyles = StyleSheet.create({
-  tabBar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 20,
-    borderRadius: 999,
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-    elevation: 0,
-    height: 84,
-    paddingVertical: 10,
+  customContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   tabBackground: {
     flex: 1,
+    flexDirection: 'row',
     backgroundColor: '#0d0d14',
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-  },
-  tabItem: {
-    borderRadius: 999,
-    paddingVertical: 10,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 4,
+    gap: 6,
   },
   iconBadge: {
     flexDirection: 'row',
@@ -154,7 +137,7 @@ const tabStyles = StyleSheet.create({
     justifyContent: 'center',
     gap: 6,
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 999,
   },
   iconBadgeActive: {
@@ -167,6 +150,20 @@ const tabStyles = StyleSheet.create({
   },
   iconLabelActive: {
     color: '#ffffff',
+  },
+  searchBubble: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#1db954',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 12,
+    shadowColor: '#1db954',
+    shadowOpacity: 0.6,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 8,
   },
 });
 
@@ -184,3 +181,53 @@ const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
     </Text>
   </View>
 );
+
+const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarProps) => {
+  const insets = useSafeAreaInsets();
+  const searchRoute = state.routes.find(route => route.name === 'Search');
+  const mainRoutes = state.routes.filter(route => route.name !== 'Search');
+
+  const handlePress = (routeName: string, key: string, isFocused: boolean) => {
+    const event = navigation.emit({ type: 'tabPress', target: key, canPreventDefault: true });
+    if (!isFocused && !event.defaultPrevented) {
+      navigation.navigate(routeName);
+    }
+  };
+
+  const searchRouteIndex = searchRoute ? state.routes.findIndex(r => r.key === searchRoute.key) : -1;
+  const isSearchFocused = searchRouteIndex === state.index;
+
+  return (
+    <View style={[tabStyles.customContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}> 
+      <View style={tabStyles.tabBackground}>
+        {mainRoutes.map(route => {
+          const routeIndex = state.routes.findIndex(r => r.key === route.key);
+          const isFocused = state.index === routeIndex;
+          return (
+            <TouchableOpacity
+              key={route.key}
+              accessibilityRole="button"
+              accessibilityState={isFocused ? { selected: true } : {}}
+              onPress={() => handlePress(route.name, route.key, isFocused)}
+              style={{ flex: 1 }}
+            >
+              <TabBarIcon
+                label={route.name}
+                iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+                focused={isFocused}
+              />
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+      {searchRoute ? (
+        <TouchableOpacity
+          style={tabStyles.searchBubble}
+          onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
+        >
+          <Icon name="search" size={24} color="#050505" />
+        </TouchableOpacity>
+      ) : null}
+    </View>
+  );
+};

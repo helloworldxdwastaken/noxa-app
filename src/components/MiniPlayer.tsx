@@ -32,7 +32,7 @@ const MiniPlayer: React.FC = () => {
   }
 
   return (
-    <View pointerEvents="box-none" style={[styles.wrapper, { bottom: (insets.bottom || 16) + 92 }]}>
+    <View pointerEvents="box-none" style={[styles.wrapper, { bottom: (insets.bottom || 16) + 24 }]}> 
       <TouchableOpacity
         style={styles.container}
         activeOpacity={0.9}
@@ -41,7 +41,7 @@ const MiniPlayer: React.FC = () => {
         <ArtworkImage
           uri={artwork}
           size={48}
-          fallbackLabel={track.title?.[0]?.toUpperCase() ?? '♪'}
+          fallbackLabel={track.title?.[0]?.toUpperCase()}
           shape="rounded"
         />
         <View style={styles.info}>

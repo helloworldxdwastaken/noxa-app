@@ -73,11 +73,7 @@ const SearchScreen: React.FC<Props> = () => {
   const renderLocalItem = useCallback(
     ({ item }: { item: Song }) => (
       <TouchableOpacity style={styles.resultRow} onPress={() => handlePlayLocalSong(item)}>
-        <ArtworkImage
-          uri={item.albumCover}
-          size={56}
-          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
-        />
+        <ArtworkImage uri={item.albumCover} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
         <View style={styles.resultInfo}>
           <Text style={styles.resultTitle} numberOfLines={1}>
             {item.title}
@@ -94,11 +90,7 @@ const SearchScreen: React.FC<Props> = () => {
   const renderOnlineItem = useCallback(
     ({ item }: { item: RemoteTrack }) => (
       <View style={styles.resultRow}>
-        <ArtworkImage
-          uri={item.image}
-          size={56}
-          fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
-        />
+        <ArtworkImage uri={item.image} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
         <View style={styles.resultInfo}>
           <Text style={styles.resultTitle} numberOfLines={1}>
             {item.title}

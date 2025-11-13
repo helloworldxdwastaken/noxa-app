@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/Feather';
 
 import {
   deletePlaylist,
@@ -143,7 +144,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       <ArtworkImage
         uri={item.albumCover}
         size={48}
-        fallbackLabel={item.title?.[0]?.toUpperCase() ?? '♪'}
+        fallbackLabel={item.title?.[0]?.toUpperCase()}
       />
       <View style={styles.trackInfo}>
         <Text style={styles.trackTitle} numberOfLines={1}>
@@ -174,13 +175,13 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       <View style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>←</Text>
+            <Icon name="chevron-left" size={22} color="#ffffff" />
           </TouchableOpacity>
           <View style={styles.coverWrapper}>
             <ArtworkImage
               uri={derivedCover ?? tracks[0]?.albumCover ?? null}
               size={84}
-              fallbackLabel={displayName?.[0]?.toUpperCase() ?? '♪'}
+              fallbackLabel={displayName?.[0]?.toUpperCase()}
             />
           </View>
           <View style={styles.headerInfo}>
@@ -221,12 +222,23 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               onPress={() => updateMutation.mutate()}
               disabled={updateMutation.isPending}
             >
-              <Text style={styles.actionText}>
-                {updateMutation.isPending ? 'Saving…' : '💾 Save'}
-              </Text>
+              <View style={styles.actionContent}>
+                <Icon
+                  name="save"
+                  size={16}
+                  color="#ffffff"
+                  style={updateMutation.isPending ? { opacity: 0.7 } : null}
+                />
+                <Text style={styles.actionText}>
+                  {updateMutation.isPending ? 'Saving…' : 'Save'}
+                </Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={() => setIsEditing(false)}>
-              <Text style={styles.actionText}>✖ Cancel</Text>
+              <View style={styles.actionContent}>
+                <Icon name="x" size={16} color="#ffffff" />
+                <Text style={styles.actionText}>Cancel</Text>
+              </View>
             </TouchableOpacity>
           </>
         ) : (
@@ -239,22 +251,37 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 setIsEditing(true);
               }}
             >
-              <Text style={styles.actionText}>✏️ Edit</Text>
+              <View style={styles.actionContent}>
+                <Icon name="edit-3" size={16} color="#ffffff" />
+                <Text style={styles.actionText}>Edit</Text>
+              </View>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionBtn} onPress={handleDelete}>
-              <Text style={styles.actionTextDanger}>🗑️ Delete</Text>
+              <View style={styles.actionContent}>
+                <Icon name="trash-2" size={16} color="#ff6b6b" />
+                <Text style={styles.actionTextDanger}>Delete</Text>
+              </View>
             </TouchableOpacity>
             {isDownloading ? (
               <TouchableOpacity style={[styles.actionBtn, styles.actionBtnDisabled]} disabled>
-                <Text style={styles.actionText}>{`Downloading ${Math.round(playlistProgress * 100)}%`}</Text>
+                <View style={styles.actionContent}>
+                  <Icon name="download" size={16} color="#ffffff" />
+                  <Text style={styles.actionText}>{`Downloading ${Math.round(playlistProgress * 100)}%`}</Text>
+                </View>
               </TouchableOpacity>
             ) : isDownloaded ? (
               <TouchableOpacity style={styles.actionBtn} onPress={handleRemoveOffline}>
-                <Text style={styles.actionText}>✓ Remove Offline</Text>
+                <View style={styles.actionContent}>
+                  <Icon name="check-circle" size={16} color="#ffffff" />
+                  <Text style={styles.actionText}>Remove Offline</Text>
+                </View>
               </TouchableOpacity>
             ) : (
               <TouchableOpacity style={styles.actionBtn} onPress={handleDownloadOffline}>
-                <Text style={styles.actionText}>⬇ Save Offline</Text>
+                <View style={styles.actionContent}>
+                  <Icon name="download" size={16} color="#ffffff" />
+                  <Text style={styles.actionText}>Save Offline</Text>
+                </View>
               </TouchableOpacity>
             )}
           </>
@@ -269,7 +296,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         contentContainerStyle={tracks.length === 0 && styles.emptyContainer}
         ListEmptyComponent={
           <View style={styles.centered}>
-            <Text style={styles.emptyIcon}>🎵</Text>
+            <View style={styles.emptyIconCircle}>
+              <Icon name="music" size={32} color="#8aa4ff" />
+            </View>
             <Text style={styles.emptyText}>No tracks in this playlist yet.</Text>
           </View>
         }
@@ -312,10 +341,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#ffffff',
   },
   headerInfo: {
     gap: 8,
@@ -364,6 +389,11 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#121212',
   },
+  actionContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   actionBtnDisabled: {
     opacity: 0.6,
   },
@@ -411,8 +441,13 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flexGrow: 1,
   },
-  emptyIcon: {
-    fontSize: 64,
+  emptyIconCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#15151f',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyText: {
     color: '#9090a5',

@@ -12,6 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/Feather';
 
 import { fetchPlaylists, fetchSongs } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
@@ -43,6 +44,12 @@ type Props = CompositeScreenProps<
   BottomTabScreenProps<AppTabsParamList, 'Library'>,
   NativeStackScreenProps<AppStackParamList>
 >;
+
+const TAB_ITEMS: Array<{ key: LibraryView; label: string; icon: string }> = [
+  { key: 'artists', label: 'Artists', icon: 'mic' },
+  { key: 'albums', label: 'Albums', icon: 'disc' },
+  { key: 'playlists', label: 'Playlists', icon: 'music' },
+];
 
 const LibraryScreen: React.FC<Props> = ({ navigation }) => {
   const { state: offlineState } = useOffline();
@@ -204,7 +211,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         <ArtworkImage
           uri={item.coverUrl}
           size={140}
-          fallbackLabel={item.name?.[0]?.toUpperCase() ?? '♪'}
+          fallbackLabel={item.name?.[0]?.toUpperCase()}
         />
         <Text style={styles.gridTitle} numberOfLines={2}>
           {item.name}
@@ -242,30 +249,25 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
     <View style={styles.container}>
       {/* View Tabs */}
       <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeView === 'artists' && styles.tabActive]}
-          onPress={() => setActiveView('artists')}
-        >
-          <Text style={[styles.tabText, activeView === 'artists' && styles.tabTextActive]}>
-            🎤 Artists
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeView === 'albums' && styles.tabActive]}
-          onPress={() => setActiveView('albums')}
-        >
-          <Text style={[styles.tabText, activeView === 'albums' && styles.tabTextActive]}>
-            💿 Albums
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeView === 'playlists' && styles.tabActive]}
-          onPress={() => setActiveView('playlists')}
-        >
-          <Text style={[styles.tabText, activeView === 'playlists' && styles.tabTextActive]}>
-            📂 Playlists
-          </Text>
-        </TouchableOpacity>
+        {TAB_ITEMS.map(item => {
+          const isActive = activeView === item.key;
+          return (
+            <TouchableOpacity
+              key={item.key}
+              style={[styles.tab, isActive && styles.tabActive]}
+              onPress={() => setActiveView(item.key)}
+            >
+              <View style={styles.tabLabel}>
+                <Icon
+                  name={item.icon}
+                  size={14}
+                  color={isActive ? '#ffffff' : '#9090a5'}
+                />
+                <Text style={[styles.tabText, isActive && styles.tabTextActive]}>{item.label}</Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Content */}
@@ -286,9 +288,13 @@ const LibraryScreen: React.FC<Props> = ({ navigation }) => {
         }
         ListEmptyComponent={
           <View style={styles.centered}>
-            <Text style={styles.emptyIcon}>
-              {activeView === 'artists' ? '🎤' : activeView === 'albums' ? '💿' : '📂'}
-            </Text>
+            <View style={styles.emptyIconCircle}>
+              <Icon
+                name={activeView === 'artists' ? 'mic' : activeView === 'albums' ? 'disc' : 'music'}
+                size={28}
+                color="#8aa4ff"
+              />
+            </View>
             <Text style={styles.emptyText}>
               {connectivity.isOffline
                 ? `No offline ${activeView} available`
@@ -327,6 +333,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     alignItems: 'center',
   },
+  tabLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   tabActive: {
     backgroundColor: '#1db954',
   },
@@ -356,8 +367,13 @@ const styles = StyleSheet.create({
   emptyContainer: {
     flexGrow: 1,
   },
-  emptyIcon: {
-    fontSize: 64,
+  emptyIconCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1b1b26',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emptyText: {
     color: '#ffffff',

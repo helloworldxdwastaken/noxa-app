@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import Icon from 'react-native-vector-icons/Feather';
 
 import {
   requestDownloadAdd,
@@ -111,9 +112,9 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+          <Icon name="chevron-left" size={24} color="#ffffff" />
+        </TouchableOpacity>
           <Text style={styles.headerTitle}>Download Music</Text>
         </View>
 
@@ -227,9 +228,12 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
           onPress={handleSubmit}
           disabled={isPending}
         >
-          <Text style={styles.submitText}>
-            {isPending ? '⏳ Processing...' : '⬇ Start Download'}
-          </Text>
+          <View style={styles.submitContent}>
+            <Icon name={isPending ? 'loader' : 'download'} size={18} color="#ffffff" />
+            <Text style={styles.submitText}>
+              {isPending ? 'Processing…' : 'Start Download'}
+            </Text>
+          </View>
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -253,10 +257,6 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 40,
     height: 40,
-  },
-  backIcon: {
-    fontSize: 28,
-    color: '#ffffff',
   },
   headerTitle: {
     fontSize: 24,
@@ -316,13 +316,18 @@ const styles = StyleSheet.create({
   },
   submitBtnDisabled: {
     backgroundColor: '#1a1a1a',
+    opacity: 0.7,
+  },
+  submitContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   submitText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#ffffff',
   },
 });
 
 export default DownloadRequestScreen;
-

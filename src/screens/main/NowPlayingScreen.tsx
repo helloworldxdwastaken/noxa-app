@@ -139,11 +139,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               <ArtworkImage
                 uri={track.artwork ?? undefined}
                 size={300}
-                fallbackLabel={track.title?.[0]?.toUpperCase() ?? '♪'}
+                fallbackLabel={track.title?.[0]?.toUpperCase()}
               />
             ) : (
               <View style={styles.placeholderArtwork}>
-                <Text style={styles.artworkIcon}>♪</Text>
+                <Icon name="music" size={64} color="#8aa4ff" />
               </View>
             )}
           </View>
@@ -206,7 +206,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               return (
                 <View key={`${item.id}-${index}`} style={styles.queueItem}>
                   <View style={[styles.queueArtwork, isActive && styles.queueArtworkActive]}>
-                    <Text style={styles.queueIcon}>{item.title?.[0]?.toUpperCase() ?? '♪'}</Text>
+                    {item.title ? (
+                      <Text style={styles.queueIcon}>{item.title[0]?.toUpperCase()}</Text>
+                    ) : (
+                      <Icon name="music" size={18} color="#8aa4ff" />
+                    )}
                   </View>
                   <View style={styles.queueInfo}>
                     <Text
@@ -296,10 +300,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#1f1f2e',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  artworkIcon: {
-    fontSize: 80,
-    color: '#8aa4ff',
   },
   trackInfo: {
     alignItems: 'center',
