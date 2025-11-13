@@ -1,7 +1,7 @@
 name: MusicApp
 
 options:
-  bundleIdPrefix: com.tokyo
+  bundleIdPrefix: com.noxamusic
   deploymentTarget:
     iOS: 15.1
 
@@ -24,7 +24,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: "Noxa Music"
-        PRODUCT_BUNDLE_IDENTIFIER: com.tokyo.noxa
+        PRODUCT_BUNDLE_IDENTIFIER: com.noxamusic.app
         INFOPLIST_FILE: ios/music_app/Info.plist
         SWIFT_VERSION: "5.0"
         CURRENT_PROJECT_VERSION: "1"

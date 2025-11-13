@@ -1,4 +1,4 @@
-package com.tokyo.noxa
+package com.noxamusic.app
 
 import android.app.Application
 import com.facebook.react.PackageList
