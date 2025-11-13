@@ -77,12 +77,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.noxamusic.app"
+    namespace "com.tokyo.noxa"
     buildFeatures {
         prefab true
     }
     defaultConfig {
-        applicationId "com.noxamusic.app"
+        applicationId "com.tokyo.noxa"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
