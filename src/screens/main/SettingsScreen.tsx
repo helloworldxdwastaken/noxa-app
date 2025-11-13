@@ -68,7 +68,7 @@ const SettingsScreen: React.FC = () => {
     >
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Server</Text>
-        <Text style={styles.sectionSubtitle}>Point the app to your Music Stream backend.</Text>
+        <Text style={styles.sectionSubtitle}>Point the app to your Noxa Music backend.</Text>
         <TextInput
           style={styles.input}
           placeholder="https://stream.noxamusic.com"
@@ -172,4 +172,3 @@ const styles = StyleSheet.create({
 });
 
 export default SettingsScreen;
-

@@ -47,7 +47,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <View style={styles.card}>
-        <Text style={styles.title}>Welcome to Music Stream</Text>
+        <Text style={styles.title}>Welcome to Noxa Music</Text>
         <Text style={styles.subtitle}>Sign in to access your library anywhere.</Text>
 
         <TextInput
@@ -185,4 +185,3 @@ const styles = StyleSheet.create({
 });
 
 export default LoginScreen;
-
