@@ -216,7 +216,7 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             style={StyleSheet.absoluteFill}
             onPress={() => setPlaylistPickerVisible(false)}
           />
-          <View style={[styles.dialogCard, { maxHeight: '70%' }]}>
+          <View style={[styles.dialogCard, styles.playlistDialog]}>
             <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
             {playlists.length === 0 ? (
               <Text style={styles.sheetEmpty}>{t('search.noPlaylistsAction')}</Text>
@@ -379,6 +379,9 @@ const styles = StyleSheet.create({
   },
   sheetDangerText: {
     color: '#f87171',
+  },
+  playlistDialog: {
+    maxHeight: '70%',
   },
   sheetEmpty: {
     color: '#9090a5',

@@ -12,12 +12,9 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type {
-  CompositeNavigationProp,
-  CompositeScreenProps,
-} from '@react-navigation/native';
-import type { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { CompositeScreenProps } from '@react-navigation/native';
+import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { fetchPlaylists, requestDownloadAdd, searchLibrary, searchOnlineTracks } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
