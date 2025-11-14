@@ -54,6 +54,7 @@ jobs:
 
       - name: Build Android APK
         run: |
+          rm -f android-build.log
           cd android
           ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all | tee ../android-build.log
 
@@ -72,6 +73,17 @@ jobs:
           path: android/app/.cxx/**/cmake_build_output.txt
           if-no-files-found: ignore
           retention-days: 7
+
+      - name: List CMake logs on failure
+        if: failure()
+        run: |
+          echo "Available cmake_build_output.txt files:"
+          find android/app -name 'cmake_build_output.txt' -print || true
+
+      - name: Show Gradle build log info on failure
+        if: failure()
+        run: |
+          ls -l android-build.log || true
 
       - name: Upload Gradle build log on failure
         if: failure()
