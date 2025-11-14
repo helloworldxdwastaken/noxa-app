@@ -427,10 +427,15 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
       </ScrollView>
 
-      <Modal transparent visible={actionsVisible} animationType="fade" onRequestClose={() => setActionsVisible(false)}>
+      <Modal
+        transparent
+        visible={actionsVisible}
+        animationType="fade"
+        onRequestClose={() => setActionsVisible(false)}
+      >
         <Pressable style={styles.sheetBackdrop} onPress={() => setActionsVisible(false)} />
         <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>Track Actions</Text>
+          <Text style={styles.sheetTitle}>{track?.title ?? t('playlist.optionsTitle')}</Text>
           <View style={styles.sheetSection}>
             <TouchableOpacity
               style={styles.sheetAction}
@@ -443,20 +448,23 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               }}
             >
               <Icon name="plus-circle" size={18} color="#ffffff" />
-              <Text style={styles.sheetActionText}>Add to playlist</Text>
+              <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
             </TouchableOpacity>
-          </View>
-          <View style={styles.sheetSection}>
-            <Text style={styles.sheetSubtitle}>Library</Text>
             <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
-              <Icon name="minus-circle" size={18} color="#fbbf24" />
-              <Text style={styles.sheetActionText}>Remove from library</Text>
+              <Icon name="trash-2" size={18} color="#fbbf24" />
+              <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(true)}>
-              <Icon name="trash-2" size={18} color="#f87171" />
-              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>Delete permanently</Text>
+              <Icon name="alert-triangle" size={18} color="#f87171" />
+              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
+                {t('common.deletePermanent')}
+              </Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>
+            <Icon name="x" size={18} color="#ffffff" />
+            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
+          </TouchableOpacity>
         </View>
       </Modal>
       <Modal
@@ -467,11 +475,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setPlaylistPickerVisible(false)} />
         <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
-          <Text style={styles.sheetTitle}>Select playlist</Text>
+          <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
           {loadingPlaylists ? (
             <ActivityIndicator color="#ffffff" />
           ) : playlists.length === 0 ? (
-            <Text style={styles.sheetEmpty}>Create a playlist first.</Text>
+            <Text style={styles.sheetEmpty}>{t('playlist.noOtherPlaylists')}</Text>
           ) : (
             <FlatList
               data={playlists}
@@ -491,7 +499,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           )}
           <TouchableOpacity style={styles.sheetAction} onPress={() => setPlaylistPickerVisible(false)}>
             <Icon name="x" size={18} color="#f87171" />
-            <Text style={[styles.sheetActionText, styles.sheetDangerText]}>Cancel</Text>
+            <Text style={[styles.sheetActionText, styles.sheetDangerText]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
       </Modal>
@@ -722,7 +730,7 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
   sheetBackdrop: {
-    flex: 1,
+    ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   sheetContainer: {
@@ -730,10 +738,11 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#0c0c13',
+    backgroundColor: '#0d0d14',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
+    paddingTop: 16,
     gap: 16,
   },
   sheetTitle: {
@@ -744,22 +753,16 @@ const styles = StyleSheet.create({
   sheetSection: {
     gap: 12,
   },
-  sheetSubtitle: {
-    color: '#9090a5',
-    fontSize: 13,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
   sheetAction: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 8,
+    paddingVertical: 10,
   },
   sheetActionText: {
     color: '#ffffff',
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   sheetDangerText: {
     color: '#f87171',
@@ -772,7 +775,7 @@ const styles = StyleSheet.create({
     maxHeight: 240,
   },
   playlistListContent: {
-    gap: 4,
+    gap: 8,
   },
 });
 
