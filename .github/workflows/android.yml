@@ -58,6 +58,16 @@ jobs:
           cd android
           ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all | tee ../android-build.log
 
+      - name: List build outputs
+        if: success()
+        run: |
+          echo "Contents of android/app/build/outputs:"
+          if [ -d android/app/build/outputs ]; then
+            find android/app/build/outputs -maxdepth 4 -type f -print
+          else
+            echo "No build outputs directory found."
+          fi
+
       - name: Upload Android APK
         if: success()
         uses: actions/upload-artifact@v4
