@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -65,18 +65,25 @@ const AuthNavigator = () => (
   </AuthStack.Navigator>
 );
 
-const AppTabsNavigator = () => (
-  <Tabs.Navigator screenOptions={{ headerShown: false }} tabBar={customTabBarRenderer}>
-    <Tabs.Screen name="Home" component={HomeScreen} />
-    <Tabs.Screen
-      name="Library"
-      component={LibraryStackNavigator}
-      options={{ unmountOnBlur: true }}
-    />
-    <Tabs.Screen name="Search" component={SearchScreen} />
-    <Tabs.Screen name="Settings" component={SettingsScreen} />
-  </Tabs.Navigator>
-);
+const AppTabsNavigator = () => {
+  const [libraryKey, setLibraryKey] = useState(0);
+
+  return (
+    <Tabs.Navigator screenOptions={{ headerShown: false }} tabBar={customTabBarRenderer}>
+      <Tabs.Screen name="Home" component={HomeScreen} />
+      <Tabs.Screen
+        name="Library"
+        listeners={{
+          blur: () => setLibraryKey(prev => prev + 1),
+        }}
+      >
+        {() => <LibraryStackNavigator key={`library-stack-${libraryKey}`} />}
+      </Tabs.Screen>
+      <Tabs.Screen name="Search" component={SearchScreen} />
+      <Tabs.Screen name="Settings" component={SettingsScreen} />
+    </Tabs.Navigator>
+  );
+};
 
 const LibraryStackNavigator = () => (
   <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
