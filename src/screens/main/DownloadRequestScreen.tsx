@@ -109,7 +109,12 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView
+        contentContainerStyle={styles.overlayContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.dialogCard}>
         {/* Header */}
         <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -235,6 +240,7 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </View>
         </TouchableOpacity>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -243,11 +249,23 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: 'rgba(0,0,0,0.7)',
   },
-  content: {
-    padding: 20,
+  overlayContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  dialogCard: {
+    backgroundColor: '#050505',
+    borderRadius: 28,
+    padding: 24,
     gap: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    alignSelf: 'center',
+    width: '100%',
+    maxWidth: 520,
   },
   header: {
     flexDirection: 'row',

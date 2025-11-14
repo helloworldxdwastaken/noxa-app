@@ -16,13 +16,7 @@ import type { CompositeScreenProps } from '@react-navigation/native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import {
-  fetchPlaylists,
-  requestDownloadAdd,
-  searchLibrary,
-  searchOnlineTracks,
-  addTrackToPlaylist,
-} from '../../api/service';
+import { fetchPlaylists, requestDownloadAdd, searchLibrary, searchOnlineTracks } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import type { RemoteTrack, Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
@@ -66,9 +60,19 @@ const SearchScreen: React.FC<Props> = () => {
   const results = mode === 'local' ? localSongs : onlineResults;
   const isFetching = mode === 'local' ? localFetching : onlineFetching;
 
-  const downloadMutation = useMutation<void, Error, RemoteTrack>({
-    mutationFn: (track: RemoteTrack) =>
-      requestDownloadAdd(track.title, track.artistName, track.albumTitle ?? undefined),
+  type DownloadRequest = {
+    track: RemoteTrack;
+    playlistId?: number;
+  };
+
+  const downloadMutation = useMutation<void, Error, DownloadRequest>({
+    mutationFn: ({ track, playlistId }) =>
+      requestDownloadAdd(
+        track.title,
+        track.artistName,
+        track.albumTitle ?? undefined,
+        playlistId,
+      ),
     onSuccess: () => {
       Alert.alert(t('common.ok'), t('search.downloadQueued'));
     },
@@ -145,9 +149,11 @@ const SearchScreen: React.FC<Props> = () => {
               Keyboard.dismiss();
               setDownloadOptionsTrack(item);
             }}
-            disabled={downloadMutation.isPending && downloadMutation.variables?.id === item.id}
+            disabled={
+              downloadMutation.isPending && downloadMutation.variables?.track.id === item.id
+            }
           >
-            {downloadMutation.isPending && downloadMutation.variables?.id === item.id ? (
+            {downloadMutation.isPending && downloadMutation.variables?.track.id === item.id ? (
               <ActivityIndicator color="#050505" size="small" />
             ) : (
               <Icon name="download" size={16} color="#050505" />
@@ -300,7 +306,7 @@ const SearchScreen: React.FC<Props> = () => {
             <TouchableOpacity
               style={styles.sheetAction}
               onPress={() => {
-                downloadMutation.mutate(downloadOptionsTrack);
+                downloadMutation.mutate({ track: downloadOptionsTrack });
                 setDownloadOptionsTrack(null);
               }}
             >
@@ -354,10 +360,9 @@ const SearchScreen: React.FC<Props> = () => {
                     key={playlist.id}
                     style={styles.sheetAction}
                     onPress={() => {
-                      downloadMutation.mutate(playlistPickerTrack);
-                      addTrackToPlaylist(playlist.id, Number(playlistPickerTrack.id)).catch(error => {
-                        console.error('Failed to add track', error);
-                        Alert.alert(t('common.error'), t('common.unableToAddTrack'));
+                      downloadMutation.mutate({
+                        track: playlistPickerTrack,
+                        playlistId: playlist.id,
                       });
                       setPlaylistPickerTrack(null);
                     }}
