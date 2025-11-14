@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -502,6 +503,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  trackMenuButton: {
+    padding: 6,
+    marginLeft: 8,
+  },
   trackInfo: {
     gap: 4,
     flex: 1,
@@ -518,6 +523,51 @@ const styles = StyleSheet.create({
   centered: {
     padding: 32,
     alignItems: 'center',
+  },
+  sheetBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+  },
+  sheetContainer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 0,
+    backgroundColor: '#0d0d14',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    gap: 16,
+  },
+  sheetTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  sheetAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 10,
+  },
+  sheetActionText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  sheetDangerText: {
+    color: '#f87171',
+  },
+  sheetEmpty: {
+    color: '#9090a5',
+    fontSize: 14,
+  },
+  playlistScroll: {
+    maxHeight: 260,
+  },
+  playlistList: {
+    gap: 8,
   },
 });
 
