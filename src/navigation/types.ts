@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { Song } from '../types/models';
 
 export type AuthStackParamList = {
   Login: undefined;
@@ -22,6 +23,15 @@ export type LibraryStackParamList = {
       }
     | undefined;
   PlaylistDetail: PlaylistDetailParams;
+  ArtistDetail: {
+    artistName: string;
+    songs: Song[];
+  };
+  AlbumDetail: {
+    artistName: string | null;
+    albumTitle: string;
+    songs: Song[];
+  };
 };
 
 export type AppTabsParamList = {

@@ -15,10 +15,12 @@ import SplashScreen from '../screens/common/SplashScreen';
 import DownloadRequestScreen from '../screens/main/DownloadRequestScreen';
 import HomeScreen from '../screens/main/HomeScreen';
 import LibraryScreen from '../screens/main/LibraryScreen';
+import ArtistDetailScreen from '../screens/main/ArtistDetailScreen';
 import NowPlayingScreen from '../screens/main/NowPlayingScreen';
 import PlaylistDetailScreen from '../screens/main/PlaylistDetailScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import AlbumDetailScreen from '../screens/main/AlbumDetailScreen';
 import { useLanguage } from '../context/LanguageContext';
 import type {
   AppStackParamList,
@@ -88,6 +90,8 @@ const LibraryStackNavigator = () => (
   <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
     <LibraryStack.Screen name="LibraryMain" component={LibraryScreen} />
     <LibraryStack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
+    <LibraryStack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
+    <LibraryStack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
   </LibraryStack.Navigator>
 );
 

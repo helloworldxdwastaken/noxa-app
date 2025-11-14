@@ -185,7 +185,15 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const renderArtist = useCallback(
     ({ item }: { item: Artist }) => (
-      <TouchableOpacity style={styles.gridCard}>
+      <TouchableOpacity
+        style={styles.gridCard}
+        onPress={() =>
+          navigation.navigate('ArtistDetail', {
+            artistName: item.name,
+            songs: item.songs,
+          })
+        }
+      >
         <ArtworkImage
           uri={item.artwork}
           size={140}
@@ -200,12 +208,21 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
         </Text>
       </TouchableOpacity>
     ),
-    [t],
+    [navigation, t],
   );
 
   const renderAlbum = useCallback(
     ({ item }: { item: Album }) => (
-      <TouchableOpacity style={styles.gridCard}>
+      <TouchableOpacity
+        style={styles.gridCard}
+        onPress={() =>
+          navigation.navigate('AlbumDetail', {
+            artistName: item.artist ?? null,
+            albumTitle: item.title,
+            songs: item.songs,
+          })
+        }
+      >
         <ArtworkImage
           uri={item.artwork}
           size={140}
@@ -219,7 +236,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
         </Text>
       </TouchableOpacity>
     ),
-    [],
+    [navigation],
   );
 
   const renderPlaylist = useCallback(
