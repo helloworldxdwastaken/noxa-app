@@ -180,12 +180,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleOpenArtist = useCallback(
     (artist: LocalArtist) => {
-      navigation.navigate('Library', {
-        screen: 'ArtistDetail',
-        params: {
-          artistName: artist.name,
-          songs: artist.songs,
-        },
+      navigation.navigate('ArtistDetail', {
+        artistName: artist.name,
+        songs: artist.songs,
       });
     },
     [navigation],
@@ -193,13 +190,10 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
 
   const handleOpenAlbum = useCallback(
     (album: LocalAlbum) => {
-      navigation.navigate('Library', {
-        screen: 'AlbumDetail',
-        params: {
-          artistName: album.artist,
-          albumTitle: album.title,
-          songs: album.songs,
-        },
+      navigation.navigate('AlbumDetail', {
+        artistName: album.artist,
+        albumTitle: album.title,
+        songs: album.songs,
       });
     },
     [navigation],

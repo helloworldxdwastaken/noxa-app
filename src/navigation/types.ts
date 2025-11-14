@@ -49,4 +49,13 @@ export type AppStackParamList = {
     | undefined;
   NowPlaying: undefined;
   DownloadRequest: undefined;
+  ArtistDetail: {
+    artistName: string;
+    songs: Song[];
+  };
+  AlbumDetail: {
+    artistName: string | null;
+    albumTitle: string;
+    songs: Song[];
+  };
 };

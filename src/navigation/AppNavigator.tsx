@@ -113,6 +113,22 @@ const AppStackNavigator = () => (
           animation: 'slide_from_bottom',
         }}
       />
+      <AppStack.Screen
+        name="ArtistDetail"
+        component={ArtistDetailScreen}
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
+      <AppStack.Screen
+        name="AlbumDetail"
+        component={AlbumDetailScreen}
+        options={{
+          presentation: 'card',
+          animation: 'slide_from_right',
+        }}
+      />
     </AppStack.Navigator>
     <MiniPlayer />
     <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
