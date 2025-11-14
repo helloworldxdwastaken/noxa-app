@@ -500,7 +500,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 
   if (backgroundSource) {
     return (
-      <ImageBackground source={backgroundSource} blurRadius={45} style={styles.backgroundImage}>
+      <ImageBackground source={backgroundSource} blurRadius={20} style={styles.backgroundImage}>
         <View style={styles.backdropOverlay} />
         {content}
       </ImageBackground>

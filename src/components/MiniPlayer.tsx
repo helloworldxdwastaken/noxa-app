@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { State } from 'react-native-track-player';
 import Icon from 'react-native-vector-icons/Feather';
+import { BlurView } from '@react-native-community/blur';
 
 import type { AppStackParamList } from '../navigation/types';
 import ArtworkImage from './ArtworkImage';
@@ -35,36 +36,45 @@ const MiniPlayer: React.FC = () => {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.wrapper, { bottom: (insets.bottom || 12) + 60 }]}
+      style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) + 96 }]}
     >
       <TouchableOpacity
         style={styles.container}
         activeOpacity={0.9}
         onPress={() => navigation.navigate('NowPlaying')}
       >
-        <ArtworkImage
-          uri={artwork}
-          size={48}
-          fallbackLabel={track.title?.[0]?.toUpperCase()}
-          shape="rounded"
+        <BlurView
+          pointerEvents="none"
+          style={styles.blurLayer}
+          blurType="dark"
+          blurAmount={20}
+          reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
         />
-        <View style={styles.info}>
-          <Text style={styles.title} numberOfLines={1}>
-            {track.title ?? 'Unknown'}
-          </Text>
-          <Text style={styles.artist} numberOfLines={1}>
-            {track.artist ?? 'Unknown Artist'}
-          </Text>
+        <View style={styles.content}>
+          <ArtworkImage
+            uri={artwork}
+            size={48}
+            fallbackLabel={track.title?.[0]?.toUpperCase()}
+            shape="rounded"
+          />
+          <View style={styles.info}>
+            <Text style={styles.title} numberOfLines={1}>
+              {track.title ?? 'Unknown'}
+            </Text>
+            <Text style={styles.artist} numberOfLines={1}>
+              {track.artist ?? 'Unknown Artist'}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.playBtn}
+            onPress={e => {
+              e.stopPropagation();
+              togglePlayback().catch(err => console.warn('Toggle playback failed', err));
+            }}
+          >
+            <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#050505" />
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          style={styles.playBtn}
-          onPress={e => {
-            e.stopPropagation();
-            togglePlayback().catch(err => console.warn('Toggle playback failed', err));
-          }}
-        >
-          <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#050505" />
-        </TouchableOpacity>
       </TouchableOpacity>
     </View>
   );
@@ -77,20 +87,26 @@ const styles = StyleSheet.create({
     right: 16,
   },
   container: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: 'rgba(10,10,15,0.6)',
     borderRadius: 48,
+    overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.1)',
     shadowColor: '#000',
     shadowOpacity: 0.35,
     shadowRadius: 20,
     shadowOffset: { width: 0, height: 14 },
     elevation: 12,
+    backgroundColor: 'rgba(10,10,15,0.7)',
+  },
+  blurLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   info: {
     flex: 1,

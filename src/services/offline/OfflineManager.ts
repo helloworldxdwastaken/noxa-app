@@ -416,11 +416,17 @@ export class OfflineManager {
     const fileName = `art_${song.id}_${Date.now()}.jpg`;
     const destination = `${ARTWORK_DIR}/${fileName}`;
     try {
+      const headers: Record<string, string> = {};
+      const token = getAuthToken();
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       await RNFS.downloadFile({
         fromUrl: url,
         toFile: destination,
         discretionary: true,
         cacheable: true,
+        headers,
       }).promise;
       return `file://${destination}`;
     } catch {

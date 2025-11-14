@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Feather';
+import { BlurView } from '@react-native-community/blur';
 
 import { useAuth } from '../context/AuthContext';
 import MiniPlayer from '../components/MiniPlayer';
@@ -123,11 +124,23 @@ export default AppNavigator;
 
 const tabStyles = StyleSheet.create({
   customContainer: {
+    marginHorizontal: 12,
+    marginBottom: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    backgroundColor: 'rgba(10,10,15,0.7)',
+  },
+  blurLayer: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
     paddingBottom: 20,
   },
   tabBackground: {
@@ -226,35 +239,44 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
 
   return (
     <View style={[tabStyles.customContainer, { paddingBottom: Math.max(insets.bottom, 20) }]}>
-      <View style={tabStyles.tabBackground}>
-        {mainRoutes.map(route => {
-          const routeIndex = state.routes.findIndex(r => r.key === route.key);
-          const isFocused = state.index === routeIndex;
-          return (
-            <TouchableOpacity
-              key={route.key}
-             accessibilityRole="button"
-             accessibilityState={isFocused ? { selected: true } : {}}
-             onPress={() => handlePress(route.name, route.key, isFocused)}
-              style={[tabStyles.tabButton]}
-            >
-              <TabBarIcon
-                label={labelMap[route.name] ?? route.name}
-                iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
-                focused={isFocused}
-              />
-            </TouchableOpacity>
-          );
-        })}
+      <BlurView
+        pointerEvents="none"
+        style={tabStyles.blurLayer}
+        blurType="dark"
+        blurAmount={20}
+        reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
+      />
+      <View style={tabStyles.contentRow}>
+        <View style={tabStyles.tabBackground}>
+          {mainRoutes.map(route => {
+            const routeIndex = state.routes.findIndex(r => r.key === route.key);
+            const isFocused = state.index === routeIndex;
+            return (
+              <TouchableOpacity
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                onPress={() => handlePress(route.name, route.key, isFocused)}
+                style={tabStyles.tabButton}
+              >
+                <TabBarIcon
+                  label={labelMap[route.name] ?? route.name}
+                  iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+                  focused={isFocused}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {searchRoute ? (
+          <TouchableOpacity
+            style={tabStyles.searchBubble}
+            onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
+          >
+            <Icon name="search" size={24} color="#1db954" />
+          </TouchableOpacity>
+        ) : null}
       </View>
-      {searchRoute ? (
-        <TouchableOpacity
-          style={tabStyles.searchBubble}
-          onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
-        >
-          <Icon name="search" size={24} color="#1db954" />
-        </TouchableOpacity>
-      ) : null}
     </View>
   );
 };

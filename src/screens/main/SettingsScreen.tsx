@@ -5,7 +5,6 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -19,16 +18,12 @@ import type { SupportedLanguage } from '../../i18n/translations';
 
 const SettingsScreen: React.FC = () => {
   const {
-    state: { baseUrl, adminCredentials },
+    state: { baseUrl },
     updateServerUrl,
-    setAdminCredentials,
     logout,
   } = useAuth();
 
   const [serverUrl, setServerUrl] = useState(baseUrl);
-  const [adminUser, setAdminUser] = useState(adminCredentials?.username ?? '');
-  const [adminPass, setAdminPass] = useState(adminCredentials?.password ?? '');
-  const [rememberAdmin, setRememberAdmin] = useState(Boolean(adminCredentials));
   const { t, language, setLanguage } = useLanguage();
 
   const handleSaveServer = async () => {
@@ -39,22 +34,6 @@ const SettingsScreen: React.FC = () => {
     try {
       await updateServerUrl(serverUrl.trim());
       Alert.alert(t('common.ok'), t('settings.serverSuccess'));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.error');
-      Alert.alert(t('common.error'), message);
-    }
-  };
-
-  const handleSaveAdmin = async () => {
-    if (!adminUser || !adminPass) {
-      await setAdminCredentials(null);
-      setRememberAdmin(false);
-      Alert.alert(t('common.ok'), t('settings.adminCleared'));
-      return;
-    }
-    try {
-      await setAdminCredentials({ username: adminUser.trim(), password: adminPass }, rememberAdmin);
-      Alert.alert(t('common.ok'), t('settings.adminSaved'));
     } catch (error) {
       const message = error instanceof Error ? error.message : t('common.error');
       Alert.alert(t('common.error'), message);
@@ -77,75 +56,48 @@ const SettingsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.serverTitle')}</Text>
-        <Text style={styles.sectionSubtitle}>{t('settings.serverSubtitle')}</Text>
-        <TextInput
-          style={styles.input}
-          placeholder={t('settings.serverPlaceholder')}
-          value={serverUrl}
-          onChangeText={setServerUrl}
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-        <TouchableOpacity style={styles.button} onPress={handleSaveServer}>
-          <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
-        </TouchableOpacity>
+          <Text style={styles.sectionTitle}>{t('settings.serverTitle')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.serverSubtitle')}</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={t('settings.serverPlaceholder')}
+            value={serverUrl}
+            onChangeText={setServerUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <TouchableOpacity style={styles.button} onPress={handleSaveServer}>
+            <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.adminTitle')}</Text>
-        <Text style={styles.sectionSubtitle}>{t('settings.adminSubtitle')}</Text>
-        <TextInput
-          style={styles.input}
-          placeholder={t('settings.adminUser')}
-          autoCapitalize="none"
-          value={adminUser}
-          onChangeText={setAdminUser}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder={t('settings.adminPass')}
-          secureTextEntry
-          value={adminPass}
-          onChangeText={setAdminPass}
-        />
-        <View style={styles.switchRow}>
-          <Text style={styles.switchLabel}>{t('settings.remember')}</Text>
-          <Switch value={rememberAdmin} onValueChange={setRememberAdmin} />
-        </View>
-        <TouchableOpacity style={styles.button} onPress={handleSaveAdmin}>
-          <Text style={styles.buttonText}>{t('settings.saveAdmin')}</Text>
-        </TouchableOpacity>
-        </View>
-
-        <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
-        <Text style={styles.sectionSubtitle}>{t('settings.languageSubtitle')}</Text>
-        <View style={styles.languageToggle}>
-          {(['en', 'es'] as SupportedLanguage[]).map(option => {
-            const isActive = language === option;
-            return (
-              <TouchableOpacity
-                key={option}
-                style={[styles.languageBtn, isActive && styles.languageBtnActive]}
-                onPress={() => setLanguage(option)}
-              >
-                <Text
-                  style={[styles.languageBtnText, isActive && styles.languageBtnTextActive]}
+          <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.languageSubtitle')}</Text>
+          <View style={styles.languageToggle}>
+            {(['en', 'es'] as SupportedLanguage[]).map(option => {
+              const isActive = language === option;
+              const flag = option === 'en' ? '🇺🇸' : '🇪🇸';
+              return (
+                <TouchableOpacity
+                  key={option}
+                  style={[styles.languageBtn, isActive && styles.languageBtnActive]}
+                  onPress={() => setLanguage(option)}
                 >
-                  {option === 'en' ? t('settings.english') : t('settings.spanish')}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+                  <Text style={{ color: isActive ? '#050505' : '#9090a5', fontWeight: '600' }}>
+                    {`${flag} ${option === 'en' ? t('settings.english') : t('settings.spanish')}`}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
         </View>
 
         <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
-        <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleLogout}>
-          <Text style={styles.buttonText}>{t('settings.signOut')}</Text>
-        </TouchableOpacity>
+          <Text style={styles.sectionTitle}>{t('settings.accountTitle')}</Text>
+          <TouchableOpacity style={[styles.button, styles.dangerButton]} onPress={handleLogout}>
+            <Text style={styles.buttonText}>{t('settings.signOut')}</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -182,13 +134,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     color: '#ffffff',
   },
-  switchRow: {
+  languageToggle: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap: 8,
+    padding: 4,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
   },
-  switchLabel: {
-    color: '#e6e6f2',
+  languageBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  languageBtnActive: {
+    backgroundColor: '#ffffff',
   },
   button: {
     backgroundColor: '#1db954',
@@ -202,29 +167,6 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontWeight: '600',
-  },
-  languageToggle: {
-    flexDirection: 'row',
-    borderRadius: 999,
-    backgroundColor: '#1a1a1a',
-    padding: 4,
-    gap: 4,
-  },
-  languageBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 999,
-    alignItems: 'center',
-  },
-  languageBtnActive: {
-    backgroundColor: '#1db954',
-  },
-  languageBtnText: {
-    color: '#9090a5',
-    fontWeight: '600',
-  },
-  languageBtnTextActive: {
-    color: '#050505',
   },
 });
 
