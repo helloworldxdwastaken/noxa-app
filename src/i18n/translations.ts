@@ -29,6 +29,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       playlists: 'Your Playlists',
       showAll: 'Show all',
       recentlyAdded: 'Recently Added',
+      play: 'Play All',
       offline: 'Offline mode',
       stats: {
         songs: 'Songs',
@@ -177,6 +178,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       playlists: 'Tus listas',
       showAll: 'Ver todo',
       recentlyAdded: 'Recientemente añadido',
+      play: 'Reproducir todo',
       offline: 'Modo sin conexión',
       stats: {
         songs: 'Canciones',

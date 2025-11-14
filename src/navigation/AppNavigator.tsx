@@ -251,13 +251,14 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   return (
     <View style={[tabStyles.customContainer, { paddingBottom: bottomPadding }]}>
       <View style={tabStyles.tabBackground}>
-        <BlurView
-          pointerEvents="none"
-          style={tabStyles.blurLayer}
-          blurType="dark"
-          blurAmount={20}
-          reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
-        />
+        <View pointerEvents="none" style={tabStyles.blurLayer}>
+          <BlurView
+            style={StyleSheet.absoluteFillObject}
+            blurType="dark"
+            blurAmount={20}
+            reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
+          />
+        </View>
         {mainRoutes.map(route => {
           const routeIndex = state.routes.findIndex(r => r.key === route.key);
           const isFocused = state.index === routeIndex;
@@ -283,13 +284,14 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
           style={tabStyles.searchBubble}
           onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
         >
-          <BlurView
-            pointerEvents="none"
-            style={tabStyles.blurLayer}
-            blurType="dark"
-            blurAmount={20}
-            reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
-          />
+          <View pointerEvents="none" style={tabStyles.blurLayer}>
+            <BlurView
+              style={StyleSheet.absoluteFillObject}
+              blurType="dark"
+              blurAmount={20}
+              reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
+            />
+          </View>
           <Icon name="search" size={24} color="#1db954" />
         </TouchableOpacity>
       ) : null}

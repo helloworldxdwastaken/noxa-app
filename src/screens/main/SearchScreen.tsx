@@ -12,9 +12,12 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import type { CompositeScreenProps } from '@react-navigation/native';
-import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
-import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  CompositeNavigationProp,
+  CompositeScreenProps,
+} from '@react-navigation/native';
+import type { BottomTabNavigationProp, BottomTabScreenProps } from '@react-navigation/bottom-tabs';
+import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { fetchPlaylists, requestDownloadAdd, searchLibrary, searchOnlineTracks } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
@@ -28,18 +31,37 @@ import { useLanguage } from '../../context/LanguageContext';
 
 type SearchMode = 'local' | 'online';
 type OnlineSearchType = 'track' | 'artist' | 'album';
+type LocalSearchType = 'track' | 'artist' | 'album';
+
+interface LocalArtist {
+  id: string;
+  name: string;
+  trackCount: number;
+  songs: Song[];
+  artwork?: string | null;
+}
+
+interface LocalAlbum {
+  id: string;
+  title: string;
+  artist: string | null;
+  trackCount: number;
+  songs: Song[];
+  artwork?: string | null;
+}
 
 type Props = CompositeScreenProps<
   BottomTabScreenProps<AppTabsParamList, 'Search'>,
   NativeStackScreenProps<AppStackParamList>
 >;
 
-const SearchScreen: React.FC<Props> = () => {
+const SearchScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');
+  const [localType, setLocalType] = useState<LocalSearchType>('track');
   const [downloadOptionsTrack, setDownloadOptionsTrack] = useState<RemoteTrack | null>(null);
   const [playlistPickerTrack, setPlaylistPickerTrack] = useState<RemoteTrack | null>(null);
   const { data: playlists = [] } = useQuery({ queryKey: ['playlists'], queryFn: fetchPlaylists });
@@ -57,7 +79,59 @@ const SearchScreen: React.FC<Props> = () => {
   });
 
   const localSongs = useMemo(() => (Array.isArray(localResults) ? localResults : []), [localResults]);
-  const results = mode === 'local' ? localSongs : onlineResults;
+  const localArtists = useMemo<LocalArtist[]>(() => {
+    if (!localSongs.length) {
+      return [];
+    }
+    const grouped = localSongs.reduce<Record<string, LocalArtist>>((acc, song) => {
+      const artistName = song.artist || t('library.unknownArtist');
+      if (!acc[artistName]) {
+        acc[artistName] = {
+          id: artistName,
+          name: artistName,
+          trackCount: 0,
+          songs: [],
+          artwork: song.albumCover ?? null,
+        };
+      }
+      acc[artistName].songs.push(song);
+      acc[artistName].trackCount += 1;
+      if (!acc[artistName].artwork && song.albumCover) {
+        acc[artistName].artwork = song.albumCover;
+      }
+      return acc;
+    }, {});
+    return Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
+  }, [localSongs, t]);
+
+  const localAlbums = useMemo<LocalAlbum[]>(() => {
+    if (!localSongs.length) {
+      return [];
+    }
+    const grouped = localSongs.reduce<Record<string, LocalAlbum>>((acc, song) => {
+      const albumTitle = song.album || t('library.unknownAlbum');
+      const key = `${albumTitle}-${song.artist ?? ''}`;
+      if (!acc[key]) {
+        acc[key] = {
+          id: key,
+          title: albumTitle,
+          artist: song.artist ?? null,
+          trackCount: 0,
+          songs: [],
+          artwork: song.albumCover ?? null,
+        };
+      }
+      acc[key].songs.push(song);
+      acc[key].trackCount += 1;
+      if (!acc[key].artwork && song.albumCover) {
+        acc[key].artwork = song.albumCover;
+      }
+      return acc;
+    }, {});
+    return Object.values(grouped).sort((a, b) => a.title.localeCompare(b.title));
+  }, [localSongs, t]);
+
+  const onlineList = mode === 'online' ? onlineResults : [];
   const isFetching = mode === 'local' ? localFetching : onlineFetching;
 
   type DownloadRequest = {
@@ -90,7 +164,7 @@ const SearchScreen: React.FC<Props> = () => {
     [localSongs],
   );
 
-  const renderLocalItem = useCallback(
+  const renderLocalSong = useCallback(
     ({ item }: { item: Song }) => (
       <TouchableOpacity style={styles.resultRow} onPress={() => handlePlayLocalSong(item)}>
         <ArtworkImage uri={item.albumCover} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
@@ -105,6 +179,70 @@ const SearchScreen: React.FC<Props> = () => {
       </TouchableOpacity>
     ),
     [handlePlayLocalSong],
+  );
+
+  const handleOpenArtist = useCallback(
+    (artist: LocalArtist) => {
+      navigation.navigate('Library', {
+        screen: 'ArtistDetail',
+        params: {
+          artistName: artist.name,
+          songs: artist.songs,
+        },
+      });
+    },
+    [navigation],
+  );
+
+  const handleOpenAlbum = useCallback(
+    (album: LocalAlbum) => {
+      navigation.navigate('Library', {
+        screen: 'AlbumDetail',
+        params: {
+          artistName: album.artist,
+          albumTitle: album.title,
+          songs: album.songs,
+        },
+      });
+    },
+    [navigation],
+  );
+
+  const renderLocalArtist = useCallback(
+    ({ item }: { item: LocalArtist }) => (
+      <TouchableOpacity style={styles.resultRow} onPress={() => handleOpenArtist(item)}>
+        <ArtworkImage uri={item.artwork} size={56} fallbackLabel={item.name?.[0]?.toUpperCase()} />
+        <View style={styles.resultInfo}>
+          <Text style={styles.resultTitle} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={styles.resultSubtitle} numberOfLines={1}>
+            {item.trackCount} {t('search.types.track')}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    [handleOpenArtist, t],
+  );
+
+  const renderLocalAlbum = useCallback(
+    ({ item }: { item: LocalAlbum }) => (
+      <TouchableOpacity style={styles.resultRow} onPress={() => handleOpenAlbum(item)}>
+        <ArtworkImage uri={item.artwork} size={56} fallbackLabel={item.title?.[0]?.toUpperCase()} />
+        <View style={styles.resultInfo}>
+          <Text style={styles.resultTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
+          <Text style={styles.resultSubtitle} numberOfLines={1}>
+            {item.artist || t('library.unknownArtist')}
+          </Text>
+          <Text style={styles.resultMeta}>
+            {item.trackCount} {t('search.types.track')}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    ),
+    [handleOpenAlbum, t],
   );
 
   const [previewingId, setPreviewingId] = useState<string | null>(null);
@@ -165,6 +303,63 @@ const SearchScreen: React.FC<Props> = () => {
     [downloadMutation, handlePreview, previewingId, t],
   );
 
+  const renderEmptyState = useCallback(
+    (context: SearchMode) => {
+      if (query.trim().length <= 1) {
+        return (
+          <View style={styles.centered}>
+            <View style={styles.emptyIcon}>
+              <Icon name="search" size={24} color="#8aa4ff" />
+            </View>
+            <Text style={styles.emptyTitle}>{t('search.searchForMusic')}</Text>
+            <Text style={styles.emptyText}>
+              {context === 'local' ? t('search.localDescription') : t('search.discover')}
+            </Text>
+          </View>
+        );
+      }
+      return (
+        <View style={styles.centered}>
+          <View style={styles.emptyIcon}>
+            <Icon name="slash" size={24} color="#f87171" />
+          </View>
+          <Text style={styles.emptyTitle}>{t('search.noResults')}</Text>
+          <Text style={styles.emptyText}>{t('search.noResultsDescription')}</Text>
+        </View>
+      );
+    },
+    [query, t],
+  );
+
+  const localFilterChips = (
+    <View style={styles.typeFilters}>
+      <TouchableOpacity
+        style={[styles.typeChip, localType === 'track' && styles.typeChipActive]}
+        onPress={() => setLocalType('track')}
+      >
+        <Text style={[styles.typeChipText, localType === 'track' && styles.typeChipTextActive]}>
+          {t('search.types.track')}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.typeChip, localType === 'artist' && styles.typeChipActive]}
+        onPress={() => setLocalType('artist')}
+      >
+        <Text style={[styles.typeChipText, localType === 'artist' && styles.typeChipTextActive]}>
+          {t('search.types.artist')}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.typeChip, localType === 'album' && styles.typeChipActive]}
+        onPress={() => setLocalType('album')}
+      >
+        <Text style={[styles.typeChipText, localType === 'album' && styles.typeChipTextActive]}>
+          {t('search.types.album')}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
       <TextInput
@@ -200,7 +395,8 @@ const SearchScreen: React.FC<Props> = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Online Search Type Filters */}
+      {/* Search Type Filters */}
+      {mode === 'local' ? localFilterChips : null}
       {mode === 'online' && (
         <View style={styles.typeFilters}>
           <TouchableOpacity
@@ -238,64 +434,48 @@ const SearchScreen: React.FC<Props> = () => {
           <Text style={styles.loadingText}>{t('search.loading')}</Text>
         </View>
       ) : mode === 'local' ? (
-        <FlatList<Song>
-          data={(results as Song[]) ?? []}
-          keyExtractor={item => `${item.id}`}
-          renderItem={renderLocalItem}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={
-            (!results || results.length === 0) && styles.emptyContainer
-          }
-          ListEmptyComponent={
-            query.trim().length <= 1 ? (
-              <View style={styles.centered}>
-                <View style={styles.emptyIcon}>
-                  <Icon name="search" size={24} color="#8aa4ff" />
-                </View>
-                <Text style={styles.emptyTitle}>{t('search.searchForMusic')}</Text>
-                <Text style={styles.emptyText}>
-                  {mode === 'local' ? t('search.localDescription') : t('search.discover')}
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.centered}>
-                <View style={styles.emptyIcon}>
-                  <Icon name="slash" size={24} color="#f87171" />
-                </View>
-                <Text style={styles.emptyTitle}>{t('search.noResults')}</Text>
-                <Text style={styles.emptyText}>{t('search.noResultsDescription')}</Text>
-              </View>
-            )
-          }
-        />
+        <>
+          {localType === 'track' && (
+            <FlatList<Song>
+              data={localSongs}
+              keyExtractor={item => `${item.id}`}
+              renderItem={renderLocalSong}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={localSongs.length === 0 && styles.emptyContainer}
+              ListEmptyComponent={renderEmptyState('local')}
+            />
+          )}
+          {localType === 'artist' && (
+            <FlatList<LocalArtist>
+              data={localArtists}
+              keyExtractor={item => item.id}
+              renderItem={renderLocalArtist}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={localArtists.length === 0 && styles.emptyContainer}
+              ListEmptyComponent={renderEmptyState('local')}
+            />
+          )}
+          {localType === 'album' && (
+            <FlatList<LocalAlbum>
+              data={localAlbums}
+              keyExtractor={item => item.id}
+              renderItem={renderLocalAlbum}
+              keyboardShouldPersistTaps="handled"
+              contentContainerStyle={localAlbums.length === 0 && styles.emptyContainer}
+              ListEmptyComponent={renderEmptyState('local')}
+            />
+          )}
+        </>
       ) : (
         <FlatList<RemoteTrack>
-          data={(results as RemoteTrack[]) ?? []}
+          data={(onlineList as RemoteTrack[]) ?? []}
           keyExtractor={item => `${item.id}`}
           renderItem={renderOnlineItem}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={
-            (!results || results.length === 0) && styles.emptyContainer
+            (!onlineList || onlineList.length === 0) && styles.emptyContainer
           }
-          ListEmptyComponent={
-            query.trim().length <= 1 ? (
-              <View style={styles.centered}>
-                <View style={styles.emptyIcon}>
-                  <Icon name="search" size={24} color="#8aa4ff" />
-                </View>
-                <Text style={styles.emptyTitle}>{t('search.searchForMusic')}</Text>
-                <Text style={styles.emptyText}>{t('search.discover')}</Text>
-              </View>
-            ) : (
-              <View style={styles.centered}>
-                <View style={styles.emptyIcon}>
-                  <Icon name="slash" size={24} color="#f87171" />
-                </View>
-                <Text style={styles.emptyTitle}>{t('search.noResults')}</Text>
-                <Text style={styles.emptyText}>{t('search.noResultsDescription')}</Text>
-              </View>
-            )
-          }
+          ListEmptyComponent={renderEmptyState('online')}
         />
       )}
       {downloadOptionsTrack ? (
@@ -498,6 +678,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   resultAlbum: {
+    color: '#7a7a8c',
+    fontSize: 12,
+  },
+  resultMeta: {
     color: '#7a7a8c',
     fontSize: 12,
   },

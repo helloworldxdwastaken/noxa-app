@@ -43,13 +43,14 @@ const MiniPlayer: React.FC = () => {
         activeOpacity={0.9}
         onPress={() => navigation.navigate('NowPlaying')}
       >
-        <BlurView
-          pointerEvents="none"
-          style={styles.blurLayer}
-          blurType="dark"
-          blurAmount={20}
-          reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
-        />
+        <View pointerEvents="none" style={styles.blurLayer}>
+          <BlurView
+            style={StyleSheet.absoluteFillObject}
+            blurType="dark"
+            blurAmount={20}
+            reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
+          />
+        </View>
         <View style={styles.content}>
           <ArtworkImage
             uri={artwork}
