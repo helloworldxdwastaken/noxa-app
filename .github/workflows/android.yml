@@ -55,7 +55,7 @@ jobs:
       - name: Build Android APK
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all
+          ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all | tee ../android-build.log
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -73,3 +73,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      - name: Upload Gradle build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: android-build.log
+          if-no-files-found: ignore
+          retention-days: 7

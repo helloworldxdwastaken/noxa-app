@@ -36,7 +36,7 @@ const MiniPlayer: React.FC = () => {
   return (
     <View
       pointerEvents="box-none"
-      style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) + 96 }]}
+      style={[styles.wrapper, { bottom: Math.max(insets.bottom, 12) + 94 }]}
     >
       <TouchableOpacity
         style={styles.container}
