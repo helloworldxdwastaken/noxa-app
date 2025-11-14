@@ -170,11 +170,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       ],
       shadowOpacity: glowAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [0.12, 0.55],
+        outputRange: [0.12, 0.28],
       }),
       shadowRadius: glowAnim.interpolate({
         inputRange: [0, 1],
-        outputRange: [12, 28],
+        outputRange: [12, 20],
       }),
     }),
     [glowAnim],

@@ -33,6 +33,12 @@ import type { AppStackParamList, AppTabsParamList } from '../../navigation/types
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useLanguage } from '../../context/LanguageContext';
 
+const TRACK_SEPARATOR_STYLE = { height: 16 };
+const TRACK_FOOTER_STYLE = { height: 8 };
+
+const TrackGridSeparator = () => <View style={TRACK_SEPARATOR_STYLE} />;
+const TrackGridFooter = () => <View style={TRACK_FOOTER_STYLE} />;
+
 type HomeTabNav = BottomTabNavigationProp<AppTabsParamList, 'Home'>;
 type RootStackNav = NativeStackNavigationProp<AppStackParamList>;
 type NavigationProp = CompositeNavigationProp<HomeTabNav, RootStackNav>;
@@ -277,8 +283,8 @@ const HomeScreen: React.FC = () => {
             numColumns={2}
             columnWrapperStyle={styles.trackColumn}
             scrollEnabled={false}
-            ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
-            ListFooterComponent={<View style={{ height: 8 }} />}
+            ItemSeparatorComponent={TrackGridSeparator}
+            ListFooterComponent={TrackGridFooter}
             contentContainerStyle={styles.trackGrid}
           />
         </View>
@@ -296,43 +302,45 @@ const HomeScreen: React.FC = () => {
         animationType="fade"
         onRequestClose={closeTrackMenu}
       >
-        <Pressable style={styles.sheetBackdrop} onPress={closeTrackMenu} />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 12 }]}>
-          <Text style={styles.sheetTitle}>
-            {selectedTrack?.title ?? t('common.trackActions')}
-          </Text>
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => {
-              setTrackMenuVisible(false);
-              setPlaylistPickerVisible(true);
-            }}
-          >
-            <Icon name="plus-circle" size={18} color="#ffffff" />
-            <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => handleDeleteTrack(false)}
-            disabled={deleting}
-          >
-            <Icon name="minus-circle" size={18} color="#fbbf24" />
-            <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => handleDeleteTrack(true)}
-            disabled={deleting}
-          >
-            <Icon name="trash-2" size={18} color="#f87171" />
-            <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
-              {t('common.deletePermanent')}
+        <View style={styles.modalOverlay}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={closeTrackMenu} />
+          <View style={styles.dialogCard}>
+            <Text style={styles.sheetTitle}>
+              {selectedTrack?.title ?? t('common.trackActions')}
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>
-            <Icon name="x" size={18} color="#ffffff" />
-            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => {
+                setTrackMenuVisible(false);
+                setPlaylistPickerVisible(true);
+              }}
+            >
+              <Icon name="plus-circle" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => handleDeleteTrack(false)}
+              disabled={deleting}
+            >
+              <Icon name="minus-circle" size={18} color="#fbbf24" />
+              <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => handleDeleteTrack(true)}
+              disabled={deleting}
+            >
+              <Icon name="trash-2" size={18} color="#f87171" />
+              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
+                {t('common.deletePermanent')}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>
+              <Icon name="x" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
@@ -342,43 +350,49 @@ const HomeScreen: React.FC = () => {
         animationType="fade"
         onRequestClose={() => setPlaylistPickerVisible(false)}
       >
-        <Pressable
-          style={styles.sheetBackdrop}
-          onPress={() => setPlaylistPickerVisible(false)}
-        />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 12 }]}>
-          <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
-          {playlists.length === 0 ? (
-            <Text style={styles.sheetEmpty}>{t('search.noPlaylistsAction')}</Text>
-          ) : (
-            <ScrollView style={styles.playlistScroll} contentContainerStyle={styles.playlistList}>
-              {playlists.map(playlist => (
-                <TouchableOpacity
-                  key={playlist.id}
-                  style={styles.sheetAction}
-                  onPress={() => handleAddToPlaylist(playlist.id)}
-                  disabled={addingPlaylistId === playlist.id}
-                >
-                  {addingPlaylistId === playlist.id ? (
-                    <ActivityIndicator color="#ffffff" />
-                  ) : (
-                    <Icon name="folder-plus" size={18} color="#ffffff" />
-                  )}
-                  <Text style={styles.sheetActionText}>{playlist.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          )}
-          <TouchableOpacity
-            style={styles.sheetAction}
-            onPress={() => {
-              setPlaylistPickerVisible(false);
-              setSelectedTrack(null);
-            }}
-          >
-            <Icon name="x" size={18} color="#ffffff" />
-            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
-          </TouchableOpacity>
+        <View style={styles.modalOverlay}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setPlaylistPickerVisible(false)}
+          />
+          <View style={[styles.dialogCard, { maxHeight: '75%' }]}>
+            <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
+            {playlists.length === 0 ? (
+              <Text style={styles.sheetEmpty}>{t('search.noPlaylistsAction')}</Text>
+            ) : (
+              <ScrollView
+                style={styles.playlistScroll}
+                contentContainerStyle={styles.playlistList}
+                showsVerticalScrollIndicator
+              >
+                {playlists.map(playlist => (
+                  <TouchableOpacity
+                    key={playlist.id}
+                    style={styles.sheetAction}
+                    onPress={() => handleAddToPlaylist(playlist.id)}
+                    disabled={addingPlaylistId === playlist.id}
+                  >
+                    {addingPlaylistId === playlist.id ? (
+                      <ActivityIndicator color="#ffffff" />
+                    ) : (
+                      <Icon name="folder-plus" size={18} color="#ffffff" />
+                    )}
+                    <Text style={styles.sheetActionText}>{playlist.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+            <TouchableOpacity
+              style={styles.sheetAction}
+              onPress={() => {
+                setPlaylistPickerVisible(false);
+                setSelectedTrack(null);
+              }}
+            >
+              <Icon name="x" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
     </ScrollView>
@@ -524,20 +538,18 @@ const styles = StyleSheet.create({
     padding: 32,
     alignItems: 'center',
   },
-  sheetBackdrop: {
+  modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    padding: 24,
   },
-  sheetContainer: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 0,
-    backgroundColor: '#0d0d14',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingHorizontal: 20,
-    paddingTop: 16,
+  dialogCard: {
+    backgroundColor: '#050505',
+    borderRadius: 24,
+    padding: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
     gap: 16,
   },
   sheetTitle: {
