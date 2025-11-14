@@ -55,7 +55,7 @@ jobs:
       - name: Build Android APK
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
@@ -64,4 +64,12 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           retention-days: 30
 
+      - name: Upload CMake logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cmake-build-logs
+          path: android/app/.cxx/**/cmake_build_output.txt
+          if-no-files-found: ignore
+          retention-days: 7
 

@@ -84,7 +84,12 @@ const SettingsScreen: React.FC = () => {
                   style={[styles.languageBtn, isActive && styles.languageBtnActive]}
                   onPress={() => setLanguage(option)}
                 >
-                  <Text style={{ color: isActive ? '#050505' : '#9090a5', fontWeight: '600' }}>
+                  <Text
+                    style={[
+                      styles.languageBtnLabel,
+                      isActive && styles.languageBtnLabelActive,
+                    ]}
+                  >
                     {`${flag} ${option === 'en' ? t('settings.english') : t('settings.spanish')}`}
                   </Text>
                 </TouchableOpacity>
@@ -154,6 +159,13 @@ const styles = StyleSheet.create({
   },
   languageBtnActive: {
     backgroundColor: '#ffffff',
+  },
+  languageBtnLabel: {
+    fontWeight: '600',
+    color: '#9090a5',
+  },
+  languageBtnLabelActive: {
+    color: '#050505',
   },
   button: {
     backgroundColor: '#1db954',
