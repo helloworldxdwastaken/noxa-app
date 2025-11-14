@@ -59,6 +59,8 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
+  const actionSheetAnim = useRef(new Animated.Value(60)).current;
+  const playlistSheetAnim = useRef(new Animated.Value(60)).current;
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
@@ -129,6 +131,32 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       useNativeDriver: false,
     }).start();
   }, [glowAnim, isPlaying]);
+
+  useEffect(() => {
+    if (actionsVisible) {
+      actionSheetAnim.setValue(60);
+      Animated.timing(actionSheetAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      actionSheetAnim.setValue(60);
+    }
+  }, [actionSheetAnim, actionsVisible]);
+
+  useEffect(() => {
+    if (playlistPickerVisible) {
+      playlistSheetAnim.setValue(60);
+      Animated.timing(playlistSheetAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      playlistSheetAnim.setValue(60);
+    }
+  }, [playlistPickerVisible, playlistSheetAnim]);
 
   const artworkAnimatedStyle = useMemo(
     () => ({
@@ -434,7 +462,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         onRequestClose={() => setActionsVisible(false)}
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setActionsVisible(false)} />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            { paddingBottom: insets.bottom + 16, transform: [{ translateY: actionSheetAnim }] },
+          ]}
+        >
           <Text style={styles.sheetTitle}>{track?.title ?? t('playlist.optionsTitle')}</Text>
           <View style={styles.sheetSection}>
             <TouchableOpacity
@@ -465,7 +498,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             <Icon name="x" size={18} color="#ffffff" />
             <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </Modal>
       <Modal
         transparent
@@ -474,7 +507,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         onRequestClose={() => setPlaylistPickerVisible(false)}
       >
         <Pressable style={styles.sheetBackdrop} onPress={() => setPlaylistPickerVisible(false)} />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            { paddingBottom: insets.bottom + 16, transform: [{ translateY: playlistSheetAnim }] },
+          ]}
+        >
           <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
           {loadingPlaylists ? (
             <ActivityIndicator color="#ffffff" />
@@ -501,14 +539,14 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             <Icon name="x" size={18} color="#f87171" />
             <Text style={[styles.sheetActionText, styles.sheetDangerText]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </Modal>
     </View>
   );
 
   if (backgroundSource) {
     return (
-      <ImageBackground source={backgroundSource} blurRadius={20} style={styles.backgroundImage}>
+      <ImageBackground source={backgroundSource} blurRadius={15} style={styles.backgroundImage}>
         <View style={styles.backdropOverlay} />
         {content}
       </ImageBackground>

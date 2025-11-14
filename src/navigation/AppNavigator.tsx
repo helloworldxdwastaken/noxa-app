@@ -9,6 +9,7 @@ import { BlurView } from '@react-native-community/blur';
 
 import { useAuth } from '../context/AuthContext';
 import MiniPlayer from '../components/MiniPlayer';
+import { useCurrentTrack } from '../hooks/useCurrentTrack';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import SplashScreen from '../screens/common/SplashScreen';
@@ -67,7 +68,11 @@ const AuthNavigator = () => (
 const AppTabsNavigator = () => (
   <Tabs.Navigator screenOptions={{ headerShown: false }} tabBar={customTabBarRenderer}>
     <Tabs.Screen name="Home" component={HomeScreen} />
-    <Tabs.Screen name="Library" component={LibraryStackNavigator} />
+    <Tabs.Screen
+      name="Library"
+      component={LibraryStackNavigator}
+      options={{ unmountOnBlur: true }}
+    />
     <Tabs.Screen name="Search" component={SearchScreen} />
     <Tabs.Screen name="Settings" component={SettingsScreen} />
   </Tabs.Navigator>
@@ -80,29 +85,40 @@ const LibraryStackNavigator = () => (
   </LibraryStack.Navigator>
 );
 
-const AppStackNavigator = () => (
-  <>
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}
-    >
-      <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
-      <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
-      <AppStack.Screen
-        name="NowPlaying"
-        component={NowPlayingScreen}
-        options={{
-          presentation: 'fullScreenModal',
-          animation: 'slide_from_bottom',
-        }}
-      />
-    </AppStack.Navigator>
-    <MiniPlayer />
-    <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
-  </>
-);
+const MINI_PLAYER_BASE_HEIGHT = 94;
+const MINI_PLAYER_EXTRA_PADDING = 15;
+const MINI_PLAYER_TOTAL_SPACER = MINI_PLAYER_BASE_HEIGHT + MINI_PLAYER_EXTRA_PADDING;
+
+const AppStackNavigator = () => {
+  const { track } = useCurrentTrack();
+  const spacerHeight = track ? MINI_PLAYER_TOTAL_SPACER : 0;
+
+  return (
+    <View style={tabStyles.appContainer}>
+      <View style={tabStyles.stackArea}>
+        <AppStack.Navigator
+          screenOptions={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        >
+          <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
+          <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
+          <AppStack.Screen
+            name="NowPlaying"
+            component={NowPlayingScreen}
+            options={{
+              presentation: 'fullScreenModal',
+              animation: 'slide_from_bottom',
+            }}
+          />
+        </AppStack.Navigator>
+      </View>
+      <View pointerEvents="none" style={[tabStyles.miniPlayerSpacer, { height: spacerHeight }]} />
+      <MiniPlayer />
+    </View>
+  );
+};
 
 const AppNavigator = () => {
   const {
@@ -123,6 +139,12 @@ const AppNavigator = () => {
 export default AppNavigator;
 
 const tabStyles = StyleSheet.create({
+  appContainer: {
+    flex: 1,
+  },
+  stackArea: {
+    flex: 1,
+  },
   customContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -184,11 +206,7 @@ const tabStyles = StyleSheet.create({
     position: 'relative',
   },
   miniPlayerSpacer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 100,
+    width: '100%',
   },
 });
 

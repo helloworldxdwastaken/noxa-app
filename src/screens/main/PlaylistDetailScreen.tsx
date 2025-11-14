@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   FlatList,
   Modal,
   PanResponder,
@@ -57,6 +58,8 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const [trackMenuVisible, setTrackMenuVisible] = useState(false);
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
+  const trackMenuAnim = useRef(new Animated.Value(60)).current;
+  const playlistPickerAnim = useRef(new Animated.Value(60)).current;
 
   const orderedTracksRef = useRef<Song[]>([]);
   const dragIndexRef = useRef<number | null>(null);
@@ -135,6 +138,32 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   useEffect(() => {
     orderedTracksRef.current = orderedTracks;
   }, [orderedTracks]);
+
+  useEffect(() => {
+    if (trackMenuVisible) {
+      trackMenuAnim.setValue(60);
+      Animated.timing(trackMenuAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      trackMenuAnim.setValue(60);
+    }
+  }, [trackMenuAnim, trackMenuVisible]);
+
+  useEffect(() => {
+    if (playlistPickerVisible) {
+      playlistPickerAnim.setValue(60);
+      Animated.timing(playlistPickerAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      playlistPickerAnim.setValue(60);
+    }
+  }, [playlistPickerAnim, playlistPickerVisible]);
 
   const displayName = isEditing ? nameInput : derivedName;
   const displayDesc = isEditing ? descInput : derivedDesc;
@@ -601,7 +630,12 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         onRequestClose={closeTrackMenu}
       >
         <Pressable style={styles.sheetBackdrop} onPress={closeTrackMenu} />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            { paddingBottom: insets.bottom + 16, transform: [{ translateY: trackMenuAnim }] },
+          ]}
+        >
           <Text style={styles.sheetTitle}>
             {selectedTrack?.title ?? t('playlist.optionsTitle')}
           </Text>
@@ -648,7 +682,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <Icon name="x" size={18} color="#ffffff" />
             <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </Modal>
       <Modal
         transparent
@@ -657,7 +691,12 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
         onRequestClose={closePlaylistPicker}
       >
         <Pressable style={styles.sheetBackdrop} onPress={closePlaylistPicker} />
-        <View style={[styles.sheetContainer, { paddingBottom: insets.bottom + 16 }]}>
+        <Animated.View
+          style={[
+            styles.sheetContainer,
+            { paddingBottom: insets.bottom + 16, transform: [{ translateY: playlistPickerAnim }] },
+          ]}
+        >
           <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
           {playlistsLoading ? (
             <ActivityIndicator color="#ffffff" />
@@ -684,7 +723,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             <Icon name="x" size={18} color="#ffffff" />
             <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       </Modal>
     </View>
   );
