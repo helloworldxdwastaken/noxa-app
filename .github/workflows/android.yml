@@ -54,9 +54,10 @@ jobs:
 
       - name: Build Android APK
         run: |
+          set -o pipefail
           rm -f android-build.log
           cd android
-          ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all | tee ../android-build.log
+          ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all 2>&1 | tee ../android-build.log
 
       - name: List build outputs
         if: success()
