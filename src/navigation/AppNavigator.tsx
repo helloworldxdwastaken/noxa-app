@@ -99,7 +99,6 @@ const LibraryStackNavigator = () => (
         fontWeight: '600',
       },
       headerShadowVisible: false,
-      headerBackTitleVisible: false,
     }}
   >
     <LibraryStack.Screen
@@ -166,7 +165,6 @@ const AppStackNavigator = () => (
             fontWeight: '600',
           },
           headerShadowVisible: false,
-          headerBackTitleVisible: false,
         }}
       />
       <AppStack.Screen
@@ -186,7 +184,6 @@ const AppStackNavigator = () => (
             fontWeight: '600',
           },
           headerShadowVisible: false,
-          headerBackTitleVisible: false,
         }}
       />
     </AppStack.Navigator>
