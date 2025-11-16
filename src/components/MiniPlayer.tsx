@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useNavigation, useNavigationState } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { State } from 'react-native-track-player';
@@ -18,10 +18,24 @@ const MiniPlayer: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { track, state } = useCurrentTrack();
-  const isNowPlayingActive = useNavigationState(navState => {
-    const currentRoute = navState.routes[navState.index];
-    return currentRoute?.name === 'NowPlaying';
-  });
+  const [isNowPlayingActive, setIsNowPlayingActive] = useState(false);
+
+  const evaluateRoute = useCallback(() => {
+    try {
+      const navState = navigation.getState();
+      const currentRoute =
+        navState.routes[navState.index ?? navState.routes.length - 1];
+      setIsNowPlayingActive(currentRoute?.name === 'NowPlaying');
+    } catch {
+      setIsNowPlayingActive(false);
+    }
+  }, [navigation]);
+
+  useEffect(() => {
+    evaluateRoute();
+    const unsubscribe = navigation.addListener('state', evaluateRoute);
+    return unsubscribe;
+  }, [evaluateRoute, navigation]);
 
   const isPlaying =
     state === State.Playing || state === State.Buffering || state === State.Connecting;
