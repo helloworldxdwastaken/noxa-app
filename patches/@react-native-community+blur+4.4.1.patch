@@ -1,17 +1,15 @@
-diff --git a/node_modules/@react-native-community/blur/package.json b/node_modules/@react-native-community/blur/package.json
-index 0c45dcb..3d84c17 100644
---- a/node_modules/@react-native-community/blur/package.json
-+++ b/node_modules/@react-native-community/blur/package.json
-@@ -100,12 +100,7 @@
-         }
-       ]
-     ]
-   },
--  "codegenConfig": {
--    "name": "rnblurview",
--    "type": "components",
--    "jsSrcsDir": "./src/fabric",
--    "android": { "javaPackageName": "com.reactnativecommunityblur" }
--  }
-+  "codegenConfig": null
- }
+diff --git a/node_modules/@react-native-community/blur/android/build.gradle b/node_modules/@react-native-community/blur/android/build.gradle
+index acb9a88..4c96eff 100644
+--- a/node_modules/@react-native-community/blur/android/build.gradle
++++ b/node_modules/@react-native-community/blur/android/build.gradle
+@@ -15,9 +15,7 @@ def isNewArchitectureEnabled() {
+ 
+ apply plugin: 'com.android.library'
+ 
+-if (isNewArchitectureEnabled()) {
+-  apply plugin: 'com.facebook.react'
+-}
++apply plugin: 'com.facebook.react'
+ 
+ def getExtOrDefault(name) {
+   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['Blur_' + name]
