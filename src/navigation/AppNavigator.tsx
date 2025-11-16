@@ -54,6 +54,8 @@ const TAB_ICON_MAP: Record<keyof AppTabsParamList, string> = {
   Settings: 'settings',
 };
 
+const TAB_BAR_BASE_HEIGHT = 92;
+
 const AuthNavigator = () => (
   <AuthStack.Navigator
     screenOptions={{
@@ -211,13 +213,20 @@ const AppNavigator = () => {
 export default AppNavigator;
 
 const tabStyles = StyleSheet.create({
-  customContainer: {
+  wrapper: {
+    width: '100%',
+  },
+  floatingContainer: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
     paddingTop: 8,
     gap: 12,
+    zIndex: 50,
+    elevation: 16,
   },
   blurLayer: {
     ...StyleSheet.absoluteFillObject,
@@ -319,44 +328,16 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const searchRouteIndex = searchRoute ? state.routes.findIndex(r => r.key === searchRoute.key) : -1;
   const isSearchFocused = searchRouteIndex === state.index;
 
-  const bottomPadding = Math.max(insets.bottom, 12);
+  const bottomOffset = Math.max(insets.bottom, 12);
+  const containerHeight = bottomOffset + TAB_BAR_BASE_HEIGHT;
 
   return (
-    <View style={[tabStyles.customContainer, { paddingBottom: bottomPadding }]}>
-      <View style={tabStyles.tabBackground}>
-        <View pointerEvents="none" style={tabStyles.blurLayer}>
-          <BlurView
-            style={StyleSheet.absoluteFillObject}
-            blurType="dark"
-            blurAmount={20}
-            reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
-          />
-        </View>
-        {mainRoutes.map(route => {
-          const routeIndex = state.routes.findIndex(r => r.key === route.key);
-          const isFocused = state.index === routeIndex;
-          return (
-            <TouchableOpacity
-              key={route.key}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              onPress={() => handlePress(route.name, route.key, isFocused)}
-              style={tabStyles.tabButton}
-            >
-              <TabBarIcon
-                label={labelMap[route.name] ?? route.name}
-                iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
-                focused={isFocused}
-              />
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-      {searchRoute ? (
-        <TouchableOpacity
-          style={tabStyles.searchBubble}
-          onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
-        >
+    <View pointerEvents="box-none" style={[tabStyles.wrapper, { height: containerHeight }]}> 
+      <View
+        pointerEvents="box-none"
+        style={[tabStyles.floatingContainer, { bottom: bottomOffset }]}
+      >
+        <View style={tabStyles.tabBackground}>
           <View pointerEvents="none" style={tabStyles.blurLayer}>
             <BlurView
               style={StyleSheet.absoluteFillObject}
@@ -365,9 +346,43 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
               reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
             />
           </View>
-          <Icon name="search" size={24} color="#1db954" />
-        </TouchableOpacity>
-      ) : null}
+          {mainRoutes.map(route => {
+            const routeIndex = state.routes.findIndex(r => r.key === route.key);
+            const isFocused = state.index === routeIndex;
+            return (
+              <TouchableOpacity
+                key={route.key}
+                accessibilityRole="button"
+                accessibilityState={isFocused ? { selected: true } : {}}
+                onPress={() => handlePress(route.name, route.key, isFocused)}
+                style={tabStyles.tabButton}
+              >
+                <TabBarIcon
+                  label={labelMap[route.name] ?? route.name}
+                  iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+                  focused={isFocused}
+                />
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        {searchRoute ? (
+          <TouchableOpacity
+            style={tabStyles.searchBubble}
+            onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
+          >
+            <View pointerEvents="none" style={tabStyles.blurLayer}>
+              <BlurView
+                style={StyleSheet.absoluteFillObject}
+                blurType="dark"
+                blurAmount={20}
+                reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
+              />
+            </View>
+            <Icon name="search" size={24} color="#1db954" />
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 };
