@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useNavigationState } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { State } from 'react-native-track-player';
@@ -18,6 +18,10 @@ const MiniPlayer: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { track, state } = useCurrentTrack();
+  const isNowPlayingActive = useNavigationState(navState => {
+    const currentRoute = navState.routes[navState.index];
+    return currentRoute?.name === 'NowPlaying';
+  });
 
   const isPlaying =
     state === State.Playing || state === State.Buffering || state === State.Connecting;
@@ -29,7 +33,7 @@ const MiniPlayer: React.FC = () => {
     return undefined;
   }, [track?.artwork]);
 
-  if (!track) {
+  if (!track || isNowPlayingActive) {
     return null;
   }
 

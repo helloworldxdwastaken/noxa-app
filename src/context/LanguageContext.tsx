@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { NativeModules, Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { fallbackLanguage, SupportedLanguage, translate } from '../i18n/translations';
 
@@ -11,6 +12,8 @@ type LanguageContextValue = {
 };
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+
+const STORAGE_KEY = 'noxa.language';
 
 const detectDeviceLanguage = (): SupportedLanguage => {
   try {
@@ -34,13 +37,38 @@ const detectDeviceLanguage = (): SupportedLanguage => {
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<SupportedLanguage>(detectDeviceLanguage());
 
+  useEffect(() => {
+    let isMounted = true;
+    const bootstrapLanguage = async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        if ((['en', 'es'] as SupportedLanguage[]).includes(stored as SupportedLanguage) && isMounted) {
+          setLanguage(stored as SupportedLanguage);
+        }
+      } catch (error) {
+        console.warn('Failed to load stored language', error);
+      }
+    };
+    void bootstrapLanguage();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleSetLanguage = useCallback((lang: SupportedLanguage) => {
+    setLanguage(lang);
+    AsyncStorage.setItem(STORAGE_KEY, lang).catch(error =>
+      console.warn('Failed to persist language', error),
+    );
+  }, []);
+
   const value = useMemo(
     () => ({
       language,
-      setLanguage,
+      setLanguage: handleSetLanguage,
       t: (key: string, vars?: Record<string, string | number>) => translate(language, key, vars),
     }),
-    [language],
+    [handleSetLanguage, language],
   );
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
