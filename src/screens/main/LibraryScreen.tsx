@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -269,6 +269,12 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
     [navigation, t],
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: t('tabs.Library'),
+    });
+  }, [navigation, t]);
+
   if (!connectivity.isOffline && isLoading) {
     return (
       <View style={styles.centered}>
@@ -291,8 +297,13 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
   const activeLabel = labelForView(activeView);
   const activeLabelLower = activeLabel.toLowerCase();
 
+  const listData =
+    activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists;
+  const listRenderer =
+    activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist;
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }]}>
+    <View style={styles.container}>
       {/* View Tabs */}
       <View style={styles.tabs}>
         {tabItems.map(item => {
@@ -318,22 +329,23 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Content */}
       {activeView === 'downloads' ? (
-        <View style={styles.downloadsWrapper}>
+        <View style={[styles.downloadsWrapper, { paddingBottom: insets.bottom + 32 }]}>
           <DownloadsScreen />
         </View>
       ) : (
         <FlatList
-          data={(activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists) as any[]}
+          data={listData as any[]}
           keyExtractor={item => `${item.id}`}
-          renderItem={(activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist) as any}
+          renderItem={listRenderer as any}
           numColumns={2}
           key={activeView}
           columnWrapperStyle={styles.gridRow}
-          contentContainerStyle={
-            (activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists).length === 0
+          contentContainerStyle={[
+            listData.length === 0
               ? styles.emptyContainer
-              : styles.listContent
-          }
+              : styles.listContent,
+            { paddingBottom: insets.bottom + 32 },
+          ]}
           refreshControl={
             <RefreshControl
               refreshing={!connectivity.isOffline && isRefetching}
@@ -380,6 +392,7 @@ const styles = StyleSheet.create({
     gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: '#282828',
+    marginTop: 12,
   },
   tab: {
     flex: 1,

@@ -87,11 +87,47 @@ const AppTabsNavigator = () => {
 };
 
 const LibraryStackNavigator = () => (
-  <LibraryStack.Navigator screenOptions={{ headerShown: false }}>
-    <LibraryStack.Screen name="LibraryMain" component={LibraryScreen} />
-    <LibraryStack.Screen name="PlaylistDetail" component={PlaylistDetailScreen} />
-    <LibraryStack.Screen name="ArtistDetail" component={ArtistDetailScreen} />
-    <LibraryStack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
+  <LibraryStack.Navigator
+    screenOptions={{
+      headerStyle: {
+        backgroundColor: '#030303',
+      },
+      headerTintColor: '#ffffff',
+      headerTitleStyle: {
+        color: '#ffffff',
+        fontSize: 18,
+        fontWeight: '600',
+      },
+      headerShadowVisible: false,
+      headerBackTitleVisible: false,
+    }}
+  >
+    <LibraryStack.Screen
+      name="LibraryMain"
+      component={LibraryScreen}
+      options={{
+        title: 'Library',
+      }}
+    />
+    <LibraryStack.Screen
+      name="PlaylistDetail"
+      component={PlaylistDetailScreen}
+      options={{ headerShown: false }}
+    />
+    <LibraryStack.Screen
+      name="ArtistDetail"
+      component={ArtistDetailScreen}
+      options={({ route }) => ({
+        title: route.params.artistName,
+      })}
+    />
+    <LibraryStack.Screen
+      name="AlbumDetail"
+      component={AlbumDetailScreen}
+      options={({ route }) => ({
+        title: route.params.albumTitle ?? 'Album',
+      })}
+    />
   </LibraryStack.Navigator>
 );
 
@@ -119,6 +155,18 @@ const AppStackNavigator = () => (
         options={{
           presentation: 'card',
           animation: 'slide_from_right',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#030303',
+          },
+          headerTintColor: '#ffffff',
+          headerTitleStyle: {
+            color: '#ffffff',
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerShadowVisible: false,
+          headerBackTitleVisible: false,
         }}
       />
       <AppStack.Screen
@@ -127,6 +175,18 @@ const AppStackNavigator = () => (
         options={{
           presentation: 'card',
           animation: 'slide_from_right',
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: '#030303',
+          },
+          headerTintColor: '#ffffff',
+          headerTitleStyle: {
+            color: '#ffffff',
+            fontSize: 18,
+            fontWeight: '600',
+          },
+          headerShadowVisible: false,
+          headerBackTitleVisible: false,
         }}
       />
     </AppStack.Navigator>

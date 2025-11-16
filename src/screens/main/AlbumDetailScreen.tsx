@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -108,16 +108,19 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   };
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: albumTitle ?? t('library.albums'),
+    });
+  }, [albumTitle, navigation, t]);
+
   return (
     <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Icon name="chevron-left" size={22} color="#ffffff" />
-          </TouchableOpacity>
+        <View style={styles.header}>
           <View style={styles.headerInfo}>
             <Text style={styles.muted}>{artistName ?? t('library.unknownArtist')}</Text>
             <Text style={styles.title}>{albumTitle}</Text>
@@ -269,14 +272,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
+    marginTop: 8,
   },
   headerInfo: {
     flex: 1,

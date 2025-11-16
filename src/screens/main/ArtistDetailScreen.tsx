@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -164,23 +164,24 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     </TouchableOpacity>
   );
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: artistName,
+    });
+  }, [navigation, artistName]);
+
   return (
     <View style={styles.screen}>
       <ScrollView
         contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Icon name="chevron-left" size={22} color="#ffffff" />
-          </TouchableOpacity>
-          <View style={styles.headerInfo}>
-            <Text style={styles.title}>{artistName}</Text>
-            <Text style={styles.subtitle}>
-              {t('playlist.trackCount', { count: songs.length })} • {albums.length}{' '}
-              {t('library.albums').toLowerCase()}
-            </Text>
-          </View>
+        <View style={styles.summary}>
+          <Text style={styles.title}>{artistName}</Text>
+          <Text style={styles.subtitle}>
+            {t('playlist.trackCount', { count: songs.length })} • {albums.length}{' '}
+            {t('library.albums').toLowerCase()}
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -331,21 +332,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 24,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerInfo: {
-    flex: 1,
+  summary: {
+    paddingTop: 8,
+    gap: 6,
   },
   title: {
     fontSize: 28,
