@@ -36,6 +36,7 @@ import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/servi
 import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
+import { useMiniPlayerVisibility } from '../../context/MiniPlayerContext';
 
 const trackToSong = (playerTrack: Track): Song => ({
   id: Number(playerTrack.id),
@@ -61,6 +62,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const { track, state } = useCurrentTrack();
   const { t } = useLanguage();
   const autoDownloadNewTrack = useAutoDownloadNewTracks();
+  const { hide, show } = useMiniPlayerVisibility();
   const progress = useProgress(250);
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
@@ -113,6 +115,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       let mounted = true;
+      hide();
       TrackPlayer.getRepeatMode()
         .then(mode => {
           if (mounted) {
@@ -122,8 +125,9 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         .catch(() => {});
       return () => {
         mounted = false;
+        show();
       };
-    }, []),
+    }, [hide, show]),
   );
 
   useEffect(() => {

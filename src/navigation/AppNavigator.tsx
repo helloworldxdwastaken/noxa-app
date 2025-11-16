@@ -22,6 +22,7 @@ import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
 import AlbumDetailScreen from '../screens/main/AlbumDetailScreen';
 import { useLanguage } from '../context/LanguageContext';
+import { MiniPlayerVisibilityProvider } from '../context/MiniPlayerContext';
 import type {
   AppStackParamList,
   AppTabsParamList,
@@ -133,7 +134,7 @@ const LibraryStackNavigator = () => (
 );
 
 const AppStackNavigator = () => (
-  <>
+  <MiniPlayerVisibilityProvider>
     <AppStack.Navigator
       screenOptions={{
         headerShown: false,
@@ -191,7 +192,7 @@ const AppStackNavigator = () => (
     </AppStack.Navigator>
     <MiniPlayer />
     <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
-  </>
+  </MiniPlayerVisibilityProvider>
 );
 
 const AppNavigator = () => {
