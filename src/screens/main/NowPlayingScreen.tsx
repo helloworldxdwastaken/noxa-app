@@ -33,8 +33,18 @@ import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
 import { togglePlayback } from '../../services/player/PlayerService';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
-import type { Playlist } from '../../types/models';
+import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
+
+const trackToSong = (playerTrack: Track): Song => ({
+  id: Number(playerTrack.id),
+  title: playerTrack.title ?? 'Unknown',
+  artist: playerTrack.artist ?? 'Unknown Artist',
+  album: playerTrack.album ?? undefined,
+  duration: typeof playerTrack.duration === 'number' ? playerTrack.duration : undefined,
+  albumCover: typeof playerTrack.artwork === 'string' ? playerTrack.artwork : undefined,
+});
 
 type Props = NativeStackScreenProps<AppStackParamList, 'NowPlaying'>;
 
@@ -50,6 +60,7 @@ const formatTime = (seconds: number) => {
 const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const { track, state } = useCurrentTrack();
   const { t } = useLanguage();
+  const autoDownloadNewTrack = useAutoDownloadNewTracks();
   const progress = useProgress(250);
   const [queue, setQueue] = useState<Track[]>([]);
   const [repeatMode, setRepeatMode] = useState<RepeatMode>(RepeatMode.Queue);
@@ -308,6 +319,8 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await addTrackToPlaylist(playlistId, Number(track.id));
       Alert.alert('Added', 'Track added to playlist.');
+      const playlistMeta = playlists.find(item => item.id === playlistId);
+      autoDownloadNewTrack(playlistMeta, trackToSong(track));
       setActionsVisible(false);
       setPlaylistPickerVisible(false);
     } catch (error) {

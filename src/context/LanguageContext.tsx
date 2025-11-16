@@ -49,7 +49,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
         console.warn('Failed to load stored language', error);
       }
     };
-    void bootstrapLanguage();
+    bootstrapLanguage().catch(error => console.warn('Failed to bootstrap language', error));
     return () => {
       isMounted = false;
     };

@@ -36,6 +36,7 @@ import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'PlaylistDetail'>;
 const ROW_HEIGHT = 76;
@@ -48,6 +49,7 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   const connectivity = useConnectivity();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const autoDownloadNewTrack = useAutoDownloadNewTracks();
 
   const [isEditing, setIsEditing] = useState(false);
   const [nameInput, setNameInput] = useState(initialName ?? '');
@@ -321,6 +323,8 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     try {
       await addTrackToPlaylist(targetPlaylistId, selectedTrack.id);
       Alert.alert(t('common.ok'), t('common.addedToPlaylist'));
+      const targetPlaylist = availablePlaylists.find(item => item.id === targetPlaylistId);
+      autoDownloadNewTrack(targetPlaylist, selectedTrack);
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
     } catch (error) {
       Alert.alert(

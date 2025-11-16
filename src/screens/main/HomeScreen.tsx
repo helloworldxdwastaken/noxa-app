@@ -32,6 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
 const TRACK_SEPARATOR_STYLE = { height: 16 };
 const TRACK_FOOTER_STYLE = { height: 8 };
@@ -48,6 +49,7 @@ const HomeScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const connectivity = useConnectivity();
   const { t } = useLanguage();
+  const autoDownloadNewTrack = useAutoDownloadNewTracks();
   const {
     data: stats,
     isLoading: statsLoading,
@@ -157,6 +159,8 @@ const HomeScreen: React.FC = () => {
       setAddingPlaylistId(playlistId);
       await addTrackToPlaylist(playlistId, selectedTrack.id);
       Alert.alert(t('common.ok'), t('common.addedToPlaylist'));
+      const targetPlaylist = playlists.find(item => item.id === playlistId);
+      autoDownloadNewTrack(targetPlaylist, selectedTrack);
     } catch (error) {
       Alert.alert(
         t('common.error'),

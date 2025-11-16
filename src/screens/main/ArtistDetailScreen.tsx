@@ -21,6 +21,7 @@ import ArtworkImage from '../../components/ArtworkImage';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
 import { useConnectivity } from '../../hooks/useConnectivity';
+import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'ArtistDetail'>;
 
@@ -36,6 +37,7 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const connectivity = useConnectivity();
+  const autoDownloadNewTrack = useAutoDownloadNewTracks();
 
   const [trackMenuVisible, setTrackMenuVisible] = useState(false);
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
@@ -99,6 +101,8 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       setAddingPlaylistId(playlistId);
       await addTrackToPlaylist(playlistId, selectedTrack.id);
       Alert.alert(t('common.ok'), t('common.addedToPlaylist'));
+      const targetPlaylist = playlists.find(item => item.id === playlistId);
+      autoDownloadNewTrack(targetPlaylist, selectedTrack);
     } catch (error) {
       Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.unableToAddTrack'));
     } finally {
