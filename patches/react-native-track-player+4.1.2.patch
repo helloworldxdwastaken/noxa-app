@@ -676,13 +676,11 @@ index b2409a0..35dc544 100644
 +        }
      }
  }
-
 diff --git a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
-index 24b35c3..b5d8c0e 100644
+index afa6b0f..c417e7b 100644
 --- a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
 +++ b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
-@@ -741,17 +741,17 @@ class MusicService : HeadlessJsTaskService() {
-     }
+@@ -741,7 +741,7 @@ class MusicService : HeadlessJsTaskService() {
  
      @MainThread
      private fun emit(event: String, data: Bundle? = null) {
@@ -691,9 +689,7 @@ index 24b35c3..b5d8c0e 100644
              ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
              ?.emit(event, data?.let { Arguments.fromBundle(it) })
      }
- 
-     @MainThread
-     private fun emitList(event: String, data: List<Bundle> = emptyList()) {
+@@ -751,7 +751,7 @@ class MusicService : HeadlessJsTaskService() {
          val payload = Arguments.createArray()
          data.forEach { payload.pushMap(Arguments.fromBundle(it)) }
  
