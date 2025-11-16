@@ -65,6 +65,8 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
   const shuffleBackupRef = useRef<Track[] | null>(null);
+  const shuffleEnabledRef = useRef(false);
+  const shuffleToggleInProgressRef = useRef(false);
 
   const loadQueue = useCallback(async () => {
     try {
@@ -229,14 +231,19 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     return clone;
   }, []);
 
+  useEffect(() => {
+    shuffleEnabledRef.current = shuffleEnabled;
+  }, [shuffleEnabled]);
+
   const handleShuffleToggle = useCallback(async () => {
-    if (!track || !canShuffle) {
+    if (!track || !canShuffle || shuffleToggleInProgressRef.current) {
       return;
     }
+    shuffleToggleInProgressRef.current = true;
     const currentPosition = position;
     const wasPlaying = isPlaying;
     try {
-      if (!shuffleEnabled) {
+      if (!shuffleEnabledRef.current) {
         shuffleBackupRef.current = queue;
         const currentTrack = queue.find(item => item.id === track.id);
         const rest = queue.filter(item => item.id !== track.id);
@@ -254,6 +261,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           await TrackPlayer.play();
         }
         setQueue(newQueue);
+        shuffleEnabledRef.current = true;
         setShuffleEnabled(true);
       } else {
         const originalQueue = shuffleBackupRef.current ?? queue;
@@ -270,12 +278,15 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         }
         shuffleBackupRef.current = null;
         setQueue(originalQueue);
+        shuffleEnabledRef.current = false;
         setShuffleEnabled(false);
       }
     } catch (error) {
       console.error('Failed to toggle shuffle', error);
+    } finally {
+      shuffleToggleInProgressRef.current = false;
     }
-  }, [track, canShuffle, position, isPlaying, shuffleEnabled, queue, shuffleArray]);
+  }, [track, canShuffle, position, isPlaying, queue, shuffleArray]);
 
   const panResponder = useMemo(
     () =>
