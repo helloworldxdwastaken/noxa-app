@@ -270,7 +270,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const handlePlaySong = useCallback(
     (song: Song) => {
-      const queue = baseTracks.filter(track => track.id !== song.id);
+      const selectedIndex = baseTracks.findIndex(track => track.id === song.id);
+      const queue =
+        selectedIndex >= 0
+          ? [
+              ...baseTracks.slice(selectedIndex + 1),
+              ...baseTracks.slice(0, selectedIndex),
+            ]
+          : baseTracks.filter(track => track.id !== song.id);
       playSong(song, queue).catch(error => console.error('Failed to start playback', error));
     },
     [baseTracks],
