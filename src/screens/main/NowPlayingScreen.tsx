@@ -31,7 +31,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AppStackParamList } from '../../navigation/types';
 import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
-import { togglePlayback } from '../../services/player/PlayerService';
+import { playSong, togglePlayback } from '../../services/player/PlayerService';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
@@ -89,6 +89,27 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       setQueue([]);
     }
   }, []);
+
+  const handleSelectTrack = useCallback(
+    async (target: Track) => {
+      const targetIndex = queue.findIndex(item => item.id === target.id);
+      if (targetIndex >= 0) {
+        try {
+          await TrackPlayer.skip(targetIndex);
+          return;
+        } catch {
+          // fall back to manual playback reset below
+        }
+      }
+      const song = trackToSong(target);
+      const upcoming = queue
+        .filter(item => item.id !== target.id)
+        .map(item => trackToSong(item));
+      await playSong(song, upcoming);
+      await loadQueue();
+    },
+    [queue, loadQueue],
+  );
 
   const loadPlaylists = useCallback(async () => {
     setLoadingPlaylists(true);
@@ -456,7 +477,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             queue.map((item, index) => {
               const isActive = index === activeIndex;
               return (
-                <View key={`${item.id}-${index}`} style={styles.queueItem}>
+                <TouchableOpacity
+                  key={`${item.id}-${index}`}
+                  style={styles.queueItem}
+                  onPress={() => handleSelectTrack(item)}
+                  disabled={isActive}
+                >
                   <View style={[styles.queueArtwork, isActive && styles.queueArtworkActive]}>
                     <ArtworkImage
                       uri={typeof item.artwork === 'string' ? item.artwork : null}
@@ -476,7 +502,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                     </Text>
                   </View>
                   {isActive ? <Text style={styles.queueNow}>NOW</Text> : null}
-                </View>
+                </TouchableOpacity>
               );
             })
           )}

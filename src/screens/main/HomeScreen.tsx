@@ -197,11 +197,20 @@ const HomeScreen: React.FC = () => {
 
   const renderRecentTrack = ({ item }: { item: Song }) => (
     <TouchableOpacity style={styles.trackCard} onPress={() => handlePlayTrack(item)}>
-      <ArtworkImage
-        uri={item.albumCover}
-        size={64}
-        fallbackLabel={item.title?.[0]?.toUpperCase()}
-      />
+      <TouchableOpacity
+        style={styles.trackMenuButton}
+        onPress={() => handleOpenTrackMenu(item)}
+        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+      >
+        <Icon name="more-vertical" size={18} color="#ffffff" />
+      </TouchableOpacity>
+      <View style={styles.trackArtworkWrapper}>
+        <ArtworkImage
+          uri={item.albumCover}
+          size={88}
+          fallbackLabel={item.title?.[0]?.toUpperCase()}
+        />
+      </View>
       <View style={styles.trackInfo}>
         <Text style={styles.trackTitle} numberOfLines={1}>
           {item.title}
@@ -210,13 +219,6 @@ const HomeScreen: React.FC = () => {
           {item.artist}
         </Text>
       </View>
-      <TouchableOpacity
-        style={styles.trackMenuButton}
-        onPress={() => handleOpenTrackMenu(item)}
-        hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-      >
-        <Icon name="more-vertical" size={18} color="#ffffff" />
-      </TouchableOpacity>
     </TouchableOpacity>
   );
 
@@ -545,25 +547,36 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#121212',
     gap: 12,
-    flexDirection: 'row',
     alignItems: 'center',
+    position: 'relative',
   },
   trackMenuButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
     padding: 6,
-    marginLeft: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+  trackArtworkWrapper: {
+    width: '100%',
+    alignItems: 'center',
   },
   trackInfo: {
     gap: 4,
-    flex: 1,
+    alignItems: 'center',
+    width: '100%',
   },
   trackTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#ffffff',
+    textAlign: 'center',
   },
   trackArtist: {
     fontSize: 12,
     color: '#9090a5',
+    textAlign: 'center',
   },
   centered: {
     padding: 32,

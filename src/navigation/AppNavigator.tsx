@@ -279,12 +279,15 @@ const tabStyles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 999,
+    overflow: 'hidden',
   },
   iconBadgeActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#1db954',
   },
   tabButton: {
     flex: 1,
+    borderRadius: 999,
+    overflow: 'hidden',
   },
   iconLabel: {
     fontSize: 12,
@@ -323,7 +326,7 @@ type TabBarIconProps = {
 
 const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
   <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
-    <Icon name={iconName} size={18} color={focused ? '#1db954' : '#7c8297'} />
+    <Icon name={iconName} size={18} color={focused ? '#ffffff' : '#7c8297'} />
     <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
       {label}
     </Text>
