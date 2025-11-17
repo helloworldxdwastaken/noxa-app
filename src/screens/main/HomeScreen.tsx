@@ -113,6 +113,10 @@ const HomeScreen: React.FC = () => {
     [recentTracks],
   );
 
+  const handleOpenSettings = useCallback(() => {
+    navigation.navigate('Settings');
+  }, [navigation]);
+
   const renderPlaylistItem = ({ item }: { item: Playlist }) => (
     <TouchableOpacity
       style={styles.playlistCard}
@@ -225,7 +229,17 @@ const HomeScreen: React.FC = () => {
     >
       {/* Greeting Header */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>{t('home.greeting')}</Text>
+        <View style={styles.headerRow}>
+          <TouchableOpacity
+            style={styles.settingsButton}
+            onPress={handleOpenSettings}
+            accessibilityRole="button"
+            accessibilityLabel={t('tabs.Settings')}
+          >
+            <Icon name="settings" size={18} color="#ffffff" />
+          </TouchableOpacity>
+          <Text style={styles.greeting}>{t('home.greeting')}</Text>
+        </View>
         {connectivity.isOffline ? (
           <View style={styles.offlineBanner}>
             <Icon name="wifi-off" size={16} color="#fcd34d" />
@@ -411,6 +425,19 @@ const styles = StyleSheet.create({
   header: {
     padding: 24,
     paddingBottom: 16,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  settingsButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   greeting: {
     fontSize: 32,

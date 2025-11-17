@@ -41,8 +41,20 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
     tabs: {
       Home: 'Home',
       Library: 'Library',
+      Create: 'Create',
       Search: 'Search',
       Settings: 'Settings',
+    },
+    create: {
+      title: 'Start a new playlist',
+      subtitle: 'Give it a name, add a description, and jump right in.',
+      helper: 'You will be taken to the playlist after it is created.',
+      openModal: 'Start new playlist',
+      modalTitle: 'Create a playlist',
+      createButton: 'Save playlist',
+      success: 'Playlist created.',
+      error: 'Unable to create playlist.',
+      nameRequired: 'Please enter a playlist name.',
     },
     search: {
       placeholderLocal: 'Search your library',
@@ -127,6 +139,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       noTracksTitle: 'No tracks',
       removeOfflineTitle: 'Remove offline copies',
       removeOfflineConfirm: 'Delete this playlist from offline cache?',
+      emptyCta: 'Add songs',
     },
     nowPlaying: {
       title: 'Now Playing',
@@ -190,8 +203,20 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
     tabs: {
       Home: 'Inicio',
       Library: 'Biblioteca',
+      Create: 'Crear',
       Search: 'Buscar',
       Settings: 'Ajustes',
+    },
+    create: {
+      title: 'Crea una nueva lista',
+      subtitle: 'Ponle nombre, añade una descripción y comienza.',
+      helper: 'Irás directo a la lista una vez guardada.',
+      openModal: 'Crear lista',
+      modalTitle: 'Nueva lista de reproducción',
+      createButton: 'Guardar lista',
+      success: 'Lista creada.',
+      error: 'No se pudo crear la lista.',
+      nameRequired: 'Ingresa un nombre para la lista.',
     },
     search: {
       placeholderLocal: 'Busca en tu biblioteca',
@@ -276,6 +301,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       noTracksTitle: 'Sin canciones',
       removeOfflineTitle: 'Quitar descargas',
       removeOfflineConfirm: '¿Eliminar esta lista de la caché sin conexión?',
+      emptyCta: 'Añadir canciones',
     },
     nowPlaying: {
       title: 'Reproduciendo',

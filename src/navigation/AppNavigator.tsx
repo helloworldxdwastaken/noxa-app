@@ -20,6 +20,7 @@ import NowPlayingScreen from '../screens/main/NowPlayingScreen';
 import PlaylistDetailScreen from '../screens/main/PlaylistDetailScreen';
 import SearchScreen from '../screens/main/SearchScreen';
 import SettingsScreen from '../screens/main/SettingsScreen';
+import CreatePlaylistScreen from '../screens/main/CreatePlaylistScreen';
 import AlbumDetailScreen from '../screens/main/AlbumDetailScreen';
 import { useLanguage } from '../context/LanguageContext';
 import { MiniPlayerVisibilityProvider } from '../context/MiniPlayerContext';
@@ -51,8 +52,8 @@ const navigationTheme = {
 const TAB_ICON_MAP: Record<keyof AppTabsParamList, string> = {
   Home: 'home',
   Library: 'layers',
+  Create: 'plus-square',
   Search: 'search',
-  Settings: 'settings',
 };
 
 const TAB_BAR_BASE_HEIGHT = 92;
@@ -83,8 +84,8 @@ const AppTabsNavigator = () => {
       >
         {() => <LibraryStackNavigator key={`library-stack-${libraryKey}`} />}
       </Tabs.Screen>
+      <Tabs.Screen name="Create" component={CreatePlaylistScreen} />
       <Tabs.Screen name="Search" component={SearchScreen} />
-      <Tabs.Screen name="Settings" component={SettingsScreen} />
     </Tabs.Navigator>
   );
 };
@@ -133,67 +134,91 @@ const LibraryStackNavigator = () => (
   </LibraryStack.Navigator>
 );
 
-const AppStackNavigator = () => (
-  <MiniPlayerVisibilityProvider>
-    <AppStack.Navigator
-      screenOptions={{
-        headerShown: false,
-        animation: 'slide_from_right',
-      }}
-    >
-      <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
-      <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
-      <AppStack.Screen
-        name="NowPlaying"
-        component={NowPlayingScreen}
-        options={{
-          presentation: 'fullScreenModal',
-          animation: 'slide_from_bottom',
-        }}
-      />
-      <AppStack.Screen
-        name="ArtistDetail"
-        component={ArtistDetailScreen}
-        options={{
-          presentation: 'card',
+const AppStackNavigator = () => {
+  const { t } = useLanguage();
+
+  return (
+    <MiniPlayerVisibilityProvider>
+      <AppStack.Navigator
+        screenOptions={{
+          headerShown: false,
           animation: 'slide_from_right',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: '#030303',
-          },
-          headerTintColor: '#ffffff',
-          headerTitleStyle: {
-            color: '#ffffff',
-            fontSize: 18,
-            fontWeight: '600',
-          },
-          headerShadowVisible: false,
         }}
-      />
-      <AppStack.Screen
-        name="AlbumDetail"
-        component={AlbumDetailScreen}
-        options={{
-          presentation: 'card',
-          animation: 'slide_from_right',
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: '#030303',
-          },
-          headerTintColor: '#ffffff',
-          headerTitleStyle: {
-            color: '#ffffff',
-            fontSize: 18,
-            fontWeight: '600',
-          },
-          headerShadowVisible: false,
-        }}
-      />
-    </AppStack.Navigator>
-    <MiniPlayer />
-    <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
-  </MiniPlayerVisibilityProvider>
-);
+      >
+        <AppStack.Screen name="Tabs" component={AppTabsNavigator} />
+        <AppStack.Screen name="DownloadRequest" component={DownloadRequestScreen} />
+        <AppStack.Screen
+          name="NowPlaying"
+          component={NowPlayingScreen}
+          options={{
+            presentation: 'fullScreenModal',
+            animation: 'slide_from_bottom',
+          }}
+        />
+        <AppStack.Screen
+          name="ArtistDetail"
+          component={ArtistDetailScreen}
+          options={{
+            presentation: 'card',
+            animation: 'slide_from_right',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#030303',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              color: '#ffffff',
+              fontSize: 18,
+              fontWeight: '600',
+            },
+            headerShadowVisible: false,
+          }}
+        />
+        <AppStack.Screen
+          name="AlbumDetail"
+          component={AlbumDetailScreen}
+          options={{
+            presentation: 'card',
+            animation: 'slide_from_right',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#030303',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              color: '#ffffff',
+              fontSize: 18,
+              fontWeight: '600',
+            },
+            headerShadowVisible: false,
+          }}
+        />
+        <AppStack.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{
+            presentation: 'card',
+            animation: 'slide_from_right',
+            headerShown: true,
+            headerStyle: {
+              backgroundColor: '#030303',
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              color: '#ffffff',
+              fontSize: 18,
+              fontWeight: '600',
+            },
+            headerShadowVisible: false,
+            title: t('tabs.Settings'),
+          }}
+        />
+      </AppStack.Navigator>
+      <MiniPlayer />
+      <View style={tabStyles.miniPlayerSpacer} pointerEvents="box-none" />
+    </MiniPlayerVisibilityProvider>
+  );
+};
 
 const AppNavigator = () => {
   const {
@@ -315,8 +340,8 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const labelMap: Record<string, string> = {
     Home: t('tabs.Home'),
     Library: t('tabs.Library'),
+    Create: t('tabs.Create'),
     Search: t('tabs.Search'),
-    Settings: t('tabs.Settings'),
   };
 
   const handlePress = (routeName: string, key: string, isFocused: boolean) => {

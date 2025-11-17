@@ -37,8 +37,8 @@ export type LibraryStackParamList = {
 export type AppTabsParamList = {
   Home: undefined;
   Library: NavigatorScreenParams<LibraryStackParamList> | undefined;
+  Create: undefined;
   Search: undefined;
-  Settings: undefined;
 };
 
 export type AppStackParamList = {
@@ -47,6 +47,7 @@ export type AppStackParamList = {
         screen?: keyof AppTabsParamList;
       }
     | undefined;
+  Settings: undefined;
   NowPlaying: undefined;
   DownloadRequest: undefined;
   ArtistDetail: {

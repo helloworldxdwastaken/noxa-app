@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from 'react-native-vector-icons/Feather';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -284,6 +285,13 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     },
     [baseTracks],
   );
+
+  const handleAddSongsShortcut = useCallback(() => {
+    const libraryNavigator = navigation.getParent();
+    const tabNavigator = libraryNavigator?.getParent?.();
+    const targetNavigator = (tabNavigator ?? libraryNavigator) as NavigationProp<ParamListBase> | undefined;
+    targetNavigator?.navigate('Search' as never);
+  }, [navigation]);
 
   const handleRemoveSelectedTrack = () => {
     if (!selectedTrack) {
@@ -631,6 +639,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               <Icon name="music" size={32} color="#8aa4ff" />
             </View>
             <Text style={styles.emptyText}>{t('library.emptyPlaylist')}</Text>
+            <TouchableOpacity style={styles.emptyAction} onPress={handleAddSongsShortcut}>
+              <Icon name="plus" size={16} color="#050505" />
+              <Text style={styles.emptyActionText}>{t('playlist.emptyCta')}</Text>
+            </TouchableOpacity>
           </View>
         }
       />
@@ -911,6 +923,22 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#9090a5',
     fontSize: 16,
+    textAlign: 'center',
+  },
+  emptyAction: {
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: '#1db954',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  emptyActionText: {
+    color: '#050505',
+    fontWeight: '700',
+    fontSize: 14,
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
