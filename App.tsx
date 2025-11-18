@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import FeatherIcon from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import { enableScreens } from 'react-native-screens';
 
 import AppNavigator from './src/navigation/AppNavigator';
@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
 });
 
 enableScreens();
-(FeatherIcon as unknown as { loadFont?: () => void }).loadFont?.();
+(Ionicons as unknown as { loadFont?: () => void }).loadFont?.();
 
 const App = () => (
   <SafeAreaProvider>

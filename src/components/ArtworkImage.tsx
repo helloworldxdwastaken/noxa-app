@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from './Icon';
 
 import { useAuth } from '../context/AuthContext';
 

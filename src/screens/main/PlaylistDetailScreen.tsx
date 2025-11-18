@@ -16,7 +16,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { NavigationProp, ParamListBase } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 

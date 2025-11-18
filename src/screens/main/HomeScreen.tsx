@@ -27,7 +27,7 @@ import {
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import { useConnectivity } from '../../hooks/useConnectivity';

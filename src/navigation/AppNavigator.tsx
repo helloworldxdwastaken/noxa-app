@@ -4,7 +4,7 @@ import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../components/Icon';
 import { BlurView } from '@react-native-community/blur';
 
 import { useAuth } from '../context/AuthContext';
@@ -49,11 +49,16 @@ const navigationTheme = {
   },
 };
 
-const TAB_ICON_MAP: Record<keyof AppTabsParamList, string> = {
-  Home: 'home',
-  Library: 'layers',
-  Create: 'plus-square',
-  Search: 'search',
+type TabIconConfig = {
+  default: string;
+  active: string;
+};
+
+const TAB_ICON_MAP: Record<keyof AppTabsParamList, TabIconConfig> = {
+  Home: { default: 'home-outline', active: 'home' },
+  Library: { default: 'library-outline', active: 'library' },
+  Create: { default: 'add-circle-outline', active: 'add-circle' },
+  Search: { default: 'search-outline', active: 'search' },
 };
 
 const TAB_BAR_BASE_HEIGHT = 92;
@@ -321,17 +326,21 @@ const tabStyles = StyleSheet.create({
 type TabBarIconProps = {
   label: string;
   iconName: string;
+  activeIconName?: string;
   focused: boolean;
 };
 
-const TabBarIcon = ({ label, iconName, focused }: TabBarIconProps) => (
-  <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
-    <Icon name={iconName} size={18} color={focused ? '#ffffff' : '#7c8297'} />
-    <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
-      {label}
-    </Text>
-  </View>
-);
+const TabBarIcon = ({ label, iconName, activeIconName, focused }: TabBarIconProps) => {
+  const resolvedIcon = focused && activeIconName ? activeIconName : iconName;
+  return (
+    <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
+      <Icon name={resolvedIcon} size={20} color={focused ? '#ffffff' : '#7c8297'} />
+      <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
+        {label}
+      </Text>
+    </View>
+  );
+};
 
 const customTabBarRenderer = (props: BottomTabBarProps) => <CustomTabBar {...props} />;
 
@@ -388,7 +397,8 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
               >
                 <TabBarIcon
                   label={labelMap[route.name] ?? route.name}
-                  iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList] ?? 'circle'}
+                  iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList]?.default ?? 'ellipse-outline'}
+                  activeIconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList]?.active}
                   focused={isFocused}
                 />
               </TouchableOpacity>
@@ -408,7 +418,11 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
                 reducedTransparencyFallbackColor="rgba(5,5,10,0.92)"
               />
             </View>
-            <Icon name="search" size={24} color="#1db954" />
+            <Icon
+              name={isSearchFocused ? TAB_ICON_MAP.Search.active : TAB_ICON_MAP.Search.default}
+              size={24}
+              color="#1db954"
+            />
           </TouchableOpacity>
         ) : null}
       </View>

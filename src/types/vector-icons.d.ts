@@ -1,14 +1,14 @@
-declare module 'react-native-vector-icons/Feather' {
+declare module 'react-native-vector-icons/Ionicons' {
   import type { ComponentType } from 'react';
   import type { TextProps } from 'react-native';
 
-  export interface FeatherIconProps extends TextProps {
+  export interface IoniconsProps extends TextProps {
     name: string;
     size?: number;
     color?: string;
   }
 
-  const FeatherIcon: ComponentType<FeatherIconProps>;
+  const IoniconsIcon: ComponentType<IoniconsProps>;
 
-  export default FeatherIcon;
+  export default IoniconsIcon;
 }

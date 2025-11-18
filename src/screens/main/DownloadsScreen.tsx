@@ -12,7 +12,7 @@ import {
   View,
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchDownloads, requestSpotifyPlaylistImport, requestUrlDownload } from '../../api/service';

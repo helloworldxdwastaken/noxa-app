@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchPlaylists, fetchSongs } from '../../api/service';

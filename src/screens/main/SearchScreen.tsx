@@ -22,7 +22,7 @@ import type { RemoteTrack, Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
 import { playPreview, subscribeToPreview } from '../../services/player/PreviewManager';
 import ArtworkImage from '../../components/ArtworkImage';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../../context/LanguageContext';
 

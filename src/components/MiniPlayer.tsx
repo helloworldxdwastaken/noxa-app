@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { State } from 'react-native-track-player';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from './Icon';
 import { BlurView } from '@react-native-community/blur';
 
 import type { AppStackParamList } from '../navigation/types';
@@ -75,7 +75,7 @@ const MiniPlayer: React.FC = () => {
               togglePlayback().catch(err => console.warn('Toggle playback failed', err));
             }}
           >
-            <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#050505" />
+            <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#ffffff" />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

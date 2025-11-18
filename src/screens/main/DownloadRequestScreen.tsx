@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 
 import {
   requestDownloadAdd,

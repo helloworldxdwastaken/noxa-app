@@ -16,7 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 
 import { createPlaylist } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';

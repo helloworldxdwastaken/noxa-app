@@ -25,7 +25,7 @@ import TrackPlayer, {
   useTrackPlayerEvents,
   State as TrackState,
 } from 'react-native-track-player';
-import Icon from 'react-native-vector-icons/Feather';
+import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { AppStackParamList } from '../../navigation/types';
@@ -448,9 +448,9 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.playBtn} onPress={() => togglePlayback()}>
             {track ? (
-              <Icon name={isPlaying ? 'pause' : 'play'} size={28} color="#050505" />
+              <Icon name={isPlaying ? 'pause' : 'play'} size={28} color="#ffffff" />
             ) : (
-              <ActivityIndicator color="#050505" />
+              <ActivityIndicator color="#ffffff" />
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} onPress={handleSkipNext}>
