@@ -17,6 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchDownloads, requestSpotifyPlaylistImport, requestUrlDownload } from '../../api/service';
 import { useOffline } from '../../context/OfflineContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
+import { hexToRgba } from '../../utils/color';
 import type { DownloadItem } from '../../types/models';
 
 type ImportType = 'track' | 'playlist';
@@ -45,6 +47,7 @@ const IMPORT_OPTIONS: Array<{
 ];
 
 const DownloadsScreen: React.FC = () => {
+  const { primary, onPrimary } = useAccentColor();
   const { state: offlineState } = useOffline();
   const insets = useSafeAreaInsets();
   const [importVisible, setImportVisible] = useState(false);
@@ -194,12 +197,12 @@ const DownloadsScreen: React.FC = () => {
           <Text style={styles.pageSubtitle}>Track progress or import Spotify links</Text>
         </View>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: primary, shadowColor: primary }]}
           onPress={handleImportOpen}
           accessibilityRole="button"
           accessibilityLabel="Import music"
         >
-          <Icon name="plus" size={18} color="#050505" />
+          <Icon name="plus" size={18} color={onPrimary} />
         </TouchableOpacity>
       </View>
       {progressBlock}
@@ -237,25 +240,38 @@ const DownloadsScreen: React.FC = () => {
           <View style={styles.importOptions}>
             {IMPORT_OPTIONS.map(option => {
               const isActive = option.type === importType;
+              const accentColor = option.type === 'track' ? primary : option.accent;
               return (
                 <TouchableOpacity
                   key={option.type}
-                  style={[styles.importOption, isActive && styles.importOptionActive]}
+                  style={[
+                    styles.importOption,
+                    isActive && [
+                      styles.importOptionActive,
+                      {
+                        borderColor: hexToRgba(accentColor, 0.5),
+                        backgroundColor: hexToRgba(accentColor, 0.12),
+                      },
+                    ],
+                  ]}
                   onPress={() => setImportType(option.type)}
                 >
                   <View
                     style={[
                       styles.importIcon,
-                      { backgroundColor: `${option.accent}22`, borderColor: `${option.accent}55` },
+                      {
+                        backgroundColor: hexToRgba(accentColor, 0.12),
+                        borderColor: hexToRgba(accentColor, 0.4),
+                      },
                     ]}
                   >
-                    <Icon name={option.icon} size={18} color={option.accent} />
+                    <Icon name={option.icon} size={18} color={accentColor} />
                   </View>
                   <View style={styles.importTextBlock}>
                     <Text style={styles.importOptionTitle}>{option.title}</Text>
                     <Text style={styles.importOptionDescription}>{option.description}</Text>
                   </View>
-                  {isActive ? <Icon name="check" size={16} color="#1db954" /> : null}
+                  {isActive ? <Icon name="check" size={16} color={accentColor} /> : null}
                 </TouchableOpacity>
               );
             })}
@@ -284,14 +300,18 @@ const DownloadsScreen: React.FC = () => {
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.primaryBtn, submittingImport && styles.primaryBtnDisabled]}
+              style={[
+              styles.primaryBtn,
+              { backgroundColor: primary, shadowColor: primary },
+              submittingImport && styles.primaryBtnDisabled,
+            ]}
               onPress={handleStartImport}
               disabled={submittingImport}
             >
               {submittingImport ? (
-                <ActivityIndicator color="#050505" />
+                <ActivityIndicator color={onPrimary} />
               ) : (
-                <Text style={styles.primaryBtnText}>{importMeta.cta}</Text>
+                <Text style={[styles.primaryBtnText, { color: onPrimary }]}>{importMeta.cta}</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -361,10 +381,13 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: '#1db954',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1db954',
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 10,
+  },
     shadowOpacity: 0.4,
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 6 },
@@ -403,7 +426,6 @@ const styles = StyleSheet.create({
   },
   offlineProgressBar: {
     height: '100%',
-    backgroundColor: '#1db954',
   },
   centered: {
     flex: 1,
@@ -504,8 +526,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.02)',
   },
   importOptionActive: {
-    borderColor: 'rgba(29,185,84,0.6)',
-    backgroundColor: 'rgba(29,185,84,0.08)',
+    borderWidth: 1,
   },
   importIcon: {
     width: 44,
@@ -569,11 +590,14 @@ const styles = StyleSheet.create({
   primaryBtn: {
     flex: 1,
     borderRadius: 16,
-    backgroundColor: '#1db954',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 12,
-    shadowColor: '#1db954',
+    shadowOpacity: 0.45,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+  },
     shadowOpacity: 0.45,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 6 },
@@ -583,7 +607,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   primaryBtnText: {
-    color: '#050505',
+    color: '#ffffff',
     fontWeight: '700',
   },
 });

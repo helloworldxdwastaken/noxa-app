@@ -11,6 +11,7 @@ import type { AppStackParamList } from '../navigation/types';
 import ArtworkImage from './ArtworkImage';
 import { togglePlayback } from '../services/player/PlayerService';
 import { useCurrentTrack } from '../hooks/useCurrentTrack';
+import { useAccentColor } from '../hooks/useAccentColor';
 import { useMiniPlayerVisibility } from '../context/MiniPlayerContext';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList>;
@@ -20,6 +21,7 @@ const MiniPlayer: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { track, state } = useCurrentTrack();
   const { isVisible } = useMiniPlayerVisibility();
+  const { primary, onPrimary } = useAccentColor();
 
   const isPlaying =
     state === State.Playing || state === State.Buffering || state === State.Connecting;
@@ -69,13 +71,13 @@ const MiniPlayer: React.FC = () => {
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.playBtn}
+            style={[styles.playBtn, { backgroundColor: primary, shadowColor: primary }]}
             onPress={e => {
               e.stopPropagation();
               togglePlayback().catch(err => console.warn('Toggle playback failed', err));
             }}
           >
-            <Icon name={isPlaying ? 'pause' : 'play'} size={22} color="#ffffff" />
+            <Icon name={isPlaying ? 'pause' : 'play'} size={22} color={onPrimary} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
@@ -128,10 +130,8 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#1db954',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#1db954',
     shadowOpacity: 0.5,
     shadowRadius: 8,
     shadowOffset: { width: 0, height: 6 },

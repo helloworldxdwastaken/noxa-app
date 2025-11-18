@@ -33,6 +33,7 @@ import type { AppStackParamList, AppTabsParamList } from '../../navigation/types
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 const TRACK_SEPARATOR_STYLE = { height: 16 };
 const TRACK_FOOTER_STYLE = { height: 8 };
@@ -50,6 +51,20 @@ const HomeScreen: React.FC = () => {
   const connectivity = useConnectivity();
   const { t } = useLanguage();
   const autoDownloadNewTrack = useAutoDownloadNewTracks();
+  const { primary } = useAccentColor();
+  const [greeting, setGreeting] = useState('');
+
+  useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) {
+      setGreeting(t('home.greetingMorning'));
+    } else if (hour < 18) {
+      setGreeting(t('home.greetingAfternoon'));
+    } else {
+      setGreeting(t('home.greetingEvening'));
+    }
+  }, [t]);
+
   const {
     data: stats,
     isLoading: statsLoading,
@@ -78,6 +93,19 @@ const HomeScreen: React.FC = () => {
   });
 
   const isRefreshing = statsLoading || playlistsLoading || tracksLoading;
+
+  const currentHour = new Date().getHours();
+  let greetingKey: 'morning' | 'afternoon' | 'evening' | 'night' = 'night';
+  if (currentHour >= 5 && currentHour < 12) {
+    greetingKey = 'morning';
+  } else if (currentHour >= 12 && currentHour < 18) {
+    greetingKey = 'afternoon';
+  } else if (currentHour >= 18 && currentHour < 22) {
+    greetingKey = 'evening';
+  }
+  const greetingText = t(`home.greetings.${greetingKey}`);
+  const greeting =
+    greetingText === `home.greetings.${greetingKey}` ? t('home.greeting') : greetingText;
 
   const handleRefresh = () => {
     refetchStats();
@@ -240,7 +268,7 @@ const HomeScreen: React.FC = () => {
           >
             <Icon name="settings" size={18} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={styles.greeting}>{t('home.greeting')}</Text>
+          <Text style={styles.greeting}>{greeting}</Text>
         </View>
         {connectivity.isOffline ? (
           <View style={styles.offlineBanner}>
@@ -255,7 +283,7 @@ const HomeScreen: React.FC = () => {
         {statCards.map(card => (
           <View style={styles.statCard} key={card.label}>
             <View style={styles.statIcon}>
-              <Icon name={card.icon} size={18} color="#1db954" />
+              <Icon name={card.icon} size={18} color={primary} />
             </View>
             <Text style={styles.statValue}>{card.value}</Text>
             <Text style={styles.statLabel}>{card.label}</Text>

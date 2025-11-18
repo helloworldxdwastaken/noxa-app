@@ -20,6 +20,7 @@ import { playSong } from '../../services/player/PlayerService';
 import ArtworkImage from '../../components/ArtworkImage';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
@@ -129,9 +130,9 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.muted}>{artistName ?? t('library.unknownArtist')}</Text>
             <Text style={styles.title}>{albumTitle}</Text>
             <Text style={styles.subtitle}>{t('playlist.trackCount', { count: songs.length })}</Text>
-            <TouchableOpacity style={styles.playBtn} onPress={handlePlay}>
-              <Icon name="play" size={18} color="#050505" />
-              <Text style={styles.playBtnText}>{t('home.play') ?? 'Play'}</Text>
+            <TouchableOpacity style={[styles.playBtn, { backgroundColor: primary }]} onPress={handlePlay}>
+              <Icon name="play" size={18} color={onPrimary} />
+              <Text style={[styles.playBtnText, { color: onPrimary }]}>{t('home.play') ?? 'Play'}</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.coverWrapper}>
@@ -299,13 +300,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#1db954',
     borderRadius: 999,
     paddingHorizontal: 18,
     paddingVertical: 10,
   },
   playBtnText: {
-    color: '#050505',
+    color: 'rgba(5,5,5,0.8)',
     fontWeight: '600',
   },
   coverWrapper: {

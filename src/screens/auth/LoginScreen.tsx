@@ -73,7 +73,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.rememberRow}>
           <TouchableOpacity
-            style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            style={[styles.checkbox, rememberMe && { backgroundColor: primary, borderColor: primary }]}
             onPress={() => setRememberMe(prev => !prev)}
             disabled={isAuthenticating}
           >
@@ -83,7 +83,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, isAuthenticating && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: primary }, isAuthenticating && styles.buttonDisabled]}
           onPress={handleLogin}
           disabled={isAuthenticating}
         >
@@ -155,10 +155,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: '#1db954',
-    borderColor: '#1db954',
-  },
   checkboxDot: {
     width: 10,
     height: 10,
@@ -169,7 +165,6 @@ const styles = StyleSheet.create({
     color: '#e6e6f2',
   },
   button: {
-    backgroundColor: '#1db954',
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',

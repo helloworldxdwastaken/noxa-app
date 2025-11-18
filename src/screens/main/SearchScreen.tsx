@@ -25,6 +25,7 @@ import ArtworkImage from '../../components/ArtworkImage';
 import Icon from '../../components/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 type SearchMode = 'local' | 'online';
 type OnlineSearchType = 'track' | 'artist' | 'album';
@@ -269,10 +270,12 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
               {item.artistName}
             </Text>
             {item.albumTitle && <Text style={styles.resultAlbum}>{item.albumTitle}</Text>}
-            {isPreviewing ? <Text style={styles.previewBadge}>{t('common.previewing')}</Text> : null}
+            {isPreviewing ? (
+              <Text style={[styles.previewBadge, { backgroundColor: primary, color: onPrimary }]}>{t('common.previewing')}</Text>
+            ) : null}
           </View>
           <TouchableOpacity
-            style={styles.downloadBtn}
+            style={[styles.downloadBtn, { backgroundColor: primary }]}
             onPress={event => {
               event.stopPropagation();
               Keyboard.dismiss();
@@ -283,9 +286,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
             }
           >
             {downloadMutation.isPending && downloadMutation.variables?.track.id === item.id ? (
-              <ActivityIndicator color="#050505" size="small" />
+              <ActivityIndicator color={onPrimary} size="small" />
             ) : (
-              <Icon name="download" size={16} color="#050505" />
+              <Icon name="download" size={16} color={onPrimary} />
             )}
           </TouchableOpacity>
         </TouchableOpacity>
@@ -328,7 +331,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
         style={[styles.typeChip, localType === 'track' && styles.typeChipActive]}
         onPress={() => setLocalType('track')}
       >
-        <Text style={[styles.typeChipText, localType === 'track' && styles.typeChipTextActive]}>
+        <Text style={[styles.typeChipText, localType === 'track' && [styles.typeChipTextActive, { color: primary }]]}>
           {t('search.types.track')}
         </Text>
       </TouchableOpacity>
@@ -336,7 +339,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
         style={[styles.typeChip, localType === 'artist' && styles.typeChipActive]}
         onPress={() => setLocalType('artist')}
       >
-        <Text style={[styles.typeChipText, localType === 'artist' && styles.typeChipTextActive]}>
+        <Text style={[styles.typeChipText, localType === 'artist' && [styles.typeChipTextActive, { color: primary }]]}>
           {t('search.types.artist')}
         </Text>
       </TouchableOpacity>
@@ -344,7 +347,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
         style={[styles.typeChip, localType === 'album' && styles.typeChipActive]}
         onPress={() => setLocalType('album')}
       >
-        <Text style={[styles.typeChipText, localType === 'album' && styles.typeChipTextActive]}>
+        <Text style={[styles.typeChipText, localType === 'album' && [styles.typeChipTextActive, { color: primary }]]}>
           {t('search.types.album')}
         </Text>
       </TouchableOpacity>
@@ -369,7 +372,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
       {/* Search Mode Toggle */}
       <View style={styles.modeToggle}>
         <TouchableOpacity
-          style={[styles.modeBtn, mode === 'local' && styles.modeBtnActive]}
+          style={[styles.modeBtn, mode === 'local' && [styles.modeBtnActive, { backgroundColor: primary }]]}
           onPress={() => setMode('local')}
         >
           <Text style={[styles.modeBtnText, mode === 'local' && styles.modeBtnTextActive]}>
@@ -377,7 +380,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.modeBtn, mode === 'online' && styles.modeBtnActive]}
+          style={[styles.modeBtn, mode === 'online' && [styles.modeBtnActive, { backgroundColor: primary }]]}
           onPress={() => setMode('online')}
         >
           <Text style={[styles.modeBtnText, mode === 'online' && styles.modeBtnTextActive]}>
@@ -394,7 +397,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.typeChip, onlineType === 'track' && styles.typeChipActive]}
             onPress={() => setOnlineType('track')}
           >
-            <Text style={[styles.typeChipText, onlineType === 'track' && styles.typeChipTextActive]}>
+            <Text style={[styles.typeChipText, onlineType === 'track' && [styles.typeChipTextActive, { color: primary }]]}>
               {t('search.types.track')}
             </Text>
           </TouchableOpacity>
@@ -403,7 +406,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => setOnlineType('artist')}
           >
             <Text
-              style={[styles.typeChipText, onlineType === 'artist' && styles.typeChipTextActive]}
+              style={[styles.typeChipText, onlineType === 'artist' && [styles.typeChipTextActive, { color: primary }]]}
             >
               {t('search.types.artist')}
             </Text>
@@ -412,7 +415,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.typeChip, onlineType === 'album' && styles.typeChipActive]}
             onPress={() => setOnlineType('album')}
           >
-            <Text style={[styles.typeChipText, onlineType === 'album' && styles.typeChipTextActive]}>
+            <Text style={[styles.typeChipText, onlineType === 'album' && [styles.typeChipTextActive, { color: primary }]]}>
               {t('search.types.album')}
             </Text>
           </TouchableOpacity>
@@ -499,9 +502,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
                 setPlaylistPickerTrack(downloadOptionsTrack);
               }}
             >
-              <Icon name="plus-circle" size={18} color="#1db954" />
+              <Icon name="plus-circle" size={18} color={primary} />
               <View style={styles.sheetActionTextGroup}>
-                <Text style={[styles.sheetActionText, styles.sheetActionAccent]}>
+                <Text style={[styles.sheetActionText, styles.sheetActionAccent, { color: primary }]}>
                   {t('search.downloadAdd')}
                 </Text>
                 <Text style={styles.sheetActionSubtext}>{t('search.chooseStorage')}</Text>
@@ -582,9 +585,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     alignItems: 'center',
   },
-  modeBtnActive: {
-    backgroundColor: '#1db954',
-  },
+  modeBtnActive: {},
   modeBtnText: {
     color: '#9090a5',
     fontSize: 14,
@@ -680,7 +681,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1db954',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -735,7 +735,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   sheetActionAccent: {
-    color: '#1db954',
+    fontWeight: '600',
   },
   sheetEmpty: {
     color: '#8a8aa1',
@@ -751,8 +751,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 2,
     borderRadius: 999,
-    backgroundColor: 'rgba(29,185,84,0.12)',
-    color: '#1db954',
     fontSize: 11,
     fontWeight: '600',
   },

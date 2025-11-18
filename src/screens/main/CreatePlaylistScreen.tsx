@@ -21,6 +21,7 @@ import Icon from '../../components/Icon';
 import { createPlaylist } from '../../api/service';
 import type { AppStackParamList, AppTabsParamList } from '../../navigation/types';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 type CreateTabNav = BottomTabNavigationProp<AppTabsParamList, 'Create'>;
 type RootStackNav = NativeStackNavigationProp<AppStackParamList>;
@@ -86,12 +87,12 @@ const CreatePlaylistScreen: React.FC = () => {
     <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 }]}>
       <View style={styles.heroCard}>
         <View style={styles.heroIconCircle}>
-          <Icon name="plus-square" size={28} color="#1db954" />
+          <Icon name="plus-square" size={28} color={primary} />
         </View>
         <Text style={styles.heroTitle}>{t('create.title')}</Text>
         <Text style={styles.heroSubtitle}>{t('create.subtitle')}</Text>
-        <TouchableOpacity style={styles.primaryButton} onPress={openModal}>
-          <Icon name="plus" size={16} color="#050505" />
+        <TouchableOpacity style={[styles.primaryButton, { backgroundColor: primary }]} onPress={openModal}>
+          <Icon name="plus" size={16} color={onPrimary} />
           <Text style={styles.primaryButtonText}>{t('create.openModal')}</Text>
         </TouchableOpacity>
         <Text style={styles.heroHint}>{t('create.helper')}</Text>
@@ -120,15 +121,20 @@ const CreatePlaylistScreen: React.FC = () => {
               multiline
             />
             <TouchableOpacity
-              style={[styles.primaryButton, styles.primaryButtonFull, creating && styles.disabledButton]}
+              style={[
+                styles.primaryButton,
+                styles.primaryButtonFull,
+                { backgroundColor: primary },
+                creating && styles.disabledButton,
+              ]}
               onPress={handleCreate}
               disabled={creating}
             >
               {creating ? (
-                <ActivityIndicator color="#050505" />
+                <ActivityIndicator color={onPrimary} />
               ) : (
                 <>
-                  <Icon name="check" size={16} color="#050505" />
+                  <Icon name="check" size={16} color={onPrimary} />
                   <Text style={styles.primaryButtonText}>{t('create.createButton')}</Text>
                 </>
               )}
@@ -185,7 +191,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#1db954',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 999,
@@ -195,7 +200,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
   },
   primaryButtonText: {
-    color: '#050505',
+    color: '#ffffff',
     fontSize: 15,
     fontWeight: '700',
   },

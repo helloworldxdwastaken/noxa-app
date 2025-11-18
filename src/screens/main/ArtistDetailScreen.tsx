@@ -20,6 +20,7 @@ import type { Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 import { useConnectivity } from '../../hooks/useConnectivity';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
@@ -33,6 +34,7 @@ type AlbumGroup = {
 };
 
 const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { primary, onPrimary } = useAccentColor();
   const { artistName, songs } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
@@ -215,10 +217,10 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                   {t('playlist.trackCount', { count: album.songs.length })}
                 </Text>
                 <TouchableOpacity
-                  style={styles.playAlbumBtn}
+                  style={[styles.playAlbumBtn, { backgroundColor: primary }]}
                   onPress={() => handlePlayAlbum(album.songs)}
                 >
-                  <Icon name="play" size={16} color="#050505" />
+                  <Icon name="play" size={16} color={onPrimary} />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))}
@@ -382,7 +384,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: '#1db954',
   },
   trackList: {
     borderRadius: 20,

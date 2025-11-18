@@ -37,12 +37,14 @@ import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong } from '../../services/player/PlayerService';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 
 type Props = NativeStackScreenProps<LibraryStackParamList, 'PlaylistDetail'>;
 const ROW_HEIGHT = 76;
 
 const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
+  const { primary, onPrimary } = useAccentColor();
   const { playlistId, playlistName: initialName, description: initialDescription, coverUrl: initialCover } = route.params;
   const queryClient = useQueryClient();
   const { state: offlineState, downloadPlaylist, removePlaylist, isPlaylistDownloaded } =
@@ -603,12 +605,12 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               </TouchableOpacity>
             ) : isDownloaded ? (
               <TouchableOpacity
-                style={[styles.actionBtn, styles.actionBtnSuccess]}
+                style={[styles.actionBtn, { backgroundColor: primary }]}
                 onPress={handleRemoveOffline}
               >
                 <View style={styles.actionContent}>
-                  <Icon name="check-circle" size={16} color="#050505" />
-                  <Text style={styles.actionTextOnBright}>{t('playlist.downloaded')}</Text>
+                  <Icon name="check-circle" size={16} color={onPrimary} />
+                  <Text style={[styles.actionTextOnBright, { color: onPrimary }]}>{t('playlist.downloaded')}</Text>
                 </View>
               </TouchableOpacity>
             ) : (
@@ -639,9 +641,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
               <Icon name="music" size={32} color="#8aa4ff" />
             </View>
             <Text style={styles.emptyText}>{t('library.emptyPlaylist')}</Text>
-            <TouchableOpacity style={styles.emptyAction} onPress={handleAddSongsShortcut}>
-              <Icon name="plus" size={16} color="#050505" />
-              <Text style={styles.emptyActionText}>{t('playlist.emptyCta')}</Text>
+            <TouchableOpacity style={[styles.emptyAction, { backgroundColor: primary }]} onPress={handleAddSongsShortcut}>
+              <Icon name="plus" size={16} color={onPrimary} />
+              <Text style={[styles.emptyActionText, { color: onPrimary }]}>{t('playlist.emptyCta')}</Text>
             </TouchableOpacity>
           </View>
         }
@@ -847,11 +849,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  actionBtnSuccess: {
-    backgroundColor: '#1db954',
-  },
+  actionBtnSuccess: {},
   actionTextOnBright: {
-    color: '#050505',
+    color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -930,13 +930,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 999,
-    backgroundColor: '#1db954',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   emptyActionText: {
-    color: '#050505',
+    color: '#ffffff',
     fontWeight: '700',
     fontSize: 14,
   },

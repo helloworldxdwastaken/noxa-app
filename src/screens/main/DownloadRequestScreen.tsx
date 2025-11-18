@@ -142,7 +142,7 @@ const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.modeBtn, mode === 'playlist' && styles.modeBtnActive]}
+            style={[styles.modeBtn, mode === 'playlist' && [{ backgroundColor: primary }, styles.modeBtnActive]]}
             onPress={() => setMode('playlist')}
           >
             <Text style={[styles.modeBtnText, mode === 'playlist' && styles.modeBtnTextActive]}>
@@ -293,9 +293,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#121212',
     alignItems: 'center',
   },
-  modeBtnActive: {
-    backgroundColor: '#1db954',
-  },
+  modeBtnActive: {},
   modeBtnText: {
     fontSize: 14,
     fontWeight: '600',
@@ -326,7 +324,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   submitBtn: {
-    backgroundColor: '#1db954',
     borderRadius: 24,
     paddingVertical: 16,
     alignItems: 'center',

@@ -11,6 +11,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from '../../components/Icon';
+import { useAccentColor } from '../../hooks/useAccentColor';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { fetchPlaylists, fetchSongs } from '../../api/service';
@@ -311,7 +312,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
           return (
             <TouchableOpacity
               key={item.key}
-              style={[styles.tab, isActive && styles.tabActive]}
+              style={[styles.tab, isActive && [styles.tabActive, { backgroundColor: primary }]]}
               onPress={() => setActiveView(item.key)}
             >
               <View style={styles.tabLabel}>
@@ -407,9 +408,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
-  tabActive: {
-    backgroundColor: '#1db954',
-  },
+  tabActive: {},
   tabText: {
     fontSize: 12,
     fontWeight: '600',

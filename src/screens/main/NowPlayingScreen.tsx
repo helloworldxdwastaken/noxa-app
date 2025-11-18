@@ -37,6 +37,7 @@ import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 import { useMiniPlayerVisibility } from '../../context/MiniPlayerContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 const trackToSong = (playerTrack: Track): Song => ({
   id: Number(playerTrack.id),
@@ -80,6 +81,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const shuffleBackupRef = useRef<Track[] | null>(null);
   const shuffleEnabledRef = useRef(false);
   const shuffleToggleInProgressRef = useRef(false);
+  const { primary, onPrimary } = useAccentColor();
 
   const loadQueue = useCallback(async () => {
     try {
@@ -392,7 +394,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.artworkContainer}>
-          <Animated.View style={[styles.artworkWrapper, styles.artworkGlowBase, artworkAnimatedStyle]}>
+          <Animated.View style={[styles.artworkWrapper, styles.artworkGlowBase, { shadowColor: primary }, artworkAnimatedStyle]}>
             {track ? (
               <ArtworkImage
                 uri={track.artwork ?? undefined}
@@ -422,7 +424,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             onResponderMove={handleProgressGesture}
             onResponderRelease={handleProgressGesture}
           >
-            <View style={[styles.progressFill, { width: `${progressPct}%` }]} />
+            <View style={[styles.progressFill, { width: `${progressPct}%`, backgroundColor: primary }]} />
           </View>
           <View style={styles.progressTimes}>
             <Text style={styles.progressTime}>{formatTime(position)}</Text>
@@ -435,22 +437,22 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             <Icon
               name={repeatMode === RepeatMode.Track ? 'repeat' : 'repeat'}
               size={20}
-              color={repeatMode === RepeatMode.Off ? '#6b7280' : '#1db954'}
+              color={repeatMode === RepeatMode.Off ? '#6b7280' : primary}
             />
             {repeatMode === RepeatMode.Track ? (
-              <View style={styles.repeatBadge}>
-                <Text style={styles.repeatBadgeText}>1</Text>
+              <View style={[styles.repeatBadge, { backgroundColor: primary }]}>
+                <Text style={[styles.repeatBadgeText, { color: onPrimary }]}>1</Text>
               </View>
             ) : null}
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} onPress={handleSkipPrev}>
             <Icon name="skip-back" size={28} color="#ffffff" />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.playBtn} onPress={() => togglePlayback()}>
+          <TouchableOpacity style={[styles.playBtn, { backgroundColor: primary, shadowColor: primary }]} onPress={() => togglePlayback()}>
             {track ? (
-              <Icon name={isPlaying ? 'pause' : 'play'} size={28} color="#ffffff" />
+              <Icon name={isPlaying ? 'pause' : 'play'} size={28} color={onPrimary} />
             ) : (
-              <ActivityIndicator color="#ffffff" />
+              <ActivityIndicator color={onPrimary} />
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.controlBtn} onPress={handleSkipNext}>
@@ -460,12 +462,12 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             style={[
               styles.controlBtn,
               !canShuffle && styles.disabledControl,
-              shuffleEnabled && styles.shuffleActive,
+              shuffleEnabled && [styles.shuffleActive, { borderColor: primary }],
             ]}
             onPress={handleShuffleToggle}
             disabled={!canShuffle}
           >
-            <Icon name="shuffle" size={20} color={shuffleEnabled ? '#1db954' : '#ffffff'} />
+            <Icon name="shuffle" size={20} color={shuffleEnabled ? primary : '#ffffff'} />
           </TouchableOpacity>
         </View>
 
@@ -483,7 +485,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                   onPress={() => handleSelectTrack(item)}
                   disabled={isActive}
                 >
-                  <View style={[styles.queueArtwork, isActive && styles.queueArtworkActive]}>
+                  <View style={[styles.queueArtwork, isActive && [styles.queueArtworkActive, { borderColor: primary }]]}>
                     <ArtworkImage
                       uri={typeof item.artwork === 'string' ? item.artwork : null}
                       size={42}
@@ -492,7 +494,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
                   <View style={styles.queueInfo}>
                     <Text
-                      style={[styles.queueSongTitle, isActive && styles.queueSongTitleActive]}
+                      style={[styles.queueSongTitle, isActive && [{ color: primary }, styles.queueSongTitleActive]]}
                       numberOfLines={1}
                     >
                       {item.title}
@@ -501,7 +503,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                       {item.artist}
                     </Text>
                   </View>
-                  {isActive ? <Text style={styles.queueNow}>NOW</Text> : null}
+                  {isActive ? <Text style={[styles.queueNow, { color: primary, borderColor: primary }]}>NOW</Text> : null}
                 </TouchableOpacity>
               );
             })
@@ -569,7 +571,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         >
           <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
           {loadingPlaylists ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={onPrimary} />
           ) : playlists.length === 0 ? (
             <Text style={styles.sheetEmpty}>{t('playlist.noOtherPlaylists')}</Text>
           ) : (
@@ -669,7 +671,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   artworkGlowBase: {
-    shadowColor: '#1db954',
+    shadowOpacity: 0.6,
+    shadowRadius: 32,
+    shadowOffset: { width: 0, height: 18 },
   },
   placeholderArtwork: {
     width: 300,
@@ -708,7 +712,6 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#1db954',
   },
   progressTimes: {
     flexDirection: 'row',
@@ -737,16 +740,13 @@ const styles = StyleSheet.create({
   },
   shuffleActive: {
     borderWidth: 1,
-    borderColor: 'rgba(29,185,84,0.4)',
   },
   playBtn: {
     width: 76,
     height: 76,
     borderRadius: 38,
-    backgroundColor: '#1db954',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1db954',
     shadowOpacity: 0.6,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 8 },
@@ -759,12 +759,11 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: '#1db954',
     alignItems: 'center',
     justifyContent: 'center',
   },
   repeatBadgeText: {
-    color: '#050505',
+    color: '#ffffff',
     fontSize: 10,
     fontWeight: '700',
   },
@@ -792,7 +791,6 @@ const styles = StyleSheet.create({
   },
   queueArtworkActive: {
     borderWidth: 2,
-    borderColor: '#1db954',
   },
   queueInfo: {
     flex: 1,
@@ -802,7 +800,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   queueSongTitleActive: {
-    color: '#1db954',
+    fontWeight: '700',
   },
   queueSongArtist: {
     color: '#9090a5',
@@ -810,10 +808,8 @@ const styles = StyleSheet.create({
   },
   queueNow: {
     fontSize: 10,
-    color: '#1db954',
     fontWeight: '700',
     borderWidth: 1,
-    borderColor: '#1db954',
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 2,

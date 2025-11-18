@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { NavigationContainer, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -24,6 +24,9 @@ import CreatePlaylistScreen from '../screens/main/CreatePlaylistScreen';
 import AlbumDetailScreen from '../screens/main/AlbumDetailScreen';
 import { useLanguage } from '../context/LanguageContext';
 import { MiniPlayerVisibilityProvider } from '../context/MiniPlayerContext';
+import { useThemeAccent } from '../context/ThemeContext';
+import { useAccentColor } from '../hooks/useAccentColor';
+import { hexToRgba } from '../utils/color';
 import type {
   AppStackParamList,
   AppTabsParamList,
@@ -35,19 +38,6 @@ const AuthStack = createNativeStackNavigator<AuthStackParamList>();
 const Tabs = createBottomTabNavigator<AppTabsParamList>();
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const LibraryStack = createNativeStackNavigator<LibraryStackParamList>();
-
-const navigationTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    background: '#000000',
-    card: '#121212',
-    primary: '#1db954',
-    text: '#ffffff',
-    border: '#282828',
-    notification: '#1db954',
-  },
-};
 
 type TabIconConfig = {
   default: string;
@@ -229,6 +219,20 @@ const AppNavigator = () => {
   const {
     state: { isBootstrapped, user },
   } = useAuth();
+  const { accentOption } = useThemeAccent();
+
+  const navigationTheme = useMemo(() => ({
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: '#000000',
+      card: '#121212',
+      primary: accentOption.colors[0],
+      text: '#ffffff',
+      border: '#282828',
+      notification: accentOption.colors[0],
+    },
+  }), [accentOption]);
 
   if (!isBootstrapped) {
     return <SplashScreen />;
@@ -287,7 +291,7 @@ const tabStyles = StyleSheet.create({
     overflow: 'hidden',
   },
   iconBadgeActive: {
-    backgroundColor: '#1db954',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   tabButton: {
     flex: 1,
@@ -328,13 +332,25 @@ type TabBarIconProps = {
   iconName: string;
   activeIconName?: string;
   focused: boolean;
+  activeColor: string;
 };
 
-const TabBarIcon = ({ label, iconName, activeIconName, focused }: TabBarIconProps) => {
+const TabBarIcon = ({ label, iconName, activeIconName, focused, activeColor }: TabBarIconProps) => {
   const resolvedIcon = focused && activeIconName ? activeIconName : iconName;
   return (
-    <View style={[tabStyles.iconBadge, focused && tabStyles.iconBadgeActive]}>
-      <Icon name={resolvedIcon} size={20} color={focused ? '#ffffff' : '#7c8297'} />
+    <View
+      style={[
+        tabStyles.iconBadge,
+        focused && [
+          tabStyles.iconBadgeActive,
+          {
+            borderColor: hexToRgba(activeColor, 0.55),
+            backgroundColor: hexToRgba(activeColor, 0.18),
+          },
+        ],
+      ]}
+    >
+      <Icon name={resolvedIcon} size={20} color={focused ? activeColor : '#7c8297'} />
       <Text style={[tabStyles.iconLabel, focused && tabStyles.iconLabelActive]} numberOfLines={1}>
         {label}
       </Text>
@@ -347,6 +363,7 @@ const customTabBarRenderer = (props: BottomTabBarProps) => <CustomTabBar {...pro
 const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { primary } = useAccentColor();
   const searchRoute = state.routes.find(route => route.name === 'Search');
   const mainRoutes = state.routes.filter(route => route.name !== 'Search');
   const labelMap: Record<string, string> = {
@@ -400,6 +417,7 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
                   iconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList]?.default ?? 'ellipse-outline'}
                   activeIconName={TAB_ICON_MAP[route.name as keyof AppTabsParamList]?.active}
                   focused={isFocused}
+                  activeColor={primary}
                 />
               </TouchableOpacity>
             );
@@ -407,7 +425,13 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
         </View>
         {searchRoute ? (
           <TouchableOpacity
-            style={tabStyles.searchBubble}
+            style={[
+              tabStyles.searchBubble,
+              isSearchFocused && {
+                borderColor: hexToRgba(primary, 0.6),
+                backgroundColor: hexToRgba(primary, 0.18),
+              },
+            ]}
             onPress={() => handlePress(searchRoute.name, searchRoute.key, isSearchFocused)}
           >
             <View pointerEvents="none" style={tabStyles.blurLayer}>
@@ -421,7 +445,7 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
             <Icon
               name={isSearchFocused ? TAB_ICON_MAP.Search.active : TAB_ICON_MAP.Search.default}
               size={24}
-              color="#1db954"
+              color={primary}
             />
           </TouchableOpacity>
         ) : null}

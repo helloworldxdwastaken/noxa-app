@@ -14,10 +14,12 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import { useAuth } from '../../context/AuthContext';
 import type { AuthStackParamList } from '../../navigation/types';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 
 const SignupScreen: React.FC<Props> = ({ navigation }) => {
+  const { primary, onPrimary } = useAccentColor();
   const {
     state: { isAuthenticating },
     signup,
@@ -87,7 +89,7 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.rememberRow}>
           <TouchableOpacity
-            style={[styles.checkbox, rememberMe && styles.checkboxChecked]}
+            style={[styles.checkbox, rememberMe && { backgroundColor: primary, borderColor: primary }]}
             onPress={() => setRememberMe(prev => !prev)}
             disabled={isAuthenticating}
           >
@@ -97,12 +99,12 @@ const SignupScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.button, isAuthenticating && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: primary }, isAuthenticating && styles.buttonDisabled]}
           onPress={handleSignup}
           disabled={isAuthenticating}
         >
           {isAuthenticating ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={onPrimary} />
           ) : (
             <Text style={styles.buttonText}>Create Account</Text>
           )}
@@ -163,10 +165,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkboxChecked: {
-    backgroundColor: '#1db954',
-    borderColor: '#1db954',
-  },
   checkboxDot: {
     width: 10,
     height: 10,
@@ -177,7 +175,6 @@ const styles = StyleSheet.create({
     color: '#e6e6f2',
   },
   button: {
-    backgroundColor: '#1db954',
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',

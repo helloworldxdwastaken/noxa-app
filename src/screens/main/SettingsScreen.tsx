@@ -15,6 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import type { SupportedLanguage } from '../../i18n/translations';
+import { accentOptionsList, useThemeAccent } from '../../context/ThemeContext';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 const SettingsScreen: React.FC = () => {
   const {
@@ -25,6 +27,8 @@ const SettingsScreen: React.FC = () => {
 
   const [serverUrl, setServerUrl] = useState(baseUrl);
   const { t, language, setLanguage } = useLanguage();
+  const { accentId, setAccent } = useThemeAccent();
+  const { primary } = useAccentColor();
 
   const handleSaveServer = async () => {
     if (!serverUrl.trim()) {
@@ -66,7 +70,7 @@ const SettingsScreen: React.FC = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          <TouchableOpacity style={styles.button} onPress={handleSaveServer}>
+          <TouchableOpacity style={[styles.button, { backgroundColor: primary }]} onPress={handleSaveServer}>
             <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
           </TouchableOpacity>
         </View>
@@ -91,6 +95,48 @@ const SettingsScreen: React.FC = () => {
                     ]}
                   >
                     {`${flag} ${option === 'en' ? t('settings.english') : t('settings.spanish')}`}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('settings.accentTitle')}</Text>
+          <Text style={styles.sectionSubtitle}>{t('settings.accentSubtitle')}</Text>
+          <View style={styles.accentOptions}>
+            {accentOptionsList.map(option => {
+              const isActive = accentId === option.id;
+              const label = t(option.description as any);
+              return (
+                <TouchableOpacity
+                  key={option.id}
+                  style={[
+                    styles.accentOption,
+                    isActive && [styles.accentOptionActive, { borderColor: primary }],
+                  ]}
+                  onPress={() => setAccent(option.id)}
+                >
+                  <View style={[styles.accentSwatch, isActive && { borderColor: primary }]}>
+                    {option.colors.map((color, index) => (
+                      <View
+                        key={`${option.id}-${color}-${index}`}
+                        style={[
+                          styles.accentSwatchSegment,
+                          {
+                            backgroundColor: color,
+                            borderTopLeftRadius: index === 0 ? 12 : 0,
+                            borderBottomLeftRadius: index === 0 ? 12 : 0,
+                            borderTopRightRadius: index === option.colors.length - 1 ? 12 : 0,
+                            borderBottomRightRadius: index === option.colors.length - 1 ? 12 : 0,
+                          },
+                        ]}
+                      />
+                    ))}
+                  </View>
+                  <Text style={[styles.accentLabel, isActive && { color: primary }]}>
+                    {label}
                   </Text>
                 </TouchableOpacity>
               );
@@ -168,7 +214,6 @@ const styles = StyleSheet.create({
     color: '#050505',
   },
   button: {
-    backgroundColor: '#1db954',
     paddingVertical: 12,
     borderRadius: 12,
     alignItems: 'center',
@@ -179,6 +224,40 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontWeight: '600',
+  },
+  accentOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  accentOption: {
+    flexGrow: 1,
+    minWidth: 150,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+    padding: 14,
+    gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  accentOptionActive: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+  },
+  accentSwatch: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.08)',
+  },
+  accentSwatchSegment: {
+    flex: 1,
+    height: 26,
+  },
+  accentLabel: {
+    color: '#d1d5db',
+    fontWeight: '600',
+    fontSize: 12,
   },
 });
 

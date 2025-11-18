@@ -9,6 +9,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import { AuthProvider } from './src/context/AuthContext';
 import { OfflineProvider } from './src/context/OfflineContext';
 import { LanguageProvider } from './src/context/LanguageContext';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +30,9 @@ const App = () => (
       <AuthProvider>
         <OfflineProvider>
           <LanguageProvider>
-            <AppNavigator />
+            <ThemeProvider>
+              <AppNavigator />
+            </ThemeProvider>
           </LanguageProvider>
         </OfflineProvider>
       </AuthProvider>
