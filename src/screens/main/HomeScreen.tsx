@@ -51,7 +51,7 @@ const HomeScreen: React.FC = () => {
   const connectivity = useConnectivity();
   const { t } = useLanguage();
   const autoDownloadNewTrack = useAutoDownloadNewTracks();
-  const { primary } = useAccentColor();
+  const { primary, primaryRgba } = useAccentColor();
 
   const {
     data: stats,
@@ -270,7 +270,7 @@ const HomeScreen: React.FC = () => {
       <View style={styles.statsGrid}>
         {statCards.map(card => (
           <View style={styles.statCard} key={card.label}>
-            <View style={styles.statIcon}>
+            <View style={[styles.statIcon, { backgroundColor: primaryRgba(0.18) }]}>
               <Icon name={card.icon} size={18} color={primary} />
             </View>
             <Text style={styles.statValue}>{card.value}</Text>
