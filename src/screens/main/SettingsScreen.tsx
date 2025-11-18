@@ -124,13 +124,9 @@ const SettingsScreen: React.FC = () => {
                         key={`${option.id}-${color}-${index}`}
                         style={[
                           styles.accentSwatchSegment,
-                          {
-                            backgroundColor: color,
-                            borderTopLeftRadius: index === 0 ? 12 : 0,
-                            borderBottomLeftRadius: index === 0 ? 12 : 0,
-                            borderTopRightRadius: index === option.colors.length - 1 ? 12 : 0,
-                            borderBottomRightRadius: index === option.colors.length - 1 ? 12 : 0,
-                          },
+                          index === 0 && styles.accentSwatchSegmentLeft,
+                          index === option.colors.length - 1 && styles.accentSwatchSegmentRight,
+                          { backgroundColor: color },
                         ]}
                       />
                     ))}
@@ -253,6 +249,14 @@ const styles = StyleSheet.create({
   accentSwatchSegment: {
     flex: 1,
     height: 26,
+  },
+  accentSwatchSegmentLeft: {
+    borderTopLeftRadius: 12,
+    borderBottomLeftRadius: 12,
+  },
+  accentSwatchSegmentRight: {
+    borderTopRightRadius: 12,
+    borderBottomRightRadius: 12,
   },
   accentLabel: {
     color: '#d1d5db',

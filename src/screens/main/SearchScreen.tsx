@@ -295,7 +295,7 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
         </TouchableOpacity>
       );
     },
-    [downloadMutation, handlePreview, previewingId, t],
+    [downloadMutation, handlePreview, onPrimary, previewingId, primary, t],
   );
 
   const renderEmptyState = useCallback(
