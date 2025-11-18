@@ -44,6 +44,7 @@ type Props = NativeStackScreenProps<LibraryStackParamList, 'LibraryMain'>;
 
 const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
+  const { primary } = useAccentColor();
   const { state: offlineState } = useOffline();
   const connectivity = useConnectivity();
   const { t } = useLanguage();

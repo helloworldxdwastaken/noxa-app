@@ -52,18 +52,6 @@ const HomeScreen: React.FC = () => {
   const { t } = useLanguage();
   const autoDownloadNewTrack = useAutoDownloadNewTracks();
   const { primary } = useAccentColor();
-  const [greeting, setGreeting] = useState('');
-
-  useMemo(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting(t('home.greetingMorning'));
-    } else if (hour < 18) {
-      setGreeting(t('home.greetingAfternoon'));
-    } else {
-      setGreeting(t('home.greetingEvening'));
-    }
-  }, [t]);
 
   const {
     data: stats,
@@ -104,7 +92,7 @@ const HomeScreen: React.FC = () => {
     greetingKey = 'evening';
   }
   const greetingText = t(`home.greetings.${greetingKey}`);
-  const greeting =
+  const greetingLabel =
     greetingText === `home.greetings.${greetingKey}` ? t('home.greeting') : greetingText;
 
   const handleRefresh = () => {
@@ -268,7 +256,7 @@ const HomeScreen: React.FC = () => {
           >
             <Icon name="settings" size={18} color="#ffffff" />
           </TouchableOpacity>
-          <Text style={styles.greeting}>{greeting}</Text>
+          <Text style={styles.greeting}>{greetingLabel}</Text>
         </View>
         {connectivity.isOffline ? (
           <View style={styles.offlineBanner}>

@@ -31,6 +31,7 @@ const CreatePlaylistScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { primary, onPrimary } = useAccentColor();
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

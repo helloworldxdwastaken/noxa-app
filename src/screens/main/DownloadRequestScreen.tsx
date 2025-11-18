@@ -13,6 +13,7 @@ import {
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import Icon from '../../components/Icon';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 import {
   requestDownloadAdd,
@@ -27,6 +28,7 @@ type DownloadMode = 'manual' | 'spotify' | 'playlist';
 
 const DownloadRequestScreen: React.FC<Props> = ({ navigation }) => {
   const queryClient = useQueryClient();
+  const { primary } = useAccentColor();
   const [mode, setMode] = useState<DownloadMode>('manual');
 
   // Manual download fields

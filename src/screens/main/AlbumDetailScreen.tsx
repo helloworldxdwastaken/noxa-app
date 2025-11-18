@@ -32,6 +32,7 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { t } = useLanguage();
   const connectivity = useConnectivity();
   const autoDownloadNewTrack = useAutoDownloadNewTracks();
+  const { primary, onPrimary } = useAccentColor();
 
   const [trackMenuVisible, setTrackMenuVisible] = useState(false);
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);

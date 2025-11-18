@@ -56,6 +56,7 @@ type Props = CompositeScreenProps<
 const SearchScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
+  const { primary, onPrimary } = useAccentColor();
   const [query, setQuery] = useState('');
   const [mode, setMode] = useState<SearchMode>('local');
   const [onlineType, setOnlineType] = useState<OnlineSearchType>('track');

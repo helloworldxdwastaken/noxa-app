@@ -12,6 +12,7 @@ import {
   View,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useAccentColor } from '../../hooks/useAccentColor';
 
 import { useAuth } from '../../context/AuthContext';
 import type { AuthStackParamList } from '../../navigation/types';
@@ -23,6 +24,7 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
     state: { isAuthenticating },
     login,
   } = useAuth();
+  const { primary } = useAccentColor();
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
