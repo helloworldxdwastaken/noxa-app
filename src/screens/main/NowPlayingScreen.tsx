@@ -618,11 +618,11 @@ const styles = StyleSheet.create({
   },
   backdropOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.82)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   header: {
     flexDirection: 'row',
@@ -819,7 +819,7 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.75)',
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   sheetContainer: {
     position: 'absolute',
