@@ -618,11 +618,11 @@ const styles = StyleSheet.create({
   },
   backdropOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(5,5,10,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.82)',
   },
   container: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
   header: {
     flexDirection: 'row',
@@ -637,7 +637,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#12121b',
+    backgroundColor: '#121212',
   },
   menuBtn: {
     width: 40,
@@ -645,7 +645,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
-    backgroundColor: '#12121b',
+    backgroundColor: '#121212',
   },
   headerTitle: {
     fontSize: 16,
@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 24,
-    backgroundColor: '#1f1f2e',
+    backgroundColor: '#1b1b1b',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -706,7 +706,7 @@ const styles = StyleSheet.create({
   },
   progressBar: {
     height: 6,
-    backgroundColor: '#1f1f2e',
+    backgroundColor: '#1b1b1b',
     borderRadius: 999,
     overflow: 'hidden',
   },
@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 24,
-    backgroundColor: '#101018',
+    backgroundColor: '#111111',
   },
   disabledControl: {
     opacity: 0.5,
@@ -781,7 +781,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#1c1c23',
+    borderBottomColor: '#1b1b1b',
   },
   queueArtwork: {
     width: 48,
@@ -819,14 +819,14 @@ const styles = StyleSheet.create({
   },
   sheetBackdrop: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
   },
   sheetContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#0d0d14',
+    backgroundColor: '#0d0d0d',
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,

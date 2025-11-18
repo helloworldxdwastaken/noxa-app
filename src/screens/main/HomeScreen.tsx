@@ -34,6 +34,7 @@ import { useConnectivity } from '../../hooks/useConnectivity';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 import { useAccentColor } from '../../hooks/useAccentColor';
+import LinearGradient from 'react-native-linear-gradient';
 
 const TRACK_SEPARATOR_STYLE = { height: 16 };
 const TRACK_FOOTER_STYLE = { height: 8 };
@@ -238,15 +239,23 @@ const HomeScreen: React.FC = () => {
     </TouchableOpacity>
   );
 
+  const gradientHeight = Math.max(insets.top + 180, 220);
+
   return (
-    <ScrollView
-      style={[styles.container, { paddingTop: insets.top + 12 }]}
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#ffffff" />
-      }
-    >
-      {/* Greeting Header */}
-      <View style={styles.header}>
+    <View style={styles.screen}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={[primaryRgba(0.24), primaryRgba(0.1), 'transparent']}
+        style={[styles.headerGradient, { height: gradientHeight }]}
+      />
+      <ScrollView
+        style={[styles.container, { paddingTop: insets.top + 12 }]}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} tintColor="#ffffff" />
+        }
+      >
+        {/* Greeting Header */}
+        <View style={styles.header}>
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={styles.settingsButton}
@@ -431,14 +440,27 @@ const HomeScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  headerGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 0,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    zIndex: 1,
   },
   header: {
     padding: 24,

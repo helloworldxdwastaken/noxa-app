@@ -9,7 +9,7 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export type AccentId = 'green' | 'purpleBlue' | 'appleRed';
+export type AccentId = 'green' | 'purple' | 'blue' | 'red';
 
 export type AccentOption = {
   id: AccentId;
@@ -25,20 +25,27 @@ const ACCENT_STORAGE_KEY = 'noxa.accent';
 export const ACCENT_OPTIONS: Record<AccentId, AccentOption> = {
   green: {
     id: 'green',
-    name: 'Green Solid',
+    name: 'Spotify Green',
     colors: ['#1db954'],
     description: 'settings.accentOptionGreen',
     onPrimary: '#050505',
   },
-  purpleBlue: {
-    id: 'purpleBlue',
-    name: 'Purple & Blue',
-    colors: ['#8b5cf6', '#38bdf8'],
-    description: 'settings.accentOptionPurpleBlue',
+  purple: {
+    id: 'purple',
+    name: 'Vibrant Purple',
+    colors: ['#8b5cf6'],
+    description: 'settings.accentOptionPurple',
     onPrimary: '#ffffff',
   },
-  appleRed: {
-    id: 'appleRed',
+  blue: {
+    id: 'blue',
+    name: 'Electric Blue',
+    colors: ['#2563eb'],
+    description: 'settings.accentOptionBlue',
+    onPrimary: '#ffffff',
+  },
+  red: {
+    id: 'red',
     name: 'Apple Music Red',
     colors: ['#ff2d55'],
     description: 'settings.accentOptionRed',
@@ -62,9 +69,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const bootstrap = async () => {
       try {
         const stored = await AsyncStorage.getItem(ACCENT_STORAGE_KEY);
-        if (stored && (stored === 'green' || stored === 'purpleBlue' || stored === 'appleRed')) {
-          if (mounted) {
-            setAccentId(stored as AccentId);
+        if (stored) {
+          const normalized =
+            stored === 'green' || stored === 'purple' || stored === 'blue' || stored === 'red'
+              ? (stored as AccentId)
+              : stored === 'purpleBlue'
+                ? 'purple'
+                : stored === 'appleRed'
+                  ? 'red'
+                  : null;
+          if (normalized && mounted) {
+            setAccentId(normalized);
+            if (normalized !== stored) {
+              AsyncStorage.setItem(ACCENT_STORAGE_KEY, normalized).catch(err =>
+                console.warn('Failed to migrate accent preference', err),
+              );
+            }
           }
         }
       } catch (error) {
