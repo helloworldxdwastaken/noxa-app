@@ -258,16 +258,6 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                   <Icon name="minus-circle" size={18} color="#fbbf24" />
                   <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sheetAction}
-                  onPress={() => handleDeleteTrack(true)}
-                  disabled={deleting}
-                >
-                  <Icon name="trash-2" size={18} color="#f87171" />
-                  <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
-                    {t('common.deletePermanent')}
-                  </Text>
-                </TouchableOpacity>
               </>
             ) : null}
             <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>

@@ -279,9 +279,9 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       const queue =
         selectedIndex >= 0
           ? [
-              ...baseTracks.slice(selectedIndex + 1),
-              ...baseTracks.slice(0, selectedIndex),
-            ]
+            ...baseTracks.slice(selectedIndex + 1),
+            ...baseTracks.slice(0, selectedIndex),
+          ]
           : baseTracks.filter(track => track.id !== song.id);
       playSong(song, queue).catch(error => console.error('Failed to start playback', error));
     },
@@ -521,27 +521,27 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
                 <TextInput
                   style={styles.nameInput}
                   value={nameInput}
-                onChangeText={setNameInput}
-                placeholder={t('playlist.namePlaceholder')}
-                placeholderTextColor="#606072"
-              />
-              <TextInput
-                style={styles.descInput}
-                value={descInput}
-                onChangeText={setDescInput}
-                placeholder={t('playlist.descriptionPlaceholder')}
-                placeholderTextColor="#606072"
-              />
-            </>
-          ) : (
-            <>
-              <Text style={styles.playlistName}>{displayName}</Text>
-              {displayDesc ? <Text style={styles.playlistDesc}>{displayDesc}</Text> : null}
-              <Text style={styles.trackCount}>
-                {t('playlist.trackCount', { count: derivedTrackCount ?? tracks.length })}
-              </Text>
-            </>
-          )}
+                  onChangeText={setNameInput}
+                  placeholder={t('playlist.namePlaceholder')}
+                  placeholderTextColor="#606072"
+                />
+                <TextInput
+                  style={styles.descInput}
+                  value={descInput}
+                  onChangeText={setDescInput}
+                  placeholder={t('playlist.descriptionPlaceholder')}
+                  placeholderTextColor="#606072"
+                />
+              </>
+            ) : (
+              <>
+                <Text style={styles.playlistName}>{displayName}</Text>
+                {displayDesc ? <Text style={styles.playlistDesc}>{displayDesc}</Text> : null}
+                <Text style={styles.trackCount}>
+                  {t('playlist.trackCount', { count: derivedTrackCount ?? tracks.length })}
+                </Text>
+              </>
+            )}
           </View>
         </View>
       </View>
@@ -692,15 +692,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             >
               <Icon name="trash-2" size={18} color="#fbbf24" />
               <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.sheetAction}
-              onPress={() => handleDeleteTrackFromLibrary(true)}
-            >
-              <Icon name="alert-triangle" size={18} color="#f87171" />
-              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
-                {t('common.deletePermanent')}
-              </Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>

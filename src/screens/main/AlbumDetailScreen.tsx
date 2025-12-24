@@ -147,7 +147,7 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         <View style={styles.trackList}>
           {songs.map(track => (
-            <TouchableOpacity key={track.id} style={styles.trackRow} onPress={() => playSong(track).catch(() => {})}>
+            <TouchableOpacity key={track.id} style={styles.trackRow} onPress={() => playSong(track).catch(() => { })}>
               <View style={styles.trackMeta}>
                 <Text style={styles.trackTitle} numberOfLines={1}>
                   {track.title ?? t('library.unknownAlbum')}
@@ -193,16 +193,6 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
                 >
                   <Icon name="minus-circle" size={18} color="#fbbf24" />
                   <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.sheetAction}
-                  onPress={() => handleDeleteTrack(true)}
-                  disabled={deleting}
-                >
-                  <Icon name="trash-2" size={18} color="#f87171" />
-                  <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
-                    {t('common.deletePermanent')}
-                  </Text>
                 </TouchableOpacity>
               </>
             ) : null}

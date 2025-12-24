@@ -145,7 +145,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             setRepeatMode(mode);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
       return () => {
         mounted = false;
         show();
@@ -410,8 +410,8 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         <View style={styles.trackInfo}>
-        <Text style={styles.trackTitle}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
-        <Text style={styles.trackArtist}>{track?.artist ?? t('nowPlaying.placeholderArtist')}</Text>
+          <Text style={styles.trackTitle}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
+          <Text style={styles.trackArtist}>{track?.artist ?? t('nowPlaying.placeholderArtist')}</Text>
           {track?.album ? <Text style={styles.trackAlbum}>{track.album}</Text> : null}
         </View>
 
@@ -542,12 +542,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
             <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
               <Icon name="trash-2" size={18} color="#fbbf24" />
               <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(true)}>
-              <Icon name="alert-triangle" size={18} color="#f87171" />
-              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>
-                {t('common.deletePermanent')}
-              </Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>
