@@ -153,6 +153,22 @@ export const fetchPlaylists = async (): Promise<Playlist[]> => {
   }
 };
 
+export const fetchGeneratedPlaylists = async (): Promise<Playlist[]> => {
+  try {
+    const response = await apiClient.get('/api/playlists/generated');
+    const data = response.data;
+    if (Array.isArray(data?.playlists)) {
+      return mapPlaylists(data.playlists);
+    }
+    if (Array.isArray(data)) {
+      return mapPlaylists(data);
+    }
+    return [];
+  } catch (error) {
+    return handleAxiosError(error, 'Unable to load generated playlists.');
+  }
+};
+
 export const fetchPlaylistTracks = async (playlistId: number): Promise<Song[]> => {
   try {
     const response = await apiClient.get(`/api/playlists/${playlistId}/tracks`);
