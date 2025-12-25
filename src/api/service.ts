@@ -106,14 +106,49 @@ export const fetchSongs = async (params: { limit?: number; offset?: number } = {
   }
 };
 
-export const searchLibrary = async (query: string): Promise<Song[]> => {
+export interface SearchResults {
+  songs: Song[];
+  artists: any[];
+  albums: any[];
+}
+
+export const searchLibrary = async (
+  query: string,
+  type: 'all' | 'track' | 'artist' | 'album' = 'all',
+): Promise<SearchResults> => {
   try {
     const response = await apiClient.get('/api/library/search', {
-      params: { q: query, limit: 50 },
+      params: { q: query, type, limit: 50 },
     });
+    // The backend returns { songs: [], artists: [], albums: [] }
+    // We need to map the songs array using mapSongs
+    const data = response.data;
+    return {
+      songs: Array.isArray(data.songs) ? mapSongs(data.songs) : [],
+      artists: Array.isArray(data.artists) ? data.artists : [],
+      albums: Array.isArray(data.albums) ? data.albums : [],
+    };
+  } catch (error) {
+    // Return empty results instead of throwing, to match previous behavior gracefully
+    return { songs: [], artists: [], albums: [] };
+  }
+};
+
+export const fetchArtistTracks = async (artist: string): Promise<Song[]> => {
+  try {
+    const response = await apiClient.get(`/api/library/artist/${encodeURIComponent(artist)}`);
     return mapSongs(Array.isArray(response.data) ? response.data : []);
   } catch (error) {
-    return handleAxiosError(error, 'Unable to search library.');
+    return handleAxiosError(error, 'Unable to load artist tracks.');
+  }
+};
+
+export const fetchAlbumTracks = async (album: string): Promise<Song[]> => {
+  try {
+    const response = await apiClient.get(`/api/library/album/${encodeURIComponent(album)}`);
+    return mapSongs(Array.isArray(response.data) ? response.data : []);
+  } catch (error) {
+    return handleAxiosError(error, 'Unable to load album tracks.');
   }
 };
 

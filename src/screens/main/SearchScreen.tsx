@@ -65,9 +65,9 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
   const [playlistPickerTrack, setPlaylistPickerTrack] = useState<RemoteTrack | null>(null);
   const { data: playlists = [] } = useQuery({ queryKey: ['playlists'], queryFn: fetchPlaylists });
 
-  const { data: localResults, isFetching: localFetching } = useQuery({
-    queryKey: ['library', 'search', query],
-    queryFn: () => searchLibrary(query.trim()),
+  const { data: localData, isFetching: localFetching } = useQuery({
+    queryKey: ['library', 'search', query, localType],
+    queryFn: () => searchLibrary(query.trim(), localType),
     enabled: mode === 'local' && query.trim().length > 1,
   });
 
@@ -77,58 +77,35 @@ const SearchScreen: React.FC<Props> = ({ navigation }) => {
     enabled: mode === 'online' && query.trim().length > 1,
   });
 
-  const localSongs = useMemo(() => (Array.isArray(localResults) ? localResults : []), [localResults]);
+  const localSongs = useMemo(() => localData?.songs || [], [localData]);
   const localArtists = useMemo<LocalArtist[]>(() => {
-    if (!localSongs.length) {
-      return [];
+    // If backend returns artists, use them directly (mapping needed if structure differs)
+    if (localData?.artists && localData.artists.length > 0) {
+      return localData.artists.map((artist: any) => ({
+        id: artist.artist,
+        name: artist.artist,
+        trackCount: artist.track_count || 0,
+        songs: [], // Songs loaded on detail screen
+        artwork: artist.artist_image,
+      }));
     }
-    const grouped = localSongs.reduce<Record<string, LocalArtist>>((acc, song) => {
-      const artistName = song.artist || t('library.unknownArtist');
-      if (!acc[artistName]) {
-        acc[artistName] = {
-          id: artistName,
-          name: artistName,
-          trackCount: 0,
-          songs: [],
-          artwork: song.albumCover ?? null,
-        };
-      }
-      acc[artistName].songs.push(song);
-      acc[artistName].trackCount += 1;
-      if (!acc[artistName].artwork && song.albumCover) {
-        acc[artistName].artwork = song.albumCover;
-      }
-      return acc;
-    }, {});
-    return Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
-  }, [localSongs, t]);
+    return [];
+  }, [localData]);
 
   const localAlbums = useMemo<LocalAlbum[]>(() => {
-    if (!localSongs.length) {
-      return [];
+    // If backend returns albums, use them directly
+    if (localData?.albums && localData.albums.length > 0) {
+      return localData.albums.map((album: any) => ({
+        id: `${album.title}-${album.artist}`,
+        title: album.album,
+        artist: album.artist,
+        trackCount: album.track_count || 0,
+        songs: [], // Songs loaded on detail screen
+        artwork: album.album_cover,
+      }));
     }
-    const grouped = localSongs.reduce<Record<string, LocalAlbum>>((acc, song) => {
-      const albumTitle = song.album || t('library.unknownAlbum');
-      const key = `${albumTitle}-${song.artist ?? ''}`;
-      if (!acc[key]) {
-        acc[key] = {
-          id: key,
-          title: albumTitle,
-          artist: song.artist ?? null,
-          trackCount: 0,
-          songs: [],
-          artwork: song.albumCover ?? null,
-        };
-      }
-      acc[key].songs.push(song);
-      acc[key].trackCount += 1;
-      if (!acc[key].artwork && song.albumCover) {
-        acc[key].artwork = song.albumCover;
-      }
-      return acc;
-    }, {});
-    return Object.values(grouped).sort((a, b) => a.title.localeCompare(b.title));
-  }, [localSongs, t]);
+    return [];
+  }, [localData]);
 
   const onlineList = mode === 'online' ? onlineResults : [];
   const isFetching = mode === 'local' ? localFetching : onlineFetching;

@@ -18,7 +18,7 @@ import type { LibraryStackParamList } from '../../navigation/types';
 import { playSong } from '../../services/player/PlayerService';
 import type { Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
-import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
+import { addTrackToPlaylist, deleteTrack, fetchArtistTracks, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAccentColor } from '../../hooks/useAccentColor';
 import { useConnectivity } from '../../hooks/useConnectivity';
@@ -35,7 +35,7 @@ type AlbumGroup = {
 
 const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { primary, onPrimary } = useAccentColor();
-  const { artistName, songs } = route.params;
+  const { artistName, songs: initialSongs } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const connectivity = useConnectivity();
@@ -46,6 +46,15 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
   const [addingPlaylistId, setAddingPlaylistId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // If songs are not passed (e.g. from Search), fetch them
+  const { data: fetchedSongs } = useQuery({
+    queryKey: ['artist', artistName, 'tracks'],
+    queryFn: () => fetchArtistTracks(artistName),
+    enabled: !initialSongs || initialSongs.length === 0,
+  });
+
+  const songs = initialSongs && initialSongs.length > 0 ? initialSongs : fetchedSongs || [];
 
   const { data: playlists = [] } = useQuery({
     queryKey: ['playlists'],

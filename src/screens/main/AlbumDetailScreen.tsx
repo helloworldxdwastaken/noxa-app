@@ -18,7 +18,7 @@ import type { LibraryStackParamList } from '../../navigation/types';
 import type { Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
 import ArtworkImage from '../../components/ArtworkImage';
-import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
+import { addTrackToPlaylist, deleteTrack, fetchAlbumTracks, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAccentColor } from '../../hooks/useAccentColor';
 import { useConnectivity } from '../../hooks/useConnectivity';
@@ -27,7 +27,7 @@ import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 type Props = NativeStackScreenProps<LibraryStackParamList, 'AlbumDetail'>;
 
 const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { artistName, albumTitle, songs } = route.params;
+  const { artistName, albumTitle, songs: initialSongs } = route.params;
   const insets = useSafeAreaInsets();
   const { t } = useLanguage();
   const connectivity = useConnectivity();
@@ -39,6 +39,15 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
   const [addingPlaylistId, setAddingPlaylistId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // If songs are not passed, fetch them
+  const { data: fetchedSongs } = useQuery({
+    queryKey: ['album', albumTitle, 'tracks'],
+    queryFn: () => fetchAlbumTracks(albumTitle),
+    enabled: !initialSongs || initialSongs.length === 0,
+  });
+
+  const songs = initialSongs && initialSongs.length > 0 ? initialSongs : fetchedSongs || [];
 
   const { data: playlists = [] } = useQuery({
     queryKey: ['playlists'],
