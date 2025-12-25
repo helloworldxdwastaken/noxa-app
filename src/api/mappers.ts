@@ -80,6 +80,7 @@ export const mapPlaylist = (raw: any): Playlist => ({
     normalizeString(raw?.coverUrl) ??
     normalizeString(raw?.coverURL) ??
     normalizeString(raw?.artwork) ??
+    normalizeString(raw?.image) ??
     null,
   trackCount:
     typeof raw?.track_count === 'number'

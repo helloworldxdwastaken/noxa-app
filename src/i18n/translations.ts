@@ -35,6 +35,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       playlists: 'Your Playlists',
       showAll: 'Show all',
       recentlyAdded: 'Recently Added',
+      madeForYou: 'Made For You',
       play: 'Play All',
       offline: 'Offline mode',
       stats: {
@@ -209,6 +210,7 @@ const dictionary: Record<SupportedLanguage, TranslationNode> = {
       playlists: 'Tus listas',
       showAll: 'Ver todo',
       recentlyAdded: 'Recientemente añadido',
+      madeForYou: 'Hecho para ti',
       play: 'Reproducir todo',
       offline: 'Modo sin conexión',
       stats: {

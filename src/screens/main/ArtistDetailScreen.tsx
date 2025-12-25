@@ -54,7 +54,9 @@ const ArtistDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     enabled: !initialSongs || initialSongs.length === 0,
   });
 
-  const songs = initialSongs && initialSongs.length > 0 ? initialSongs : fetchedSongs || [];
+  const songs = useMemo(() => {
+    return initialSongs && initialSongs.length > 0 ? initialSongs : fetchedSongs || [];
+  }, [initialSongs, fetchedSongs]);
 
   const { data: playlists = [] } = useQuery({
     queryKey: ['playlists'],

@@ -128,7 +128,7 @@ export const searchLibrary = async (
       artists: Array.isArray(data.artists) ? data.artists : [],
       albums: Array.isArray(data.albums) ? data.albums : [],
     };
-  } catch (error) {
+  } catch {
     // Return empty results instead of throwing, to match previous behavior gracefully
     return { songs: [], artists: [], albums: [] };
   }
