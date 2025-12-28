@@ -19,7 +19,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import {
   fetchGeneratedPlaylists,
-  fetchLibraryStats,
   fetchPlaylists,
   fetchSongs,
   addTrackToPlaylist,
@@ -56,15 +55,6 @@ const HomeScreen: React.FC = () => {
   const { primary, primaryRgba } = useAccentColor();
 
   const {
-    data: stats,
-    isLoading: statsLoading,
-    refetch: refetchStats,
-  } = useQuery({
-    queryKey: ['library', 'stats'],
-    queryFn: fetchLibraryStats,
-  });
-
-  const {
     data: playlists = [],
     isLoading: playlistsLoading,
     refetch: refetchPlaylists,
@@ -91,7 +81,7 @@ const HomeScreen: React.FC = () => {
     queryFn: () => fetchSongs({ limit: 10 }),
   });
 
-  const isRefreshing = statsLoading || playlistsLoading || tracksLoading || generatedLoading;
+  const isRefreshing = playlistsLoading || tracksLoading || generatedLoading;
 
   const currentHour = new Date().getHours();
   let greetingKey: 'morning' | 'afternoon' | 'evening' | 'night' = 'night';
@@ -107,7 +97,6 @@ const HomeScreen: React.FC = () => {
     greetingText === `home.greetings.${greetingKey}` ? t('home.greeting') : greetingText;
 
   const handleRefresh = () => {
-    refetchStats();
     refetchPlaylists();
     refetchGenerated();
     refetchTracks();
@@ -118,14 +107,8 @@ const HomeScreen: React.FC = () => {
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
   const [addingPlaylistId, setAddingPlaylistId] = useState<number | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  const statCards = useMemo(
-    () => [
-      { label: t('home.stats.songs'), value: stats?.totalSongs ?? '--', icon: 'music' as const },
-      { label: t('home.stats.artists'), value: stats?.totalArtists ?? '--', icon: 'mic' as const },
-    ],
-    [stats?.totalArtists, stats?.totalSongs, t],
-  );
+  const [madeForYouScroll, setMadeForYouScroll] = useState(0);
+  const [playlistsScroll, setPlaylistsScroll] = useState(0);
 
   const handlePlayTrack = useCallback(
     (song: Song) => {
@@ -155,15 +138,25 @@ const HomeScreen: React.FC = () => {
         });
       }}
     >
-      <ArtworkImage
-        uri={item.coverUrl}
-        size={88}
-        fallbackLabel={item.name?.[0]?.toUpperCase()}
-      />
-      <Text style={styles.playlistName} numberOfLines={2}>
-        {item.name}
-      </Text>
-      <Text style={styles.playlistTrackCount}>{item.trackCount} tracks</Text>
+      <View style={styles.playlistArtwork}>
+        <ArtworkImage
+          uri={item.coverUrl}
+          size={160}
+          fallbackLabel={item.name?.[0]?.toUpperCase()}
+        />
+      </View>
+      <LinearGradient
+        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+        locations={[0, 0.4, 0.7, 1]}
+        style={styles.playlistGradient}
+      >
+        <View style={styles.playlistTextContainer}>
+          <Text style={styles.playlistName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.playlistTrackCount}>{item.trackCount} tracks</Text>
+        </View>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
@@ -262,6 +255,7 @@ const HomeScreen: React.FC = () => {
         {/* Greeting Header */}
         <View style={styles.header}>
           <View style={styles.headerRow}>
+            <Text style={styles.greeting}>{greetingLabel}</Text>
             <TouchableOpacity
               style={styles.settingsButton}
               onPress={handleOpenSettings}
@@ -270,7 +264,6 @@ const HomeScreen: React.FC = () => {
             >
               <Icon name="settings" size={18} color="#ffffff" />
             </TouchableOpacity>
-            <Text style={styles.greeting}>{greetingLabel}</Text>
           </View>
           {connectivity.isOffline ? (
             <View style={styles.offlineBanner}>
@@ -280,18 +273,137 @@ const HomeScreen: React.FC = () => {
           ) : null}
         </View>
 
-        {/* Library Stats */}
-        <View style={styles.statsGrid}>
-          {statCards.map(card => (
-            <View style={styles.statCard} key={card.label}>
-              <View style={[styles.statIcon, { backgroundColor: primaryRgba(0.18) }]}>
-                <Icon name={card.icon} size={18} color={primary} />
-              </View>
-              <Text style={styles.statValue}>{card.value}</Text>
-              <Text style={styles.statLabel}>{card.label}</Text>
+        {/* Daily Mix & Recommended Horizontal Section */}
+        {generatedPlaylists.length > 0 && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.featuredScrollContainer}
+          >
+            {/* Daily Mix Banner */}
+            {generatedPlaylists[0] && (
+              <TouchableOpacity
+                style={styles.dailyMixBanner}
+                onPress={() => {
+                  const dailyMix = generatedPlaylists[0];
+                  navigation.navigate('Library', {
+                    screen: 'PlaylistDetail',
+                    params: {
+                      playlistId: dailyMix.id,
+                      playlistName: dailyMix.name,
+                      description: dailyMix.description,
+                      coverUrl: dailyMix.coverUrl ?? undefined,
+                      trackCount: dailyMix.trackCount,
+                    },
+                  });
+                }}
+              >
+                <View style={styles.dailyMixArtworkContainer}>
+                  <ArtworkImage
+                    uri={generatedPlaylists[0].coverUrl}
+                    size={500}
+                    fallbackLabel={generatedPlaylists[0].name?.[0]?.toUpperCase()}
+                  />
+                </View>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']}
+                  locations={[0, 0.5, 1]}
+                  style={styles.dailyMixGradient}
+                >
+                  <View style={styles.dailyMixContent}>
+                    <Text style={styles.dailyMixLabel}>Featured Playlist</Text>
+                    <Text style={styles.dailyMixTitle}>{generatedPlaylists[0].name}</Text>
+                    <Text style={styles.dailyMixSubtitle}>
+                      {generatedPlaylists[0].trackCount} tracks
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+
+            {/* Recommended For You Banner */}
+            {generatedPlaylists[1] && (
+              <TouchableOpacity
+                style={styles.dailyMixBanner}
+                onPress={() => {
+                  const recommended = generatedPlaylists[1];
+                  navigation.navigate('Library', {
+                    screen: 'PlaylistDetail',
+                    params: {
+                      playlistId: recommended.id,
+                      playlistName: recommended.name,
+                      description: recommended.description,
+                      coverUrl: recommended.coverUrl ?? undefined,
+                      trackCount: recommended.trackCount,
+                    },
+                  });
+                }}
+              >
+                <View style={styles.dailyMixArtworkContainer}>
+                  <ArtworkImage
+                    uri={generatedPlaylists[1].coverUrl}
+                    size={500}
+                    fallbackLabel={generatedPlaylists[1].name?.[0]?.toUpperCase()}
+                  />
+                </View>
+                <LinearGradient
+                  colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.4)', 'rgba(0,0,0,0.85)']}
+                  locations={[0, 0.5, 1]}
+                  style={styles.dailyMixGradient}
+                >
+                  <View style={styles.dailyMixContent}>
+                    <Text style={styles.dailyMixLabel}>Recommended For You</Text>
+                    <Text style={styles.dailyMixTitle}>{generatedPlaylists[1].name}</Text>
+                    <Text style={styles.dailyMixSubtitle}>
+                      {generatedPlaylists[1].trackCount} tracks
+                    </Text>
+                  </View>
+                </LinearGradient>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        )}
+
+        {/* Made For You Section */}
+        {generatedPlaylists.length > 2 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('home.madeForYou') ?? 'Made For You'}</Text>
             </View>
-          ))}
-        </View>
+            <FlatList
+              horizontal
+              data={generatedPlaylists.slice(2)}
+              renderItem={renderPlaylistItem}
+              keyExtractor={item => `gen-${item.id}`}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+              onScroll={e => {
+                const scrollPosition = e.nativeEvent.contentOffset.x;
+                const contentWidth = e.nativeEvent.contentSize.width;
+                const layoutWidth = e.nativeEvent.layoutMeasurement.width;
+                const maxScroll = contentWidth - layoutWidth;
+                const scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
+                setMadeForYouScroll(scrollPercentage);
+              }}
+              scrollEventThrottle={16}
+            />
+            {generatedPlaylists.length > 3 && (
+              <View style={styles.scrollIndicatorContainer}>
+                <View style={styles.scrollIndicatorTrack}>
+                  <View
+                    style={[
+                      styles.scrollIndicatorThumb,
+                      {
+                        backgroundColor: primary,
+                        left: `${madeForYouScroll * 70}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Your Playlists Section */}
         {playlists.length > 0 && (
@@ -316,24 +428,31 @@ const HomeScreen: React.FC = () => {
               keyExtractor={item => `${item.id}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalList}
+              onScroll={e => {
+                const scrollPosition = e.nativeEvent.contentOffset.x;
+                const contentWidth = e.nativeEvent.contentSize.width;
+                const layoutWidth = e.nativeEvent.layoutMeasurement.width;
+                const maxScroll = contentWidth - layoutWidth;
+                const scrollPercentage = maxScroll > 0 ? scrollPosition / maxScroll : 0;
+                setPlaylistsScroll(scrollPercentage);
+              }}
+              scrollEventThrottle={16}
             />
-          </View>
-        )}
-
-        {/* Made For You Section */}
-        {generatedPlaylists.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{t('home.madeForYou') ?? 'Made For You'}</Text>
-            </View>
-            <FlatList
-              horizontal
-              data={generatedPlaylists}
-              renderItem={renderPlaylistItem}
-              keyExtractor={item => `gen-${item.id}`}
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalList}
-            />
+            {playlists.length > 1 && (
+              <View style={styles.scrollIndicatorContainer}>
+                <View style={styles.scrollIndicatorTrack}>
+                  <View
+                    style={[
+                      styles.scrollIndicatorThumb,
+                      {
+                        backgroundColor: primary,
+                        left: `${playlistsScroll * 70}%`,
+                      },
+                    ]}
+                  />
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -481,7 +600,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'space-between',
   },
   settingsButton: {
     width: 40,
@@ -512,36 +631,56 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 13,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    paddingHorizontal: 16,
-    gap: 12,
+  featuredScrollContainer: {
+    paddingHorizontal: 24,
+    gap: 16,
   },
-  statCard: {
-    flexBasis: '48%',
-    flexGrow: 1,
+  dailyMixBanner: {
+    width: 320,
+    height: 160,
+    borderRadius: 20,
     backgroundColor: '#121212',
-    borderRadius: 16,
-    padding: 20,
-    gap: 8,
+    overflow: 'hidden',
+    position: 'relative',
   },
-  statIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(29,185,84,0.15)',
-    justifyContent: 'center',
+  dailyMixArtworkContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  statValue: {
-    fontSize: 24,
+  dailyMixGradient: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'flex-end',
+  },
+  dailyMixContent: {
+    padding: 16,
+    gap: 4,
+  },
+  dailyMixLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#ffffff',
+    opacity: 0.7,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dailyMixTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#ffffff',
   },
-  statLabel: {
-    fontSize: 12,
-    color: '#9090a5',
+  dailyMixSubtitle: {
+    fontSize: 13,
+    color: '#e0e0e0',
+    fontWeight: '500',
   },
   section: {
     marginTop: 32,
@@ -569,20 +708,40 @@ const styles = StyleSheet.create({
   },
   playlistCard: {
     width: 160,
-    padding: 16,
+    height: 160,
     borderRadius: 16,
     backgroundColor: '#121212',
     marginRight: 16,
-    gap: 8,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  playlistArtwork: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 160,
+    height: 160,
+  },
+  playlistGradient: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    justifyContent: 'flex-end',
+  },
+  playlistTextContainer: {
+    padding: 12,
+    gap: 4,
   },
   playlistName: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#ffffff',
   },
   playlistTrackCount: {
     fontSize: 12,
-    color: '#9090a5',
+    color: '#e0e0e0',
   },
   trackGrid: {
     paddingHorizontal: 24,
@@ -677,6 +836,28 @@ const styles = StyleSheet.create({
   },
   playlistList: {
     gap: 8,
+  },
+  scrollIndicatorContainer: {
+    alignItems: 'center',
+    marginTop: 12,
+    paddingHorizontal: 24,
+  },
+  scrollIndicatorTrack: {
+    width: 80,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    position: 'relative',
+  },
+  scrollIndicatorThumb: {
+    position: 'absolute',
+    width: 24,
+    height: 4,
+    borderRadius: 2,
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
   },
 });
 

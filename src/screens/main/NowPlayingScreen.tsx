@@ -32,7 +32,7 @@ import type { AppStackParamList } from '../../navigation/types';
 import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong, togglePlayback } from '../../services/player/PlayerService';
-import { addTrackToPlaylist, deleteTrack, fetchPlaylists } from '../../api/service';
+import { addTrackToPlaylist, deleteTrack, fetchPlaylists, fetchArtistTracks } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
@@ -73,8 +73,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
-  const actionSheetAnim = useRef(new Animated.Value(60)).current;
-  const playlistSheetAnim = useRef(new Animated.Value(60)).current;
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
@@ -172,32 +170,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     }).start();
   }, [glowAnim, isPlaying]);
 
-  useEffect(() => {
-    if (actionsVisible) {
-      actionSheetAnim.setValue(60);
-      Animated.timing(actionSheetAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      actionSheetAnim.setValue(60);
-    }
-  }, [actionSheetAnim, actionsVisible]);
-
-  useEffect(() => {
-    if (playlistPickerVisible) {
-      playlistSheetAnim.setValue(60);
-      Animated.timing(playlistSheetAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }).start();
-    } else {
-      playlistSheetAnim.setValue(60);
-    }
-  }, [playlistPickerVisible, playlistSheetAnim]);
-
   const artworkAnimatedStyle = useMemo(
     () => ({
       transform: [
@@ -258,6 +230,21 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     await TrackPlayer.setRepeatMode(nextMode);
   };
 
+  const handleArtistPress = useCallback(async () => {
+    if (!track?.artist) {
+      return;
+    }
+    try {
+      const artistTracks = await fetchArtistTracks(track.artist);
+      navigation.navigate('ArtistDetail', {
+        artistName: track.artist,
+        songs: artistTracks,
+      });
+    } catch (error) {
+      Alert.alert(t('common.error'), t('common.error'));
+    }
+  }, [track?.artist, navigation, t]);
+
   const shuffleArray = useCallback((items: Track[]) => {
     const clone = [...items];
     for (let i = clone.length - 1; i > 0; i -= 1) {
@@ -282,6 +269,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     const wasPlaying = isPlaying;
     try {
       if (!shuffleEnabledRef.current) {
+        // Enable shuffle
         shuffleBackupRef.current = queue;
         const currentTrack = queue.find(item => item.id === track.id);
         const rest = queue.filter(item => item.id !== track.id);
@@ -290,29 +278,31 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         await TrackPlayer.reset();
         await TrackPlayer.add(newQueue);
         if (currentTrack) {
-          await TrackPlayer.skip(currentTrack.id);
+          await TrackPlayer.skip(0); // Skip to first track (current track)
           if (Number.isFinite(currentPosition) && currentPosition > 0) {
             await TrackPlayer.seekTo(currentPosition);
           }
-        }
-        if (wasPlaying) {
-          await TrackPlayer.play();
+          if (wasPlaying) {
+            await TrackPlayer.play();
+          }
         }
         setQueue(newQueue);
         shuffleEnabledRef.current = true;
         setShuffleEnabled(true);
       } else {
+        // Disable shuffle
         const originalQueue = shuffleBackupRef.current ?? queue;
+        const currentTrackIndex = originalQueue.findIndex(item => item.id === track.id);
         await TrackPlayer.reset();
         await TrackPlayer.add(originalQueue);
-        if (track) {
-          await TrackPlayer.skip(track.id);
+        if (currentTrackIndex >= 0) {
+          await TrackPlayer.skip(currentTrackIndex);
           if (Number.isFinite(currentPosition) && currentPosition > 0) {
             await TrackPlayer.seekTo(currentPosition);
           }
-        }
-        if (wasPlaying) {
-          await TrackPlayer.play();
+          if (wasPlaying) {
+            await TrackPlayer.play();
+          }
         }
         shuffleBackupRef.current = null;
         setQueue(originalQueue);
@@ -411,7 +401,11 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.trackInfo}>
           <Text style={styles.trackTitle}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
-          <Text style={styles.trackArtist}>{track?.artist ?? t('nowPlaying.placeholderArtist')}</Text>
+          <TouchableOpacity onPress={handleArtistPress} disabled={!track?.artist}>
+            <Text style={[styles.trackArtist, track?.artist && styles.trackArtistTappable]}>
+              {track?.artist ?? t('nowPlaying.placeholderArtist')}
+            </Text>
+          </TouchableOpacity>
           {track?.album ? <Text style={styles.trackAlbum}>{track.album}</Text> : null}
         </View>
 
@@ -517,38 +511,35 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         animationType="fade"
         onRequestClose={() => setActionsVisible(false)}
       >
-        <Pressable style={styles.sheetBackdrop} onPress={() => setActionsVisible(false)} />
-        <Animated.View
-          style={[
-            styles.sheetContainer,
-            { paddingBottom: insets.bottom + 16, transform: [{ translateY: actionSheetAnim }] },
-          ]}
-        >
-          <Text style={styles.sheetTitle}>{track?.title ?? t('playlist.optionsTitle')}</Text>
-          <View style={styles.sheetSection}>
-            <TouchableOpacity
-              style={styles.sheetAction}
-              onPress={() => {
-                if (playlists.length === 0 && !loadingPlaylists) {
-                  loadPlaylists();
-                }
-                setActionsVisible(false);
-                setPlaylistPickerVisible(true);
-              }}
-            >
-              <Icon name="plus-circle" size={18} color="#ffffff" />
-              <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
-              <Icon name="trash-2" size={18} color="#fbbf24" />
-              <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
+        <View style={styles.centeredModalOverlay}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setActionsVisible(false)} />
+          <View style={styles.centeredModalContainer}>
+            <Text style={styles.sheetTitle}>{track?.title ?? t('playlist.optionsTitle')}</Text>
+            <View style={styles.sheetSection}>
+              <TouchableOpacity
+                style={styles.sheetAction}
+                onPress={() => {
+                  if (playlists.length === 0 && !loadingPlaylists) {
+                    loadPlaylists();
+                  }
+                  setActionsVisible(false);
+                  setPlaylistPickerVisible(true);
+                }}
+              >
+                <Icon name="plus-circle" size={18} color="#ffffff" />
+                <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
+                <Icon name="trash-2" size={18} color="#fbbf24" />
+                <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>
+              <Icon name="x" size={18} color="#ffffff" />
+              <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>
-            <Icon name="x" size={18} color="#ffffff" />
-            <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        </View>
       </Modal>
       <Modal
         transparent
@@ -556,40 +547,37 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         animationType="fade"
         onRequestClose={() => setPlaylistPickerVisible(false)}
       >
-        <Pressable style={styles.sheetBackdrop} onPress={() => setPlaylistPickerVisible(false)} />
-        <Animated.View
-          style={[
-            styles.sheetContainer,
-            { paddingBottom: insets.bottom + 16, transform: [{ translateY: playlistSheetAnim }] },
-          ]}
-        >
-          <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
-          {loadingPlaylists ? (
-            <ActivityIndicator color={onPrimary} />
-          ) : playlists.length === 0 ? (
-            <Text style={styles.sheetEmpty}>{t('playlist.noOtherPlaylists')}</Text>
-          ) : (
-            <FlatList
-              data={playlists}
-              keyExtractor={item => `${item.id}`}
-              style={styles.playlistList}
-              contentContainerStyle={styles.playlistListContent}
-              renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.sheetAction}
-                  onPress={() => handleAddToPlaylist(item.id)}
-                >
-                  <Icon name="folder-plus" size={18} color="#ffffff" />
-                  <Text style={styles.sheetActionText}>{item.name}</Text>
-                </TouchableOpacity>
-              )}
-            />
-          )}
-          <TouchableOpacity style={styles.sheetAction} onPress={() => setPlaylistPickerVisible(false)}>
-            <Icon name="x" size={18} color="#f87171" />
-            <Text style={[styles.sheetActionText, styles.sheetDangerText]}>{t('common.cancel')}</Text>
-          </TouchableOpacity>
-        </Animated.View>
+        <View style={styles.centeredModalOverlay}>
+          <Pressable style={StyleSheet.absoluteFillObject} onPress={() => setPlaylistPickerVisible(false)} />
+          <View style={styles.centeredModalContainer}>
+            <Text style={styles.sheetTitle}>{t('playlist.choosePlaylist')}</Text>
+            {loadingPlaylists ? (
+              <ActivityIndicator color={primary} />
+            ) : playlists.length === 0 ? (
+              <Text style={styles.sheetEmpty}>{t('playlist.noOtherPlaylists')}</Text>
+            ) : (
+              <FlatList
+                data={playlists}
+                keyExtractor={item => `${item.id}`}
+                style={styles.playlistList}
+                contentContainerStyle={styles.playlistListContent}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.sheetAction}
+                    onPress={() => handleAddToPlaylist(item.id)}
+                  >
+                    <Icon name="folder-plus" size={18} color="#ffffff" />
+                    <Text style={styles.sheetActionText}>{item.name}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+            <TouchableOpacity style={styles.sheetAction} onPress={() => setPlaylistPickerVisible(false)}>
+              <Icon name="x" size={18} color="#f87171" />
+              <Text style={[styles.sheetActionText, styles.sheetDangerText]}>{t('common.cancel')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -690,6 +678,9 @@ const styles = StyleSheet.create({
   trackArtist: {
     fontSize: 16,
     color: '#9090a5',
+  },
+  trackArtistTappable: {
+    opacity: 0.8,
   },
   trackAlbum: {
     fontSize: 14,
@@ -858,6 +849,30 @@ const styles = StyleSheet.create({
   },
   playlistListContent: {
     gap: 8,
+  },
+  centeredModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  centeredModalContainer: {
+    width: '100%',
+    maxWidth: 400,
+    maxHeight: '70%',
+    backgroundColor: '#0d0d0d',
+    borderRadius: 24,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    gap: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    shadowColor: '#000',
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: 10 },
+    elevation: 20,
   },
 });
 

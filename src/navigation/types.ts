@@ -14,7 +14,7 @@ export type PlaylistDetailParams = {
   trackCount?: number | null;
 };
 
-export type LibraryView = 'artists' | 'albums' | 'playlists' | 'downloads';
+export type LibraryView = 'artists' | 'playlists' | 'downloads';
 
 export type LibraryStackParamList = {
   LibraryMain:

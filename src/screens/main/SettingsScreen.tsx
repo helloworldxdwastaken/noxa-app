@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -6,7 +6,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -17,32 +16,27 @@ import { useLanguage } from '../../context/LanguageContext';
 import type { SupportedLanguage } from '../../i18n/translations';
 import { accentOptionsList, useThemeAccent } from '../../context/ThemeContext';
 import { useAccentColor } from '../../hooks/useAccentColor';
+import { useMiniPlayerVisibility } from '../../context/MiniPlayerContext';
 
 const SettingsScreen: React.FC = () => {
   const {
-    state: { baseUrl },
-    updateServerUrl,
+    state: { user },
     logout,
   } = useAuth();
+  
+  const { hide, show } = useMiniPlayerVisibility();
 
-  const [serverUrl, setServerUrl] = useState(baseUrl);
+  // Hide mini player when entering Settings, show when leaving
+  useEffect(() => {
+    hide();
+    return () => {
+      show();
+    };
+  }, [hide, show]);
+
   const { t, language, setLanguage } = useLanguage();
   const { accentId, setAccent } = useThemeAccent();
   const { primary } = useAccentColor();
-
-  const handleSaveServer = async () => {
-    if (!serverUrl.trim()) {
-      Alert.alert(t('common.error'), t('settings.serverInvalid'));
-      return;
-    }
-    try {
-      await updateServerUrl(serverUrl.trim());
-      Alert.alert(t('common.ok'), t('settings.serverSuccess'));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.error');
-      Alert.alert(t('common.error'), message);
-    }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -52,28 +46,25 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top + 12 }]}
+      style={styles.container}
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: 16, paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('settings.serverTitle')}</Text>
-          <Text style={styles.sectionSubtitle}>{t('settings.serverSubtitle')}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder={t('settings.serverPlaceholder')}
-            value={serverUrl}
-            onChangeText={setServerUrl}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TouchableOpacity style={[styles.button, { backgroundColor: primary }]} onPress={handleSaveServer}>
-            <Text style={styles.buttonText}>{t('settings.saveServer')}</Text>
-          </TouchableOpacity>
-        </View>
+        {/* User Info Section */}
+        {user && (
+          <View style={styles.userSection}>
+            <View style={[styles.userAvatar, { backgroundColor: primary }]}>
+              <Text style={styles.userAvatarText}>
+                {user.username?.[0]?.toUpperCase() || 'U'}
+              </Text>
+            </View>
+            <Text style={styles.username}>{user.username}</Text>
+            {user.email && <Text style={styles.userEmail}>{user.email}</Text>}
+          </View>
+        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{t('settings.languageTitle')}</Text>
@@ -159,6 +150,37 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     gap: 24,
+  },
+  userSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    gap: 12,
+  },
+  userAvatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+  },
+  userAvatarText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  username: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#ffffff',
+  },
+  userEmail: {
+    fontSize: 14,
+    color: '#9090a5',
   },
   section: {
     backgroundColor: '#121212',

@@ -87,7 +87,7 @@ const CreatePlaylistScreen: React.FC = () => {
   return (
     <View style={[styles.container, { paddingTop: insets.top + 32, paddingBottom: insets.bottom + 32 }]}>
       <View style={styles.heroCard}>
-        <View style={styles.heroIconCircle}>
+        <View style={[styles.heroIconCircle, { backgroundColor: `${primary}20` }]}>
           <Icon name="plus-square" size={28} color={primary} />
         </View>
         <Text style={styles.heroTitle}>{t('create.title')}</Text>
@@ -167,7 +167,6 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: 'rgba(29, 185, 84, 0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },

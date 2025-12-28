@@ -31,15 +31,6 @@ interface Artist {
   artwork?: string | null;
 }
 
-interface Album {
-  id: string;
-  title: string;
-  artist: string;
-  trackCount: number;
-  songs: Song[];
-  artwork?: string | null;
-}
-
 type Props = NativeStackScreenProps<LibraryStackParamList, 'LibraryMain'>;
 
 const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
@@ -116,34 +107,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
     return Object.values(grouped).sort((a, b) => a.name.localeCompare(b.name));
   }, [songs, t]);
 
-  // Group songs by album
-  const albums = useMemo<Album[]>(() => {
-    const grouped = songs.reduce(
-      (acc, song) => {
-        const albumTitle = song.album || t('library.unknownAlbum');
-        const key = `${albumTitle}-${song.artist}`;
-        if (!acc[key]) {
-          acc[key] = {
-            id: key,
-            title: albumTitle,
-            artist: song.artist,
-            trackCount: 0,
-            songs: [],
-            artwork: song.albumCover ?? null,
-          };
-        }
-        acc[key].songs.push(song);
-        acc[key].trackCount += 1;
-        if (!acc[key].artwork && song.albumCover) {
-          acc[key].artwork = song.albumCover;
-        }
-        return acc;
-      },
-      {} as Record<string, Album>,
-    );
-    return Object.values(grouped).sort((a, b) => a.title.localeCompare(b.title));
-  }, [songs, t]);
-
   const isLoading = songsLoading || playlistsLoading;
   const isRefetching = songsRefetching || playlistsRefetching;
 
@@ -157,8 +120,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
       switch (view) {
         case 'artists':
           return t('library.artists');
-        case 'albums':
-          return t('library.albums');
         case 'playlists':
           return t('library.playlists');
         case 'downloads':
@@ -172,7 +133,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
   const tabItems = useMemo(
     () => [
       { key: 'artists' as LibraryView, label: t('library.artists'), icon: 'mic' as const },
-      { key: 'albums' as LibraryView, label: t('library.albums'), icon: 'disc' as const },
       { key: 'playlists' as LibraryView, label: t('library.playlists'), icon: 'music' as const },
       { key: 'downloads' as LibraryView, label: t('library.downloads'), icon: 'download' as const },
     ],
@@ -211,34 +171,6 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
       </TouchableOpacity>
     ),
     [navigation, t],
-  );
-
-  const renderAlbum = useCallback(
-    ({ item }: { item: Album }) => (
-      <TouchableOpacity
-        style={styles.gridCard}
-        onPress={() =>
-          navigation.navigate('AlbumDetail', {
-            artistName: item.artist ?? null,
-            albumTitle: item.title,
-            songs: item.songs,
-          })
-        }
-      >
-        <ArtworkImage
-          uri={item.artwork}
-          size={140}
-          fallbackLabel={item.title?.[0]?.toUpperCase() ?? 'A'}
-        />
-        <Text style={styles.gridTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        <Text style={styles.gridSubtitle} numberOfLines={1}>
-          {item.artist}
-        </Text>
-      </TouchableOpacity>
-    ),
-    [navigation],
   );
 
   const renderPlaylist = useCallback(
@@ -299,10 +231,8 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
   const activeLabel = labelForView(activeView);
   const activeLabelLower = activeLabel.toLowerCase();
 
-  const listData =
-    activeView === 'artists' ? artists : activeView === 'albums' ? albums : playlists;
-  const listRenderer =
-    activeView === 'artists' ? renderArtist : activeView === 'albums' ? renderAlbum : renderPlaylist;
+  const listData = activeView === 'artists' ? artists : playlists;
+  const listRenderer = activeView === 'artists' ? renderArtist : renderPlaylist;
 
   return (
     <View style={styles.container}>
@@ -359,7 +289,7 @@ const LibraryScreen: React.FC<Props> = ({ navigation, route }) => {
             <View style={styles.centered}>
               <View style={styles.emptyIconCircle}>
                 <Icon
-                  name={activeView === 'artists' ? 'mic' : activeView === 'albums' ? 'disc' : 'music'}
+                  name={activeView === 'artists' ? 'mic' : 'music'}
                   size={28}
                   color="#8aa4ff"
                 />

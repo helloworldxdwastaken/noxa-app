@@ -113,7 +113,10 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
       .filter((song): song is Song => Boolean(song));
   }, [connectivity.isOffline, offlineState.playlists, offlineState.tracks, playlistId]);
 
-  const baseTracks = connectivity.isOffline ? offlineTracks : tracks;
+  const baseTracks = useMemo(
+    () => (connectivity.isOffline ? offlineTracks : tracks),
+    [connectivity.isOffline, offlineTracks, tracks],
+  );
 
   useEffect(() => {
     if (!isEditing) {
@@ -289,10 +292,14 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
   );
 
   const handleAddSongsShortcut = useCallback(() => {
-    const libraryNavigator = navigation.getParent();
-    const tabNavigator = libraryNavigator?.getParent?.();
-    const targetNavigator = (tabNavigator ?? libraryNavigator) as NavigationProp<ParamListBase> | undefined;
-    targetNavigator?.navigate('Search' as never);
+    // Navigate to Search tab from nested Library stack
+    // navigation.getParent() gets LibraryStack navigator
+    // navigation.getParent().getParent() gets the Tab navigator
+    const libraryNav = navigation.getParent();
+    const tabNav = libraryNav?.getParent?.();
+    if (tabNav) {
+      tabNav.navigate('Search' as never);
+    }
   }, [navigation]);
 
   const handleRemoveSelectedTrack = () => {
