@@ -240,7 +240,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
         artistName: track.artist,
         songs: artistTracks,
       });
-    } catch (error) {
+    } catch {
       Alert.alert(t('common.error'), t('common.error'));
     }
   }, [track?.artist, navigation, t]);

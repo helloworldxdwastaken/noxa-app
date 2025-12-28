@@ -1,6 +1,5 @@
 import React, { useEffect } from 'react';
 import {
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -50,7 +49,7 @@ const SettingsScreen: React.FC = () => {
       behavior={Platform.select({ ios: 'padding', android: undefined })}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: 16, paddingBottom: insets.bottom + 24 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
         showsVerticalScrollIndicator={false}
       >
         {/* User Info Section */}
@@ -149,6 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000000',
   },
   scrollContent: {
+    paddingTop: 16,
     gap: 24,
   },
   userSection: {
