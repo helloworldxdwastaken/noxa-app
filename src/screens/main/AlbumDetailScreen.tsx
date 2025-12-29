@@ -157,8 +157,15 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <View style={styles.trackList}>
-          {songs.map(track => (
-            <TouchableOpacity key={track.id} style={styles.trackRow} onPress={() => playSong(track).catch(() => { })}>
+          {songs.map((track, index) => (
+            <TouchableOpacity
+              key={track.id}
+              style={styles.trackRow}
+              onPress={() => {
+                const queue = songs.slice(index + 1);
+                playSong(track, queue).catch(() => { });
+              }}
+            >
               <View style={styles.trackMeta}>
                 <Text style={styles.trackTitle} numberOfLines={1}>
                   {track.title ?? t('library.unknownAlbum')}

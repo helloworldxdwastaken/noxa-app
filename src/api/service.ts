@@ -136,7 +136,9 @@ export const searchLibrary = async (
 
 export const fetchArtistTracks = async (artist: string): Promise<Song[]> => {
   try {
-    const response = await apiClient.get(`/api/library/artist/${encodeURIComponent(artist)}`);
+    const response = await apiClient.get(`/api/library/artist/${encodeURIComponent(artist)}`, {
+      params: { limit: 1000 },
+    });
     return mapSongs(Array.isArray(response.data) ? response.data : []);
   } catch (error) {
     return handleAxiosError(error, 'Unable to load artist tracks.');
@@ -145,7 +147,9 @@ export const fetchArtistTracks = async (artist: string): Promise<Song[]> => {
 
 export const fetchAlbumTracks = async (album: string): Promise<Song[]> => {
   try {
-    const response = await apiClient.get(`/api/library/album/${encodeURIComponent(album)}`);
+    const response = await apiClient.get(`/api/library/album/${encodeURIComponent(album)}`, {
+      params: { limit: 1000 },
+    });
     return mapSongs(Array.isArray(response.data) ? response.data : []);
   } catch (error) {
     return handleAxiosError(error, 'Unable to load album tracks.');
