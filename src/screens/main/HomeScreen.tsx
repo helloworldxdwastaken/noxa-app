@@ -185,7 +185,6 @@ const HomeScreen: React.FC = () => {
           uri={item.coverUrl}
           size={160}
           fallbackLabel={item.name?.[0]?.toUpperCase()}
-          useCache={true}
         />
       </View>
       <LinearGradient
@@ -343,7 +342,6 @@ const HomeScreen: React.FC = () => {
                     uri={generatedPlaylists[0].coverUrl}
                     size={500}
                     fallbackLabel={generatedPlaylists[0].name?.[0]?.toUpperCase()}
-                    useCache={true}
                   />
                 </View>
                 <LinearGradient
@@ -385,7 +383,6 @@ const HomeScreen: React.FC = () => {
                     uri={generatedPlaylists[1].coverUrl}
                     size={500}
                     fallbackLabel={generatedPlaylists[1].name?.[0]?.toUpperCase()}
-                    useCache={true}
                   />
                 </View>
                 <LinearGradient
