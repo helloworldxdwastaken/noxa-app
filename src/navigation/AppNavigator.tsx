@@ -375,6 +375,13 @@ const CustomTabBar = ({ state, navigation }: BottomTabBarProps) => {
 
   const handlePress = (routeName: string, key: string, isFocused: boolean) => {
     const event = navigation.emit({ type: 'tabPress', target: key, canPreventDefault: true });
+    
+    // If Library tab is pressed while already focused, navigate to root
+    if (isFocused && routeName === 'Library' && !event.defaultPrevented) {
+      navigation.navigate('Library', { screen: 'LibraryMain' });
+      return;
+    }
+    
     if (!isFocused && !event.defaultPrevented) {
       navigation.navigate(routeName);
     }
