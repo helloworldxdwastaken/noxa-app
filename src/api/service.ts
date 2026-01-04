@@ -288,15 +288,6 @@ export const removeTrackFromPlaylist = async (playlistId: number, musicId: numbe
   }
 };
 
-export const deleteTrack = async (musicId: number, deleteFile = false): Promise<void> => {
-  try {
-    await apiClient.delete(`/api/library/track/${musicId}`, {
-      params: { deleteFile },
-    });
-  } catch (error) {
-    return handleAxiosError(error, 'Failed to delete track.');
-  }
-};
 
 export const deletePlaylist = async (playlistId: number): Promise<void> => {
   try {

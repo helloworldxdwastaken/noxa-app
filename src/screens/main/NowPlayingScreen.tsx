@@ -32,7 +32,7 @@ import type { AppStackParamList } from '../../navigation/types';
 import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong, togglePlayback } from '../../services/player/PlayerService';
-import { addTrackToPlaylist, deleteTrack, fetchPlaylists, fetchArtistTracks } from '../../api/service';
+import { addTrackToPlaylist, fetchPlaylists, fetchArtistTracks } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
@@ -345,18 +345,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     }
   };
 
-  const handleDeleteTrack = async (permanent: boolean) => {
-    if (!track) {
-      return;
-    }
-    try {
-      await deleteTrack(Number(track.id), permanent);
-      Alert.alert('Removed', permanent ? 'Track deleted permanently.' : 'Track removed from library.');
-      setActionsVisible(false);
-    } catch (error) {
-      Alert.alert('Failed', error instanceof Error ? error.message : 'Unable to delete track');
-    }
-  };
 
   const handleProgressGesture = useCallback(
     (event: GestureResponderEvent) => {
@@ -528,10 +516,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
               >
                 <Icon name="plus-circle" size={18} color="#ffffff" />
                 <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.sheetAction} onPress={() => handleDeleteTrack(false)}>
-                <Icon name="trash-2" size={18} color="#fbbf24" />
-                <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
               </TouchableOpacity>
             </View>
             <TouchableOpacity style={styles.sheetAction} onPress={() => setActionsVisible(false)}>

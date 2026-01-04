@@ -22,7 +22,6 @@ import {
   fetchPlaylists,
   fetchSongs,
   addTrackToPlaylist,
-  deleteTrack,
 } from '../../api/service';
 import type { Playlist, Song } from '../../types/models';
 import ArtworkImage from '../../components/ArtworkImage';
@@ -106,7 +105,6 @@ const HomeScreen: React.FC = () => {
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
   const [addingPlaylistId, setAddingPlaylistId] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const [madeForYouScroll, setMadeForYouScroll] = useState(0);
   const [playlistsScroll, setPlaylistsScroll] = useState(0);
 
@@ -192,23 +190,6 @@ const HomeScreen: React.FC = () => {
     }
   };
 
-  const handleDeleteTrack = async (permanent: boolean) => {
-    if (!selectedTrack) {
-      return;
-    }
-    try {
-      setDeleting(true);
-      await deleteTrack(selectedTrack.id, permanent);
-      Alert.alert(t('common.ok'), permanent ? t('common.deleted') : t('common.removed'));
-      refetchTracks();
-    } catch (error) {
-      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error'));
-    } finally {
-      setDeleting(false);
-      setTrackMenuVisible(false);
-      setSelectedTrack(null);
-    }
-  };
 
   const renderRecentTrack = ({ item }: { item: Song }) => (
     <TouchableOpacity style={styles.trackCard} onPress={() => handlePlayTrack(item)}>
@@ -503,14 +484,6 @@ const HomeScreen: React.FC = () => {
               >
                 <Icon name="plus-circle" size={18} color="#ffffff" />
                 <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.sheetAction}
-                onPress={() => handleDeleteTrack(false)}
-                disabled={deleting}
-              >
-                <Icon name="minus-circle" size={18} color="#fbbf24" />
-                <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>
                 <Icon name="x" size={18} color="#ffffff" />

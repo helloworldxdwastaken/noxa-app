@@ -22,7 +22,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   addTrackToPlaylist,
   deletePlaylist,
-  deleteTrack,
   fetchPlaylistTracks,
   removeTrackFromPlaylist,
   reorderPlaylist,
@@ -352,23 +351,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
     }
   };
 
-  const handleDeleteTrackFromLibrary = async (permanent: boolean) => {
-    if (!selectedTrack) {
-      return;
-    }
-    try {
-      await deleteTrack(selectedTrack.id, permanent);
-      Alert.alert(
-        t('common.ok'),
-        permanent ? t('common.deletePermanent') : t('common.removeFromLibrary'),
-      );
-      closeTrackMenu();
-      refetch();
-      queryClient.invalidateQueries({ queryKey: ['playlists'] });
-    } catch (error) {
-      Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error'));
-    }
-  };
 
   const startDrag = (index: number) => {
     if (!isEditing) {
@@ -691,13 +673,6 @@ const PlaylistDetailScreen: React.FC<Props> = ({ route, navigation }) => {
             >
               <Icon name="minus-circle" size={18} color="#fbbf24" />
               <Text style={styles.sheetActionText}>{t('common.removeFromPlaylist')}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.sheetAction}
-              onPress={() => handleDeleteTrackFromLibrary(false)}
-            >
-              <Icon name="trash-2" size={18} color="#fbbf24" />
-              <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>

@@ -18,7 +18,7 @@ import type { LibraryStackParamList } from '../../navigation/types';
 import type { Song } from '../../types/models';
 import { playSong } from '../../services/player/PlayerService';
 import ArtworkImage from '../../components/ArtworkImage';
-import { addTrackToPlaylist, deleteTrack, fetchAlbumTracks, fetchPlaylists } from '../../api/service';
+import { addTrackToPlaylist, fetchAlbumTracks, fetchPlaylists } from '../../api/service';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAccentColor } from '../../hooks/useAccentColor';
 import { useConnectivity } from '../../hooks/useConnectivity';
@@ -38,7 +38,6 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [playlistPickerVisible, setPlaylistPickerVisible] = useState(false);
   const [selectedTrack, setSelectedTrack] = useState<Song | null>(null);
   const [addingPlaylistId, setAddingPlaylistId] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
   // If songs are not passed, fetch them
   const { data: fetchedSongs } = useQuery({
@@ -96,34 +95,6 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   };
 
-  const handleDeleteTrack = async (permanent: boolean) => {
-    if (!selectedTrack) {
-      return;
-    }
-    Alert.alert(
-      permanent ? t('common.deletePermanent') : t('common.removeFromLibrary'),
-      permanent ? t('playlist.deleteConfirm') : t('playlist.removePrompt', { track: selectedTrack.title }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: permanent ? t('common.deletePermanent') : t('common.removeFromLibrary'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setDeleting(true);
-              await deleteTrack(selectedTrack.id, permanent);
-              Alert.alert(t('common.ok'), permanent ? t('common.deleted') : t('common.removed'));
-            } catch (error) {
-              Alert.alert(t('common.error'), error instanceof Error ? error.message : t('common.error'));
-            } finally {
-              setDeleting(false);
-              closeTrackMenu();
-            }
-          },
-        },
-      ],
-    );
-  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -202,18 +173,6 @@ const AlbumDetailScreen: React.FC<Props> = ({ navigation, route }) => {
               <Icon name="plus-circle" size={18} color="#ffffff" />
               <Text style={styles.sheetActionText}>{t('common.addToPlaylist')}</Text>
             </TouchableOpacity>
-            {!connectivity.isOffline ? (
-              <>
-                <TouchableOpacity
-                  style={styles.sheetAction}
-                  onPress={() => handleDeleteTrack(false)}
-                  disabled={deleting}
-                >
-                  <Icon name="minus-circle" size={18} color="#fbbf24" />
-                  <Text style={styles.sheetActionText}>{t('common.removeFromLibrary')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : null}
             <TouchableOpacity style={styles.sheetAction} onPress={closeTrackMenu}>
               <Icon name="x" size={18} color="#ffffff" />
               <Text style={styles.sheetActionText}>{t('common.cancel')}</Text>
