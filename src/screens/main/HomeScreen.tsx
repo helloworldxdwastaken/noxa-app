@@ -56,7 +56,6 @@ const HomeScreen: React.FC = () => {
   const {
     data: playlists = [],
     isLoading: playlistsLoading,
-    isPlaceholderData: playlistsIsPlaceholder,
     refetch: refetchPlaylists,
   } = useQuery({
     queryKey: ['playlists'],
@@ -68,7 +67,6 @@ const HomeScreen: React.FC = () => {
   const {
     data: generatedPlaylists = [],
     isLoading: generatedLoading,
-    isPlaceholderData: generatedIsPlaceholder,
     refetch: refetchGenerated,
   } = useQuery({
     queryKey: ['playlists', 'generated'],
@@ -369,7 +367,7 @@ const HomeScreen: React.FC = () => {
         {generatedLoading && generatedPlaylists.length === 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.skeletonText, { width: 120, height: 20 }]} />
+              <View style={[styles.skeletonText, styles.skeletonTitle]} />
             </View>
             <ScrollView
               horizontal
@@ -379,8 +377,8 @@ const HomeScreen: React.FC = () => {
               {[1, 2, 3].map(i => (
                 <View key={i} style={[styles.playlistCard, styles.skeletonCard]}>
                   <View style={styles.skeletonArtwork} />
-                  <View style={[styles.skeletonText, { width: '80%', height: 14, marginTop: 8 }]} />
-                  <View style={[styles.skeletonText, { width: '60%', height: 12, marginTop: 4 }]} />
+                  <View style={[styles.skeletonText, styles.skeletonCardTitle]} />
+                  <View style={[styles.skeletonText, styles.skeletonCardSubtitle]} />
                 </View>
               ))}
             </ScrollView>
@@ -429,7 +427,7 @@ const HomeScreen: React.FC = () => {
         {playlistsLoading && playlists.length === 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <View style={[styles.skeletonText, { width: 100, height: 20 }]} />
+              <View style={[styles.skeletonText, styles.skeletonPlaylistsTitle]} />
             </View>
             <ScrollView
               horizontal
@@ -439,8 +437,8 @@ const HomeScreen: React.FC = () => {
               {[1, 2, 3].map(i => (
                 <View key={i} style={[styles.playlistCard, styles.skeletonCard]}>
                   <View style={styles.skeletonArtwork} />
-                  <View style={[styles.skeletonText, { width: '80%', height: 14, marginTop: 8 }]} />
-                  <View style={[styles.skeletonText, { width: '60%', height: 12, marginTop: 4 }]} />
+                  <View style={[styles.skeletonText, styles.skeletonCardTitle]} />
+                  <View style={[styles.skeletonText, styles.skeletonCardSubtitle]} />
                 </View>
               ))}
             </ScrollView>
@@ -911,6 +909,24 @@ const styles = StyleSheet.create({
   skeletonText: {
     backgroundColor: '#2a2a2a',
     borderRadius: 4,
+  },
+  skeletonTitle: {
+    width: 120,
+    height: 20,
+  },
+  skeletonPlaylistsTitle: {
+    width: 100,
+    height: 20,
+  },
+  skeletonCardTitle: {
+    width: '80%',
+    height: 14,
+    marginTop: 8,
+  },
+  skeletonCardSubtitle: {
+    width: '60%',
+    height: 12,
+    marginTop: 4,
   },
 });
 
