@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -34,7 +34,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 import { useAccentColor } from '../../hooks/useAccentColor';
 import LinearGradient from 'react-native-linear-gradient';
-import { preloadPlaylistImages } from '../../utils/imageCache';
 
 const TRACK_SEPARATOR_STYLE = { height: 16 };
 const TRACK_FOOTER_STYLE = { height: 8 };
@@ -113,12 +112,6 @@ const HomeScreen: React.FC = () => {
   const [madeForYouScroll, setMadeForYouScroll] = useState(0);
   const [playlistsScroll, setPlaylistsScroll] = useState(0);
 
-  // Preload generated playlist images when they're fetched
-  useEffect(() => {
-    if (generatedPlaylists.length > 0) {
-      preloadPlaylistImages(generatedPlaylists);
-    }
-  }, [generatedPlaylists]);
 
   const handlePlayTrack = useCallback(
     (song: Song) => {
