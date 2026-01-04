@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import Icon from './Icon';
+import { Image, StyleSheet } from 'react-native';
 
 import { useAuth } from '../context/AuthContext';
 import { getCachedImage } from '../utils/imageCache';
+
+// Default artwork image
+const DEFAULT_ARTWORK = require('../../assets/default artwork_.jpg');
 
 type ArtworkImageProps = {
   uri?: string | null;
@@ -22,15 +24,13 @@ const isAbsoluteUri = (value: string) =>
 const ArtworkImage: React.FC<ArtworkImageProps> = ({ 
   uri, 
   size, 
-  fallbackLabel, 
   shape = 'rounded',
   useCache = false,
 }) => {
   const {
     state: { baseUrl },
   } = useAuth();
-  const [failed, setFailed] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [imageSource, setImageSource] = useState(DEFAULT_ARTWORK);
   const [cachedUri, setCachedUri] = useState<string | null>(null);
 
   const resolvedUri = useMemo(() => {
@@ -54,73 +54,37 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({
             setCachedUri(cached);
           }
         })
-        .catch(error => {
-          console.warn('Failed to get cached image:', error);
+        .catch(() => {
+          // Silently fail, use default artwork
         });
     }
   }, [resolvedUri, useCache]);
 
+  // Update image source when URI is available
+  useEffect(() => {
+    const finalUri = useCache && cachedUri ? cachedUri : resolvedUri;
+    if (finalUri) {
+      setImageSource({ uri: finalUri });
+    } else {
+      setImageSource(DEFAULT_ARTWORK);
+    }
+  }, [resolvedUri, cachedUri, useCache]);
+
   const borderRadius = shape === 'circle' ? size / 2 : 12;
-  const imageUri = useCache && cachedUri ? cachedUri : resolvedUri;
-
-  if (imageUri && !failed) {
-    return (
-      <View style={{ width: size, height: size, borderRadius }}>
-        {loading && (
-          <View style={[styles.placeholder, { width: size, height: size, borderRadius }]} />
-        )}
-        <Image
-          source={{ uri: imageUri }}
-          style={[styles.image, { width: size, height: size, borderRadius }]}
-          onError={() => setFailed(true)}
-          onLoadStart={() => setLoading(true)}
-          onLoad={() => setLoading(false)}
-          onLoadEnd={() => setLoading(false)}
-        />
-      </View>
-    );
-  }
-
-  const showInitial = Boolean(fallbackLabel && fallbackLabel !== '♪');
 
   return (
-    <View
-      style={[
-        styles.fallback,
-        {
-          width: size,
-          height: size,
-          borderRadius,
-        },
-      ]}
-    >
-      {showInitial ? (
-        <Text style={styles.fallbackText}>{fallbackLabel}</Text>
-      ) : (
-        <Icon name="music" size={Math.max(16, size * 0.4)} color="#9ca3af" />
-      )}
-    </View>
+    <Image
+      source={imageSource}
+      style={[styles.image, { width: size, height: size, borderRadius }]}
+      defaultSource={DEFAULT_ARTWORK}
+      onError={() => setImageSource(DEFAULT_ARTWORK)}
+    />
   );
 };
 
 const styles = StyleSheet.create({
   image: {
     backgroundColor: '#1b1b21',
-  },
-  placeholder: {
-    position: 'absolute',
-    backgroundColor: '#2a2a2a',
-    zIndex: 1,
-  },
-  fallback: {
-    backgroundColor: '#1f2937',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  fallbackText: {
-    color: '#9ca3af',
-    fontSize: 20,
-    fontWeight: '600',
   },
 });
 
