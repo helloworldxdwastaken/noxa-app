@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -34,6 +34,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
 import { useAccentColor } from '../../hooks/useAccentColor';
 import LinearGradient from 'react-native-linear-gradient';
+import { preloadPlaylistImages } from '../../utils/imageCache';
 
 const TRACK_SEPARATOR_STYLE = { height: 16 };
 const TRACK_FOOTER_STYLE = { height: 8 };
@@ -112,6 +113,13 @@ const HomeScreen: React.FC = () => {
   const [madeForYouScroll, setMadeForYouScroll] = useState(0);
   const [playlistsScroll, setPlaylistsScroll] = useState(0);
 
+  // Preload generated playlist images when they're fetched
+  useEffect(() => {
+    if (generatedPlaylists.length > 0) {
+      preloadPlaylistImages(generatedPlaylists);
+    }
+  }, [generatedPlaylists]);
+
   const handlePlayTrack = useCallback(
     (song: Song) => {
       const queue = recentTracks.filter(track => track.id !== song.id);
@@ -145,6 +153,46 @@ const HomeScreen: React.FC = () => {
           uri={item.coverUrl}
           size={160}
           fallbackLabel={item.name?.[0]?.toUpperCase()}
+        />
+      </View>
+      <LinearGradient
+        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.3)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.95)']}
+        locations={[0, 0.4, 0.7, 1]}
+        style={styles.playlistGradient}
+      >
+        <View style={styles.playlistTextContainer}>
+          <Text style={styles.playlistName} numberOfLines={2}>
+            {item.name}
+          </Text>
+          <Text style={styles.playlistTrackCount}>{item.trackCount} tracks</Text>
+        </View>
+      </LinearGradient>
+    </TouchableOpacity>
+  );
+
+  // Render function for generated playlists with image caching
+  const renderCachedPlaylistItem = ({ item }: { item: Playlist }) => (
+    <TouchableOpacity
+      style={styles.playlistCard}
+      onPress={() => {
+        navigation.navigate('Library', {
+          screen: 'PlaylistDetail',
+          params: {
+            playlistId: item.id,
+            playlistName: item.name,
+            description: item.description,
+            coverUrl: item.coverUrl ?? undefined,
+            trackCount: item.trackCount,
+          },
+        });
+      }}
+    >
+      <View style={styles.playlistArtwork}>
+        <ArtworkImage
+          uri={item.coverUrl}
+          size={160}
+          fallbackLabel={item.name?.[0]?.toUpperCase()}
+          useCache={true}
         />
       </View>
       <LinearGradient
@@ -302,6 +350,7 @@ const HomeScreen: React.FC = () => {
                     uri={generatedPlaylists[0].coverUrl}
                     size={500}
                     fallbackLabel={generatedPlaylists[0].name?.[0]?.toUpperCase()}
+                    useCache={true}
                   />
                 </View>
                 <LinearGradient
@@ -343,6 +392,7 @@ const HomeScreen: React.FC = () => {
                     uri={generatedPlaylists[1].coverUrl}
                     size={500}
                     fallbackLabel={generatedPlaylists[1].name?.[0]?.toUpperCase()}
+                    useCache={true}
                   />
                 </View>
                 <LinearGradient
@@ -391,7 +441,7 @@ const HomeScreen: React.FC = () => {
             <FlatList
               horizontal
               data={generatedPlaylists.slice(2)}
-              renderItem={renderPlaylistItem}
+              renderItem={renderCachedPlaylistItem}
               keyExtractor={item => `gen-${item.id}`}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.horizontalList}

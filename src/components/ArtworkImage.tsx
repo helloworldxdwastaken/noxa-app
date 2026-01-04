@@ -1,14 +1,16 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Image, StyleSheet, Text, View } from 'react-native';
 import Icon from './Icon';
 
 import { useAuth } from '../context/AuthContext';
+import { getCachedImage } from '../utils/imageCache';
 
 type ArtworkImageProps = {
   uri?: string | null;
   size: number;
   fallbackLabel?: string;
   shape?: 'rounded' | 'circle';
+  useCache?: boolean; // Enable caching for specific images
 };
 
 const isAbsoluteUri = (value: string) =>
@@ -17,12 +19,19 @@ const isAbsoluteUri = (value: string) =>
   value.startsWith('file://') ||
   value.startsWith('data:');
 
-const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, shape = 'rounded' }) => {
+const ArtworkImage: React.FC<ArtworkImageProps> = ({ 
+  uri, 
+  size, 
+  fallbackLabel, 
+  shape = 'rounded',
+  useCache = false,
+}) => {
   const {
     state: { baseUrl },
   } = useAuth();
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cachedUri, setCachedUri] = useState<string | null>(null);
 
   const resolvedUri = useMemo(() => {
     if (!uri) {
@@ -36,16 +45,32 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, s
     return `${normalizedBase}${normalizedPath}`;
   }, [baseUrl, uri]);
 
-  const borderRadius = shape === 'circle' ? size / 2 : 12;
+  // Load cached image if caching is enabled
+  useEffect(() => {
+    if (useCache && resolvedUri) {
+      getCachedImage(resolvedUri)
+        .then(cached => {
+          if (cached) {
+            setCachedUri(cached);
+          }
+        })
+        .catch(error => {
+          console.warn('Failed to get cached image:', error);
+        });
+    }
+  }, [resolvedUri, useCache]);
 
-  if (resolvedUri && !failed) {
+  const borderRadius = shape === 'circle' ? size / 2 : 12;
+  const imageUri = useCache && cachedUri ? cachedUri : resolvedUri;
+
+  if (imageUri && !failed) {
     return (
       <View style={{ width: size, height: size, borderRadius }}>
         {loading && (
           <View style={[styles.placeholder, { width: size, height: size, borderRadius }]} />
         )}
         <Image
-          source={{ uri: resolvedUri }}
+          source={{ uri: imageUri }}
           style={[styles.image, { width: size, height: size, borderRadius }]}
           onError={() => setFailed(true)}
           onLoadStart={() => setLoading(true)}
