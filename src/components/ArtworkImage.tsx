@@ -22,6 +22,7 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, s
     state: { baseUrl },
   } = useAuth();
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const resolvedUri = useMemo(() => {
     if (!uri) {
@@ -39,11 +40,19 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, s
 
   if (resolvedUri && !failed) {
     return (
-      <Image
-        source={{ uri: resolvedUri }}
-        style={[styles.image, { width: size, height: size, borderRadius }]}
-        onError={() => setFailed(true)}
-      />
+      <View style={{ width: size, height: size, borderRadius }}>
+        {loading && (
+          <View style={[styles.placeholder, { width: size, height: size, borderRadius }]} />
+        )}
+        <Image
+          source={{ uri: resolvedUri }}
+          style={[styles.image, { width: size, height: size, borderRadius }]}
+          onError={() => setFailed(true)}
+          onLoadStart={() => setLoading(true)}
+          onLoad={() => setLoading(false)}
+          onLoadEnd={() => setLoading(false)}
+        />
+      </View>
     );
   }
 
@@ -72,6 +81,11 @@ const ArtworkImage: React.FC<ArtworkImageProps> = ({ uri, size, fallbackLabel, s
 const styles = StyleSheet.create({
   image: {
     backgroundColor: '#1b1b21',
+  },
+  placeholder: {
+    position: 'absolute',
+    backgroundColor: '#2a2a2a',
+    zIndex: 1,
   },
   fallback: {
     backgroundColor: '#1f2937',

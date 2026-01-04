@@ -56,19 +56,25 @@ const HomeScreen: React.FC = () => {
   const {
     data: playlists = [],
     isLoading: playlistsLoading,
+    isPlaceholderData: playlistsIsPlaceholder,
     refetch: refetchPlaylists,
   } = useQuery({
     queryKey: ['playlists'],
     queryFn: fetchPlaylists,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
   });
 
   const {
     data: generatedPlaylists = [],
     isLoading: generatedLoading,
+    isPlaceholderData: generatedIsPlaceholder,
     refetch: refetchGenerated,
   } = useQuery({
     queryKey: ['playlists', 'generated'],
     queryFn: fetchGeneratedPlaylists,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes cache
   });
 
   const {
@@ -255,7 +261,21 @@ const HomeScreen: React.FC = () => {
         </View>
 
         {/* Daily Mix & Recommended Horizontal Section */}
-        {generatedPlaylists.length > 0 && (
+        {generatedLoading && generatedPlaylists.length === 0 ? (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.featuredScrollContainer}
+          >
+            {/* Skeleton loaders */}
+            <View style={[styles.dailyMixBanner, styles.skeletonBanner]}>
+              <View style={styles.skeletonGradient} />
+            </View>
+            <View style={[styles.dailyMixBanner, styles.skeletonBanner]}>
+              <View style={styles.skeletonGradient} />
+            </View>
+          </ScrollView>
+        ) : generatedPlaylists.length > 0 ? (
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -343,10 +363,29 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             )}
           </ScrollView>
-        )}
+        ) : null}
 
         {/* Made For You Section */}
-        {generatedPlaylists.length > 2 && (
+        {generatedLoading && generatedPlaylists.length === 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.skeletonText, { width: 120, height: 20 }]} />
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+            >
+              {[1, 2, 3].map(i => (
+                <View key={i} style={[styles.playlistCard, styles.skeletonCard]}>
+                  <View style={styles.skeletonArtwork} />
+                  <View style={[styles.skeletonText, { width: '80%', height: 14, marginTop: 8 }]} />
+                  <View style={[styles.skeletonText, { width: '60%', height: 12, marginTop: 4 }]} />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        ) : generatedPlaylists.length > 2 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('home.madeForYou') ?? 'Made For You'}</Text>
@@ -384,10 +423,29 @@ const HomeScreen: React.FC = () => {
               </View>
             )}
           </View>
-        )}
+        ) : null}
 
         {/* Your Playlists Section */}
-        {playlists.length > 0 && (
+        {playlistsLoading && playlists.length === 0 ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <View style={[styles.skeletonText, { width: 100, height: 20 }]} />
+            </View>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+            >
+              {[1, 2, 3].map(i => (
+                <View key={i} style={[styles.playlistCard, styles.skeletonCard]}>
+                  <View style={styles.skeletonArtwork} />
+                  <View style={[styles.skeletonText, { width: '80%', height: 14, marginTop: 8 }]} />
+                  <View style={[styles.skeletonText, { width: '60%', height: 12, marginTop: 4 }]} />
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        ) : playlists.length > 0 ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>{t('home.playlists')}</Text>
@@ -435,7 +493,7 @@ const HomeScreen: React.FC = () => {
               </View>
             )}
           </View>
-        )}
+        ) : null}
 
         {/* Recently Added */}
         {recentTracks.length > 0 && (
@@ -831,6 +889,28 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+  },
+  // Skeleton loader styles
+  skeletonBanner: {
+    backgroundColor: '#1a1a1a',
+  },
+  skeletonGradient: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#1a1a1a',
+    opacity: 0.3,
+  },
+  skeletonCard: {
+    backgroundColor: '#1a1a1a',
+  },
+  skeletonArtwork: {
+    width: '100%',
+    aspectRatio: 1,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+  },
+  skeletonText: {
+    backgroundColor: '#2a2a2a',
+    borderRadius: 4,
   },
 });
 
