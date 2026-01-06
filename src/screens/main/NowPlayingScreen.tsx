@@ -4,6 +4,7 @@ import {
   Alert,
   FlatList,
   Animated,
+  Easing,
   GestureResponderEvent,
   ImageBackground,
   Modal,
@@ -84,6 +85,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
+  const lyricTransitionAnim = useRef(new Animated.Value(0)).current;
   const shuffleBackupRef = useRef<Track[] | null>(null);
   const shuffleEnabledRef = useRef(false);
   const shuffleToggleInProgressRef = useRef(false);
@@ -321,17 +323,20 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     return -1;
   }, [syncedLyrics, progress.position]);
 
-  // Auto-scroll to current lyric
+  // Animate lyrics transition when index changes
   useEffect(() => {
     if (currentLyricIndex >= 0 && currentLyricIndex !== lastHighlightedIndex.current && lyricsVisible) {
       lastHighlightedIndex.current = currentLyricIndex;
-      // Scroll to approximately center the current line
-      // Each line is roughly 50px height (34 line height + 16 gap)
-      const lineHeight = 50;
-      const scrollPosition = Math.max(0, (currentLyricIndex * lineHeight) - 150);
-      lyricsScrollRef.current?.scrollTo({ y: scrollPosition, animated: true });
+      // Smooth scroll-up animation
+      lyricTransitionAnim.setValue(1);
+      Animated.timing(lyricTransitionAnim, {
+        toValue: 0,
+        duration: 300,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }).start();
     }
-  }, [currentLyricIndex, lyricsVisible]);
+  }, [currentLyricIndex, lyricsVisible, lyricTransitionAnim]);
 
   const handleLyricsToggle = useCallback(() => {
     setLyricsVisible(prev => !prev);
@@ -479,9 +484,25 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               )
             )}
-            {/* Lyrics view - replaces artwork completely */}
+            {/* Lyrics view - replaces artwork completely with smooth transition */}
             {lyricsVisible && (
-              <View style={styles.lyricsOverlay}>
+              <Animated.View 
+                style={[
+                  styles.lyricsOverlay,
+                  {
+                    transform: [{
+                      translateY: lyricTransitionAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0, 20],
+                      }),
+                    }],
+                    opacity: lyricTransitionAnim.interpolate({
+                      inputRange: [0, 0.5, 1],
+                      outputRange: [1, 0.7, 0.5],
+                    }),
+                  },
+                ]}
+              >
                 {lyricsLoading ? (
                   <Text style={styles.lyricsStatusText}>Loading...</Text>
                 ) : lyricsError ? (
@@ -524,20 +545,22 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 ) : (
                   <Text style={styles.lyricsStatusText}>No lyrics</Text>
                 )}
-              </View>
+              </Animated.View>
             )}
           </Animated.View>
-          {/* Lyrics toggle button */}
-          <TouchableOpacity
-            style={[styles.lyricsButton, lyricsVisible && styles.lyricsButtonActive]}
-            onPress={handleLyricsToggle}
-          >
-            <Icon name="quote" size={18} color={lyricsVisible ? primary : '#ffffff'} />
-          </TouchableOpacity>
         </View>
 
         <View style={styles.trackInfo}>
-          <Text style={styles.trackTitle}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
+          <View style={styles.trackTitleRow}>
+            <Text style={styles.trackTitle} numberOfLines={2}>{track?.title ?? t('nowPlaying.placeholderTitle')}</Text>
+            {/* Lyrics toggle button - next to song title */}
+            <TouchableOpacity
+              style={[styles.lyricsButton, lyricsVisible && styles.lyricsButtonActive]}
+              onPress={handleLyricsToggle}
+            >
+              <Icon name="quote" size={16} color={lyricsVisible ? primary : 'rgba(255,255,255,0.6)'} />
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity onPress={handleArtistPress} disabled={!track?.artist}>
             <Text style={[styles.trackArtist, track?.artist && styles.trackArtistTappable]}>
               {track?.artist ?? t('nowPlaying.placeholderArtist')}
@@ -786,33 +809,30 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden',
+    // No overflow:hidden - allows shadow/glow to show
   },
   lyricsButton: {
-    position: 'absolute',
-    bottom: -12,
-    right: 20,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    marginLeft: 8,
   },
   lyricsButtonActive: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   // Lyrics view - replaces artwork, no background
   lyricsOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    width: 300,
+    height: 300,
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 16,
-    gap: 6,
+    gap: 8,
+    overflow: 'hidden',
   },
   lyricLineFar: {
     fontSize: 12,
@@ -881,11 +901,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
   },
+  trackTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+  },
   trackTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '700',
     color: '#ffffff',
     textAlign: 'center',
+    flexShrink: 1,
   },
   trackArtist: {
     fontSize: 16,
