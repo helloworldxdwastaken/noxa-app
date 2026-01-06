@@ -465,18 +465,21 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.artworkContainer}>
           <Animated.View style={[styles.artworkWrapper, styles.artworkGlowBase, { shadowColor: primary }, artworkAnimatedStyle]}>
-            {track ? (
-              <ArtworkImage
-                uri={track.artwork ?? undefined}
-                size={300}
-                fallbackLabel={track.title?.[0]?.toUpperCase()}
-              />
-            ) : (
-              <View style={styles.placeholderArtwork}>
-                <Icon name="music" size={64} color="#8aa4ff" />
-              </View>
+            {/* Show artwork only when lyrics are hidden */}
+            {!lyricsVisible && (
+              track ? (
+                <ArtworkImage
+                  uri={track.artwork ?? undefined}
+                  size={300}
+                  fallbackLabel={track.title?.[0]?.toUpperCase()}
+                />
+              ) : (
+                <View style={styles.placeholderArtwork}>
+                  <Icon name="music" size={64} color="#8aa4ff" />
+                </View>
+              )
             )}
-            {/* Floating Lyrics on Artwork - no container, just text */}
+            {/* Lyrics view - replaces artwork completely */}
             {lyricsVisible && (
               <View style={styles.lyricsOverlay}>
                 {lyricsLoading ? (
@@ -485,9 +488,15 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.lyricsStatusText}>No lyrics found</Text>
                 ) : syncedLyrics.length > 0 ? (
                   <>
-                    {/* Previous line */}
+                    {/* Previous line -2 */}
+                    {currentLyricIndex > 1 && syncedLyrics[currentLyricIndex - 2] && (
+                      <Text style={styles.lyricLineFar} numberOfLines={1}>
+                        {syncedLyrics[currentLyricIndex - 2].text}
+                      </Text>
+                    )}
+                    {/* Previous line -1 */}
                     {currentLyricIndex > 0 && syncedLyrics[currentLyricIndex - 1] && (
-                      <Text style={styles.lyricLinePrev} numberOfLines={2}>
+                      <Text style={styles.lyricLinePrev} numberOfLines={1}>
                         {syncedLyrics[currentLyricIndex - 1].text}
                       </Text>
                     )}
@@ -497,10 +506,16 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                         {syncedLyrics[currentLyricIndex].text}
                       </Text>
                     )}
-                    {/* Next line */}
+                    {/* Next line +1 */}
                     {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex + 1] && (
-                      <Text style={styles.lyricLineNext} numberOfLines={2}>
+                      <Text style={styles.lyricLineNext} numberOfLines={1}>
                         {syncedLyrics[currentLyricIndex + 1].text}
+                      </Text>
+                    )}
+                    {/* Next line +2 */}
+                    {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex + 2] && (
+                      <Text style={styles.lyricLineFar} numberOfLines={1}>
+                        {syncedLyrics[currentLyricIndex + 2].text}
                       </Text>
                     )}
                   </>
@@ -790,15 +805,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  // Floating lyrics overlay - transparent, text with shadows
+  // Lyrics view - replaces artwork
   lyricsOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(15,15,20,0.95)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    gap: 10,
+    paddingHorizontal: 16,
+    gap: 6,
+  },
+  lyricLineFar: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.3)',
+    textAlign: 'center',
+    fontWeight: '400',
+    lineHeight: 18,
   },
   lyricLinePrev: {
     fontSize: 14,
@@ -806,40 +828,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
     lineHeight: 20,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   lyricLineCurrent: {
-    fontSize: 20,
+    fontSize: 18,
     color: '#ffffff',
     textAlign: 'center',
-    fontWeight: '800',
-    lineHeight: 28,
-    textShadowColor: 'rgba(0,0,0,0.9)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
-    marginVertical: 8,
+    fontWeight: '700',
+    lineHeight: 26,
+    marginVertical: 6,
   },
   lyricLineNext: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.45)',
     textAlign: 'center',
     fontWeight: '500',
-    fontStyle: 'italic',
     lineHeight: 20,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   lyricsStatusText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.8)',
+    color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     fontStyle: 'italic',
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
   },
   artworkGlowBase: {
     shadowOpacity: 0.6,
