@@ -80,7 +80,6 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [plainLyrics, setPlainLyrics] = useState<string[]>([]);
   const [lyricsLoading, setLyricsLoading] = useState(false);
   const [lyricsError, setLyricsError] = useState(false);
-  const lyricsScrollRef = useRef<ScrollView>(null);
   const lastHighlightedIndex = useRef<number>(-1);
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
@@ -835,42 +834,42 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   lyricLineFar: {
-    fontSize: 12,
+    fontSize: 13,
     color: 'rgba(255,255,255,0.35)',
     textAlign: 'center',
     fontWeight: '400',
-    lineHeight: 18,
+    lineHeight: 19,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   lyricLinePrev: {
-    fontSize: 14,
+    fontSize: 15,
     color: 'rgba(255,255,255,0.6)',
     textAlign: 'center',
     fontWeight: '500',
-    lineHeight: 20,
+    lineHeight: 21,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
   },
   lyricLineCurrent: {
-    fontSize: 18,
+    fontSize: 19,
     color: '#ffffff',
     textAlign: 'center',
     fontWeight: '700',
-    lineHeight: 26,
+    lineHeight: 27,
     marginVertical: 6,
     textShadowColor: 'rgba(0,0,0,0.95)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 6,
   },
   lyricLineNext: {
-    fontSize: 14,
+    fontSize: 15,
     color: 'rgba(255,255,255,0.55)',
     textAlign: 'center',
     fontWeight: '500',
-    lineHeight: 20,
+    lineHeight: 21,
     textShadowColor: 'rgba(0,0,0,0.9)',
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 4,
