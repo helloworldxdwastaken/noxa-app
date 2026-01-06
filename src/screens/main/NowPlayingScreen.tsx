@@ -476,7 +476,7 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 />
                 <View style={styles.lyricsContent}>
                   {lyricsLoading ? (
-                    <ActivityIndicator color="#ffffff" size="small" />
+                    <Text style={styles.lyricsLoadingText}>Loading lyrics...</Text>
                   ) : lyricsError ? (
                     <Text style={styles.lyricsErrorText}>No lyrics found</Text>
                   ) : syncedLyrics.length > 0 ? (
@@ -830,6 +830,12 @@ const styles = StyleSheet.create({
   lyricsErrorText: {
     fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  lyricsLoadingText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
     fontStyle: 'italic',
   },

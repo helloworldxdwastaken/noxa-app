@@ -18,8 +18,16 @@ export interface ParsedLyricLine {
   text: string;
 }
 
+// Simple in-memory cache for lyrics (persists during app session)
+const lyricsCache = new Map<string, LyricsResponse | null>();
+const MAX_CACHE_SIZE = 50;
+
+const getCacheKey = (trackName: string, artistName: string): string => {
+  return `${trackName.toLowerCase()}|${artistName.toLowerCase()}`;
+};
+
 /**
- * Fetch lyrics from lrclib.net
+ * Fetch lyrics from lrclib.net with caching
  */
 export const fetchLyrics = async (
   trackName: string,
@@ -27,6 +35,13 @@ export const fetchLyrics = async (
   albumName?: string,
   duration?: number,
 ): Promise<LyricsResponse | null> => {
+  const cacheKey = getCacheKey(trackName, artistName);
+  
+  // Check cache first
+  if (lyricsCache.has(cacheKey)) {
+    return lyricsCache.get(cacheKey) ?? null;
+  }
+
   try {
     const params = new URLSearchParams({
       track_name: trackName,
@@ -49,12 +64,26 @@ export const fetchLyrics = async (
 
     if (!response.ok) {
       if (response.status === 404) {
+        // Cache "not found" results too to avoid repeated requests
+        lyricsCache.set(cacheKey, null);
         return null;
       }
       throw new Error(`Failed to fetch lyrics: ${response.status}`);
     }
 
     const data: LyricsResponse = await response.json();
+    
+    // Manage cache size
+    if (lyricsCache.size >= MAX_CACHE_SIZE) {
+      const firstKey = lyricsCache.keys().next().value;
+      if (firstKey) {
+        lyricsCache.delete(firstKey);
+      }
+    }
+    
+    // Cache the result
+    lyricsCache.set(cacheKey, data);
+    
     return data;
   } catch (error) {
     console.warn('Lyrics fetch error:', error);
