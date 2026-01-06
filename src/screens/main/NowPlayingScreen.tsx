@@ -15,6 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { BlurView } from '@react-native-community/blur';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import TrackPlayer, {
@@ -33,6 +34,7 @@ import { useCurrentTrack } from '../../hooks/useCurrentTrack';
 import ArtworkImage from '../../components/ArtworkImage';
 import { playSong, togglePlayback } from '../../services/player/PlayerService';
 import { addTrackToPlaylist, fetchPlaylists, fetchArtistTracks } from '../../api/service';
+import { fetchLyrics, parseSyncedLyrics, parsePlainLyrics, ParsedLyricLine } from '../../api/lyrics';
 import type { Playlist, Song } from '../../types/models';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAutoDownloadNewTracks } from '../../hooks/useAutoDownloadNewTracks';
@@ -73,6 +75,13 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
   const [shuffleEnabled, setShuffleEnabled] = useState(false);
   const [progressBarWidth, setProgressBarWidth] = useState(0);
+  const [lyricsVisible, setLyricsVisible] = useState(false);
+  const [syncedLyrics, setSyncedLyrics] = useState<ParsedLyricLine[]>([]);
+  const [plainLyrics, setPlainLyrics] = useState<string[]>([]);
+  const [lyricsLoading, setLyricsLoading] = useState(false);
+  const [lyricsError, setLyricsError] = useState(false);
+  const lyricsScrollRef = useRef<ScrollView>(null);
+  const lastHighlightedIndex = useRef<number>(-1);
   const isPlaying = state === TrackState.Playing || state === TrackState.Buffering;
   const insets = useSafeAreaInsets();
   const glowAnim = useRef(new Animated.Value(isPlaying ? 1 : 0)).current;
@@ -245,6 +254,78 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [track?.artist, navigation, t]);
 
+  // Fetch lyrics when track changes
+  useEffect(() => {
+    const loadLyrics = async () => {
+      if (!track?.title || !track?.artist) {
+        setSyncedLyrics([]);
+        setPlainLyrics([]);
+        setLyricsError(false);
+        return;
+      }
+
+      setLyricsLoading(true);
+      setLyricsError(false);
+      lastHighlightedIndex.current = -1;
+
+      try {
+        const result = await fetchLyrics(
+          track.title,
+          track.artist,
+          track.album ?? undefined,
+          track.duration ?? undefined,
+        );
+
+        if (result) {
+          if (result.syncedLyrics) {
+            setSyncedLyrics(parseSyncedLyrics(result.syncedLyrics));
+            setPlainLyrics([]);
+          } else if (result.plainLyrics) {
+            setSyncedLyrics([]);
+            setPlainLyrics(parsePlainLyrics(result.plainLyrics));
+          } else if (result.instrumental) {
+            setSyncedLyrics([]);
+            setPlainLyrics(['♪ Instrumental ♪']);
+          } else {
+            setSyncedLyrics([]);
+            setPlainLyrics([]);
+            setLyricsError(true);
+          }
+        } else {
+          setSyncedLyrics([]);
+          setPlainLyrics([]);
+          setLyricsError(true);
+        }
+      } catch {
+        setSyncedLyrics([]);
+        setPlainLyrics([]);
+        setLyricsError(true);
+      } finally {
+        setLyricsLoading(false);
+      }
+    };
+
+    loadLyrics();
+  }, [track?.id, track?.title, track?.artist, track?.album, track?.duration]);
+
+  // Get current lyric line index for synced lyrics
+  const currentLyricIndex = useMemo(() => {
+    if (syncedLyrics.length === 0) {
+      return -1;
+    }
+    const currentTime = progress.position;
+    for (let i = syncedLyrics.length - 1; i >= 0; i--) {
+      if (syncedLyrics[i].time <= currentTime) {
+        return i;
+      }
+    }
+    return -1;
+  }, [syncedLyrics, progress.position]);
+
+  const handleLyricsToggle = useCallback(() => {
+    setLyricsVisible(prev => !prev);
+  }, []);
+
   const shuffleArray = useCallback((items: Track[]) => {
     const clone = [...items];
     for (let i = clone.length - 1; i > 0; i -= 1) {
@@ -384,7 +465,65 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 <Icon name="music" size={64} color="#8aa4ff" />
               </View>
             )}
+            {/* Lyrics Overlay */}
+            {lyricsVisible && (
+              <View style={styles.lyricsOverlay}>
+                <BlurView
+                  style={StyleSheet.absoluteFill}
+                  blurType="dark"
+                  blurAmount={20}
+                  reducedTransparencyFallbackColor="#000000"
+                />
+                <View style={styles.lyricsContent}>
+                  {lyricsLoading ? (
+                    <ActivityIndicator color="#ffffff" size="small" />
+                  ) : lyricsError ? (
+                    <Text style={styles.lyricsErrorText}>No lyrics found</Text>
+                  ) : syncedLyrics.length > 0 ? (
+                    <ScrollView
+                      ref={lyricsScrollRef}
+                      style={styles.lyricsScroll}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.lyricsScrollContent}
+                    >
+                      {syncedLyrics.map((line, index) => (
+                        <Text
+                          key={`${line.time}-${index}`}
+                          style={[
+                            styles.lyricLine,
+                            index === currentLyricIndex && styles.lyricLineActive,
+                          ]}
+                        >
+                          {line.text}
+                        </Text>
+                      ))}
+                    </ScrollView>
+                  ) : plainLyrics.length > 0 ? (
+                    <ScrollView
+                      style={styles.lyricsScroll}
+                      showsVerticalScrollIndicator={false}
+                      contentContainerStyle={styles.lyricsScrollContent}
+                    >
+                      {plainLyrics.map((line, index) => (
+                        <Text key={index} style={styles.lyricLine}>
+                          {line}
+                        </Text>
+                      ))}
+                    </ScrollView>
+                  ) : (
+                    <Text style={styles.lyricsErrorText}>No lyrics available</Text>
+                  )}
+                </View>
+              </View>
+            )}
           </Animated.View>
+          {/* Lyrics toggle button */}
+          <TouchableOpacity
+            style={[styles.lyricsButton, lyricsVisible && styles.lyricsButtonActive]}
+            onPress={handleLyricsToggle}
+          >
+            <Icon name="message-square" size={18} color={lyricsVisible ? primary : '#ffffff'} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.trackInfo}>
@@ -628,6 +767,7 @@ const styles = StyleSheet.create({
   },
   artworkContainer: {
     alignItems: 'center',
+    position: 'relative',
   },
   artworkWrapper: {
     width: 320,
@@ -635,6 +775,63 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
+  },
+  lyricsButton: {
+    position: 'absolute',
+    bottom: -12,
+    right: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  lyricsButtonActive: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  lyricsOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 24,
+    overflow: 'hidden',
+  },
+  lyricsContent: {
+    flex: 1,
+    padding: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  lyricsScroll: {
+    flex: 1,
+    width: '100%',
+  },
+  lyricsScrollContent: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    gap: 12,
+  },
+  lyricLine: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    fontWeight: '500',
+    lineHeight: 22,
+  },
+  lyricLineActive: {
+    fontSize: 16,
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  lyricsErrorText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.5)',
+    textAlign: 'center',
+    fontStyle: 'italic',
   },
   artworkGlowBase: {
     shadowOpacity: 0.6,

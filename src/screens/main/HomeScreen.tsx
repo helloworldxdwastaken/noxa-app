@@ -553,6 +553,45 @@ const HomeScreen: React.FC = () => {
           </View>
         )}
 
+        {/* Empty State for New Users */}
+        {!playlistsLoading && !tracksLoading && !generatedLoading &&
+          playlists.length === 0 && recentTracks.length === 0 && generatedPlaylists.length === 0 && (
+          <View style={styles.emptyStateContainer}>
+            <View style={styles.emptyStateIcon}>
+              <Icon name="music" size={48} color="#9090a5" />
+            </View>
+            <Text style={styles.emptyStateTitle}>{t('home.emptyTitle') ?? 'Welcome to Your Music'}</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              {t('home.emptySubtitle') ?? 'Start building your library by creating a playlist or adding music'}
+            </Text>
+            <TouchableOpacity
+              style={[styles.emptyStateButton, { backgroundColor: primary }]}
+              onPress={() => navigation.navigate('Create')}
+            >
+              <Icon name="plus" size={18} color="#ffffff" />
+              <Text style={styles.emptyStateButtonText}>{t('home.createPlaylist') ?? 'Create Playlist'}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Show Made For You even when library is empty */}
+        {!generatedLoading && generatedPlaylists.length > 0 &&
+          playlists.length === 0 && recentTracks.length === 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>{t('home.madeForYou') ?? 'Made For You'}</Text>
+            </View>
+            <FlatList
+              horizontal
+              data={generatedPlaylists}
+              renderItem={renderCachedPlaylistItem}
+              keyExtractor={item => `gen-empty-${item.id}`}
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.horizontalList}
+            />
+          </View>
+        )}
+
         {playlistsLoading || tracksLoading ? (
           <View style={styles.centered}>
             <ActivityIndicator color="#ffffff" />
@@ -967,6 +1006,50 @@ const styles = StyleSheet.create({
     width: '60%',
     height: 12,
     marginTop: 4,
+  },
+  // Empty state styles
+  emptyStateContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingVertical: 64,
+    gap: 16,
+  },
+  emptyStateIcon: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(144, 144, 165, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  emptyStateTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 15,
+    color: '#9090a5',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  emptyStateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 999,
+    marginTop: 8,
+  },
+  emptyStateButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ffffff',
   },
 });
 
