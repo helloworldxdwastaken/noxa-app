@@ -15,7 +15,6 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import TrackPlayer, {
@@ -477,47 +476,39 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 <Icon name="music" size={64} color="#8aa4ff" />
               </View>
             )}
-            {/* Floating Lyrics Overlay on Artwork */}
+            {/* Floating Lyrics on Artwork - no container, just text */}
             {lyricsVisible && (
               <View style={styles.lyricsOverlay}>
-                <LinearGradient
-                  colors={['rgba(60,120,140,0.85)', 'rgba(180,140,100,0.85)', 'rgba(200,150,110,0.85)']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
-                />
-                <View style={styles.lyricsFloatingContainer}>
-                  {lyricsLoading ? (
-                    <Text style={styles.lyricsStatusText}>Loading...</Text>
-                  ) : lyricsError ? (
-                    <Text style={styles.lyricsStatusText}>No lyrics found</Text>
-                  ) : syncedLyrics.length > 0 ? (
-                    <>
-                      {/* Previous line */}
-                      {currentLyricIndex > 0 && syncedLyrics[currentLyricIndex - 1] && (
-                        <Text style={styles.lyricLinePrev} numberOfLines={2}>
-                          {syncedLyrics[currentLyricIndex - 1].text}
-                        </Text>
-                      )}
-                      {/* Current line */}
-                      {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex] && (
-                        <Text style={styles.lyricLineCurrent} numberOfLines={2}>
-                          {syncedLyrics[currentLyricIndex].text}
-                        </Text>
-                      )}
-                      {/* Next line */}
-                      {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex + 1] && (
-                        <Text style={styles.lyricLineNext} numberOfLines={2}>
-                          {syncedLyrics[currentLyricIndex + 1].text}
-                        </Text>
-                      )}
-                    </>
-                  ) : plainLyrics.length > 0 ? (
-                    <Text style={styles.lyricLineCurrent}>{plainLyrics[0]}</Text>
-                  ) : (
-                    <Text style={styles.lyricsStatusText}>No lyrics</Text>
-                  )}
-                </View>
+                {lyricsLoading ? (
+                  <Text style={styles.lyricsStatusText}>Loading...</Text>
+                ) : lyricsError ? (
+                  <Text style={styles.lyricsStatusText}>No lyrics found</Text>
+                ) : syncedLyrics.length > 0 ? (
+                  <>
+                    {/* Previous line */}
+                    {currentLyricIndex > 0 && syncedLyrics[currentLyricIndex - 1] && (
+                      <Text style={styles.lyricLinePrev} numberOfLines={2}>
+                        {syncedLyrics[currentLyricIndex - 1].text}
+                      </Text>
+                    )}
+                    {/* Current line */}
+                    {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex] && (
+                      <Text style={styles.lyricLineCurrent} numberOfLines={2}>
+                        {syncedLyrics[currentLyricIndex].text}
+                      </Text>
+                    )}
+                    {/* Next line */}
+                    {currentLyricIndex >= 0 && syncedLyrics[currentLyricIndex + 1] && (
+                      <Text style={styles.lyricLineNext} numberOfLines={2}>
+                        {syncedLyrics[currentLyricIndex + 1].text}
+                      </Text>
+                    )}
+                  </>
+                ) : plainLyrics.length > 0 ? (
+                  <Text style={styles.lyricLineCurrent}>{plainLyrics[0]}</Text>
+                ) : (
+                  <Text style={styles.lyricsStatusText}>No lyrics</Text>
+                )}
               </View>
             )}
           </Animated.View>
@@ -799,49 +790,56 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  // Floating lyrics overlay on artwork
+  // Floating lyrics overlay - transparent, text with shadows
   lyricsOverlay: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: 24,
-    overflow: 'hidden',
-  },
-  lyricsFloatingContainer: {
-    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    gap: 12,
+    paddingHorizontal: 20,
+    gap: 10,
   },
   lyricLinePrev: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.4)',
-    textAlign: 'center',
-    fontWeight: '500',
-    lineHeight: 22,
-  },
-  lyricLineCurrent: {
-    fontSize: 22,
-    color: '#ffffff',
-    textAlign: 'center',
-    fontWeight: '800',
-    lineHeight: 30,
-    textShadowColor: 'rgba(0,0,0,0.25)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  lyricLineNext: {
-    fontSize: 15,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.5)',
     textAlign: 'center',
     fontWeight: '500',
+    lineHeight: 20,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  lyricLineCurrent: {
+    fontSize: 20,
+    color: '#ffffff',
+    textAlign: 'center',
+    fontWeight: '800',
+    lineHeight: 28,
+    textShadowColor: 'rgba(0,0,0,0.9)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+    marginVertical: 8,
+  },
+  lyricLineNext: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.45)',
+    textAlign: 'center',
+    fontWeight: '500',
     fontStyle: 'italic',
-    lineHeight: 22,
+    lineHeight: 20,
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   lyricsStatusText: {
     fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.8)',
     textAlign: 'center',
     fontStyle: 'italic',
+    textShadowColor: 'rgba(0,0,0,0.8)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   artworkGlowBase: {
     shadowOpacity: 0.6,
