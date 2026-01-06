@@ -65,14 +65,17 @@ jobs:
           # Retry logic for transient Maven Central 403 errors
           for i in 1 2 3; do
             echo "Build attempt $i..."
-            if ./gradlew assembleRelease --no-daemon --stacktrace --info --warning-mode all 2>&1 | tee ../android-build.log; then
+            if ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 | tee ../android-build.log; then
               echo "Build succeeded on attempt $i"
               break
             fi
             if [ $i -lt 3 ]; then
-              echo "Build failed, waiting 30s before retry..."
-              sleep 30
+              echo "Build failed, waiting 60s before retry..."
               ./gradlew --stop || true
+              # Clean Gradle caches that might be corrupted
+              rm -rf ~/.gradle/caches/modules-2/files-2.1/com.google.code.gson || true
+              rm -rf .gradle/caches || true
+              sleep 60
             else
               echo "Build failed after 3 attempts"
               exit 1
