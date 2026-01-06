@@ -25,13 +25,30 @@ jobs:
           distribution: 'zulu'
           java-version: '17'
 
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build Android Release APK
         run: |
           cd android
-          ./gradlew assembleRelease --no-daemon
+          for i in 1 2 3; do
+            echo "Build attempt $i..."
+            if ./gradlew assembleRelease --no-daemon; then
+              break
+            fi
+            if [ $i -lt 3 ]; then
+              echo "Build failed, waiting 30s before retry..."
+              sleep 30
+              ./gradlew --stop || true
+            else
+              exit 1
+            fi
+          done
 
       - name: Build Android AAB
         run: |
