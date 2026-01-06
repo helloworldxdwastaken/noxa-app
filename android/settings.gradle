@@ -2,11 +2,10 @@ pluginManagement {
     includeBuild("../node_modules/@react-native/gradle-plugin")
     repositories {
         google()
+        // Use repo1 mirror directly (same content as mavenCentral but different URL/rate limits)
+        maven { url = uri("https://repo1.maven.org/maven2") }
         mavenCentral()
         gradlePluginPortal()
-        // Fallback mirrors in case Maven Central returns 403
-        maven { url = uri("https://maven.aliyun.com/repository/central") }
-        maven { url = uri("https://repo1.maven.org/maven2") }
     }
 }
 plugins { id("com.facebook.react.settings") }
