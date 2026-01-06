@@ -1,4 +1,14 @@
-pluginManagement { includeBuild("../node_modules/@react-native/gradle-plugin") }
+pluginManagement {
+    includeBuild("../node_modules/@react-native/gradle-plugin")
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+        // Fallback mirrors in case Maven Central returns 403
+        maven { url = uri("https://maven.aliyun.com/repository/central") }
+        maven { url = uri("https://repo1.maven.org/maven2") }
+    }
+}
 plugins { id("com.facebook.react.settings") }
 extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autolinkLibrariesFromCommand() }
 rootProject.name = 'music_app'
