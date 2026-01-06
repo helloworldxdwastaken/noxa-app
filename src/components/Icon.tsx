@@ -35,6 +35,8 @@ const ICON_MAP: Record<string, string> = {
   shuffle: 'shuffle',
   play: 'play-sharp',
   pause: 'pause-sharp',
+  quote: 'text',
+  lyrics: 'text',
 };
 
 type IoniconsProps = React.ComponentProps<typeof Ionicons>;

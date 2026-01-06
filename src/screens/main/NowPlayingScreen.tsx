@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { BlurView } from '@react-native-community/blur';
+import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import TrackPlayer, {
@@ -322,6 +322,18 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
     return -1;
   }, [syncedLyrics, progress.position]);
 
+  // Auto-scroll to current lyric
+  useEffect(() => {
+    if (currentLyricIndex >= 0 && currentLyricIndex !== lastHighlightedIndex.current && lyricsVisible) {
+      lastHighlightedIndex.current = currentLyricIndex;
+      // Scroll to approximately center the current line
+      // Each line is roughly 50px height (34 line height + 16 gap)
+      const lineHeight = 50;
+      const scrollPosition = Math.max(0, (currentLyricIndex * lineHeight) - 150);
+      lyricsScrollRef.current?.scrollTo({ y: scrollPosition, animated: true });
+    }
+  }, [currentLyricIndex, lyricsVisible]);
+
   const handleLyricsToggle = useCallback(() => {
     setLyricsVisible(prev => !prev);
   }, []);
@@ -465,64 +477,13 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
                 <Icon name="music" size={64} color="#8aa4ff" />
               </View>
             )}
-            {/* Lyrics Overlay */}
-            {lyricsVisible && (
-              <View style={styles.lyricsOverlay}>
-                <BlurView
-                  style={StyleSheet.absoluteFill}
-                  blurType="dark"
-                  blurAmount={20}
-                  reducedTransparencyFallbackColor="#000000"
-                />
-                <View style={styles.lyricsContent}>
-                  {lyricsLoading ? (
-                    <Text style={styles.lyricsLoadingText}>Loading lyrics...</Text>
-                  ) : lyricsError ? (
-                    <Text style={styles.lyricsErrorText}>No lyrics found</Text>
-                  ) : syncedLyrics.length > 0 ? (
-                    <ScrollView
-                      ref={lyricsScrollRef}
-                      style={styles.lyricsScroll}
-                      showsVerticalScrollIndicator={false}
-                      contentContainerStyle={styles.lyricsScrollContent}
-                    >
-                      {syncedLyrics.map((line, index) => (
-                        <Text
-                          key={`${line.time}-${index}`}
-                          style={[
-                            styles.lyricLine,
-                            index === currentLyricIndex && styles.lyricLineActive,
-                          ]}
-                        >
-                          {line.text}
-                        </Text>
-                      ))}
-                    </ScrollView>
-                  ) : plainLyrics.length > 0 ? (
-                    <ScrollView
-                      style={styles.lyricsScroll}
-                      showsVerticalScrollIndicator={false}
-                      contentContainerStyle={styles.lyricsScrollContent}
-                    >
-                      {plainLyrics.map((line, index) => (
-                        <Text key={index} style={styles.lyricLine}>
-                          {line}
-                        </Text>
-                      ))}
-                    </ScrollView>
-                  ) : (
-                    <Text style={styles.lyricsErrorText}>No lyrics available</Text>
-                  )}
-                </View>
-              </View>
-            )}
           </Animated.View>
           {/* Lyrics toggle button */}
           <TouchableOpacity
             style={[styles.lyricsButton, lyricsVisible && styles.lyricsButtonActive]}
             onPress={handleLyricsToggle}
           >
-            <Icon name="message-square" size={18} color={lyricsVisible ? primary : '#ffffff'} />
+            <Icon name="quote" size={18} color={lyricsVisible ? primary : '#ffffff'} />
           </TouchableOpacity>
         </View>
 
@@ -702,6 +663,84 @@ const NowPlayingScreen: React.FC<Props> = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Full-screen Lyrics Overlay */}
+      {lyricsVisible && (
+        <View style={styles.lyricsFullOverlay}>
+          <LinearGradient
+            colors={['#4a90a4', '#d4a574', '#e8a87c']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={StyleSheet.absoluteFill}
+          />
+          <View style={styles.lyricsGradientOverlay} />
+          <TouchableOpacity
+            style={[styles.lyricsCloseButton, { top: insets.top + 12 }]}
+            onPress={() => setLyricsVisible(false)}
+          >
+            <Icon name="chevron-down" size={24} color="#ffffff" />
+          </TouchableOpacity>
+          <View style={styles.lyricsContentFull}>
+            {lyricsLoading ? (
+              <Text style={styles.lyricsStatusText}>Loading lyrics...</Text>
+            ) : lyricsError ? (
+              <Text style={styles.lyricsStatusText}>No lyrics found</Text>
+            ) : syncedLyrics.length > 0 ? (
+              <ScrollView
+                ref={lyricsScrollRef}
+                style={styles.lyricsScrollFull}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.lyricsScrollContentFull}
+              >
+                {syncedLyrics.map((line, index) => (
+                  <Text
+                    key={`${line.time}-${index}`}
+                    style={[
+                      styles.lyricLineFull,
+                      index === currentLyricIndex && styles.lyricLineActiveFull,
+                      index < currentLyricIndex && styles.lyricLinePastFull,
+                    ]}
+                  >
+                    {line.text}
+                  </Text>
+                ))}
+              </ScrollView>
+            ) : plainLyrics.length > 0 ? (
+              <ScrollView
+                style={styles.lyricsScrollFull}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.lyricsScrollContentFull}
+              >
+                {plainLyrics.map((line, index) => (
+                  <Text key={index} style={styles.lyricLineFull}>
+                    {line}
+                  </Text>
+                ))}
+              </ScrollView>
+            ) : (
+              <Text style={styles.lyricsStatusText}>No lyrics available</Text>
+            )}
+          </View>
+          {/* Mini controls at bottom */}
+          <View style={[styles.lyricsBottomControls, { paddingBottom: insets.bottom + 20 }]}>
+            <View style={styles.lyricsTrackInfo}>
+              <Text style={styles.lyricsTrackTitle} numberOfLines={1}>{track?.title}</Text>
+              <Text style={styles.lyricsTrackArtist} numberOfLines={1}>{track?.artist}</Text>
+            </View>
+            <View style={styles.lyricsMiniControls}>
+              <TouchableOpacity onPress={handleSkipPrev} style={styles.lyricsMiniBtn}>
+                <Icon name="skip-back" size={22} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => togglePlayback()} style={styles.lyricsPlayBtn}>
+                <Icon name={isPlaying ? 'pause' : 'play'} size={24} color="#ffffff" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleSkipNext} style={styles.lyricsMiniBtn}>
+                <Icon name="skip-forward" size={22} color="#ffffff" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 
@@ -794,50 +833,109 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.3)',
   },
-  lyricsOverlay: {
+  // Full-screen lyrics styles
+  lyricsFullOverlay: {
     ...StyleSheet.absoluteFillObject,
-    borderRadius: 24,
-    overflow: 'hidden',
+    zIndex: 100,
   },
-  lyricsContent: {
-    flex: 1,
-    padding: 16,
+  lyricsGradientOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.15)',
+  },
+  lyricsCloseButton: {
+    position: 'absolute',
+    left: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    zIndex: 10,
   },
-  lyricsScroll: {
+  lyricsContentFull: {
     flex: 1,
-    width: '100%',
+    paddingTop: 100,
+    paddingBottom: 140,
   },
-  lyricsScrollContent: {
-    paddingVertical: 40,
+  lyricsScrollFull: {
+    flex: 1,
+  },
+  lyricsScrollContentFull: {
+    paddingHorizontal: 32,
+    paddingVertical: 60,
     alignItems: 'center',
-    gap: 12,
+    gap: 16,
   },
-  lyricLine: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    textAlign: 'center',
-    fontWeight: '500',
-    lineHeight: 22,
-  },
-  lyricLineActive: {
-    fontSize: 16,
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  lyricsErrorText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.5)',
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  lyricsLoadingText: {
-    fontSize: 14,
+  lyricLineFull: {
+    fontSize: 22,
     color: 'rgba(255,255,255,0.4)',
     textAlign: 'center',
+    fontWeight: '600',
+    lineHeight: 34,
+  },
+  lyricLineActiveFull: {
+    fontSize: 26,
+    color: '#ffffff',
+    fontWeight: '800',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  lyricLinePastFull: {
+    color: 'rgba(255,255,255,0.5)',
+  },
+  lyricsStatusText: {
+    fontSize: 18,
+    color: 'rgba(255,255,255,0.6)',
+    textAlign: 'center',
     fontStyle: 'italic',
+    marginTop: 100,
+  },
+  lyricsBottomControls: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  lyricsTrackInfo: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  lyricsTrackTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#ffffff',
+    textAlign: 'center',
+  },
+  lyricsTrackArtist: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    marginTop: 2,
+  },
+  lyricsMiniControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  lyricsMiniBtn: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  lyricsPlayBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   artworkGlowBase: {
     shadowOpacity: 0.6,
